@@ -818,36 +818,58 @@
         const user = cred.user;
         await updateProfile(user, { displayName: ownerName });
 
+        // Create brand document in same shape Super Admin expects
         const brandRef = await addDoc(collection(db, "brands"), {
           name: brandName,
           country: brandCountry || null,
           ownerUserId: user.uid,
           ownerEmail: email,
           status: "active",
+          isActive: true,
           vat: 0,
           serviceFee: 0,
           sendEmail: false,
+          sendWhatsApp: false,
+          branchCount: 1,
+          defaultCurrency: null,
+          defaultTaxPercent: null,
           createdAt: serverTimestamp()
         });
 
+        // Link user -> brand
         await setDoc(doc(db, "userBrands", user.uid), {
           primaryBrandId: brandRef.id,
           brandIds: [brandRef.id]
         });
 
-        await addDoc(collection(brandRef, "branches"), {
+        // Create default branch
+        const branchRef = await addDoc(collection(brandRef, "branches"), {
           name: "Main Branch",
           code: "MAIN",
           isActive: true,
           createdAt: serverTimestamp()
         });
 
+        // Staff document for owner inside brand
         await setDoc(doc(brandRef, "staff", user.uid), {
           userId: user.uid,
           name: ownerName,
           email,
           role: "brand_owner",
           isActive: true,
+          createdAt: serverTimestamp()
+        });
+
+        // PLATFORM USERS entry so Super Admin can see brand owner
+        await setDoc(doc(db, "platformUsers", user.uid), {
+          name: ownerName,
+          email,
+          role: "brand_owner",
+          brandId: brandRef.id,
+          brandName,
+          branchId: branchRef.id,
+          branchName: "Main Branch",
+          status: "active",
           createdAt: serverTimestamp()
         });
 
@@ -2091,7 +2113,7 @@
         return;
       }
 
-      await addDoc(collection(db, "posUsers"), {
+      const docRef = await addDoc(collection(db, "posUsers"), {
         username,
         pin,
         displayName: display || username,
@@ -2099,6 +2121,21 @@
         brandId,
         role: "cashier",
         isActive: true,
+        createdAt: serverTimestamp()
+      });
+
+      const branchObj = branches.find(x => x.id === branch);
+
+      // Sync into platformUsers so Super Admin can see this cashier
+      await setDoc(doc(db, "platformUsers", docRef.id), {
+        name: display || username,
+        email: null,
+        role: "cashier",
+        brandId,
+        brandName: brandData.name || "",
+        branchId: branch,
+        branchName: branchObj ? branchObj.name : "",
+        status: "active",
         createdAt: serverTimestamp()
       });
 
@@ -2167,6 +2204,15 @@
         branchId: branch
       });
 
+      const branchObj = branches.find(x => x.id === branch);
+
+      // Mirror update into platformUsers
+      await updateDoc(doc(db, "platformUsers", id), {
+        name: display || username,
+        branchId: branch,
+        branchName: branchObj ? branchObj.name : ""
+      });
+
       closeModal();
       await loadStaff();
       renderStaffTable();
@@ -2175,6 +2221,10 @@
     async function deleteStaff(id) {
       if (!confirm("Delete staff user?")) return;
       await deleteDoc(doc(db, "posUsers", id));
+      // Clean up platformUsers entry if it exists
+      try {
+        await deleteDoc(doc(db, "platformUsers", id));
+      } catch (_) {}
       closeModal();
       await loadStaff();
       renderStaffTable();
@@ -2323,94 +2373,4 @@
     /* EXPORT BUTTONS */
     qs("#btn-export-products").addEventListener("click", () => {
       const rows = [["branch","name","code","price","stockMode","stockQty","variantGroup","variants","imageUrl"]];
-      products.forEach(p => {
-        const variantsStr = Array.isArray(p.variants)
-          ? p.variants.map(v => `${v.label || ""} (${v.stockQty ?? ""})`).join(";")
-          : "";
-        rows.push([
-          p.branchName || "",
-          p.name || "",
-          p.code || "",
-          p.price ?? "",
-          p.stockMode || "",
-          p.stockQty ?? "",
-          p.variantGroup || "",
-          variantsStr,
-          p.imageUrl || ""
-        ]);
-      });
-      downloadCsv("products.csv", rows);
-    });
-
-    qs("#btn-export-branches").addEventListener("click", () => {
-      const rows = [["name","code","isActive"]];
-      branches.forEach(b => {
-        rows.push([b.name || "", b.code || "", b.isActive !== false ? "yes" : "no"]);
-      });
-      downloadCsv("branches.csv", rows);
-    });
-
-    qs("#btn-export-staff").addEventListener("click", () => {
-      const rows = [["username","displayName","branch","role","isActive"]];
-      staffUsers.forEach(s => {
-        const b = branches.find(x => x.id === s.branchId);
-        rows.push([
-          s.username || "",
-          s.displayName || "",
-          b ? b.name : "",
-          s.role || "",
-          s.isActive !== false ? "yes" : "no"
-        ]);
-      });
-      downloadCsv("staff.csv", rows);
-    });
-
-    qs("#btn-export-customers").addEventListener("click", () => {
-      const stats = buildCustomerStats();
-      const rows = [["name","phone","email","orders","totalSpent"]];
-
-      customersList.forEach(c => {
-        const key = c.id || c.email || c.phone || c.name;
-        const st = key ? stats[key] : null;
-        rows.push([
-          c.name || "",
-          c.phone || "",
-          c.email || "",
-          st ? st.orders : 0,
-          st ? st.total : 0
-        ]);
-      });
-
-      downloadCsv("customers.csv", rows);
-    });
-
-    qs("#btn-export-orders").addEventListener("click", () => {
-      const rows = [["orderId","date","branch","customer","total","paymentMethod","type","status"]];
-      ordersList.forEach(o => {
-        rows.push([
-          o.orderId || o.id,
-          orderDate(o) || "",
-          o.branchName || "",
-          o.customerName || "",
-          o.total ?? "",
-          o.paymentMethod || "",
-          o.type || "sale",
-          o.status || "normal"
-        ]);
-      });
-      downloadCsv("orders.csv", rows);
-    });
-
-    /* LOGOUT */
-    qs("#btn-logout").addEventListener("click", async () => {
-      if (ordersUnsub) {
-        ordersUnsub();
-        ordersUnsub = null;
-      }
-      await signOut(auth);
-      showAuth();
-    });
-  </script>
-</body>
-</html>
 

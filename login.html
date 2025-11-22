@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Luma Store OS — Login</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg:#f3f4f6;
+      --panel:#ffffff;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --accent-soft:#dbeafe;
+      --accent-strong:#1d4ed8;
+      --ink:#111827;
+      --muted:#6b7280;
+      --radius:18px;
+      --shadow:0 28px 60px rgba(15,23,42,.15);
+      --danger:#ef4444;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{
+      height:100%;
+      font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:radial-gradient(circle at top,#e5edff,#f9fafb 60%);
+      color:var(--ink);
+    }
+    body{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .card{
+      width:100%;
+      max-width:420px;
+      background:var(--panel);
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      padding:18px 18px 16px;
+    }
+    .brand-mark{
+      display:flex;align-items:center;gap:10px;margin-bottom:8px;
+    }
+    .brand-logo{
+      width:34px;height:34px;border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#a855f7);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;font-size:18px;
+    }
+    .brand-title{
+      font-size:18px;font-weight:700;
+    }
+    .brand-sub{
+      font-size:11px;color:var(--muted);
+    }
+    .title{
+      font-size:16px;font-weight:600;margin-top:10px;
+    }
+    .subtitle{
+      font-size:12px;color:var(--muted);margin-top:4px;
+    }
+    .field{
+      margin-top:10px;
+    }
+    .field-label{
+      font-size:11px;margin-bottom:3px;color:#4b5563;
+    }
+    .field-input{
+      width:100%;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#f9fafb;
+      font-size:13px;
+    }
+    .field-input:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px var(--accent-soft);
+    }
+    .btn{
+      width:100%;
+      margin-top:12px;
+      padding:9px 10px;
+      border-radius:999px;
+      border:none;
+      background:var(--accent);
+      color:#fff;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:0 12px 30px rgba(37,99,235,.25);
+      transition:background .15s ease,transform .05s ease,box-shadow .15s ease;
+    }
+    .btn:hover{
+      background:var(--accent-strong);
+      transform:translateY(-1px);
+    }
+    .hint{
+      font-size:11px;color:var(--muted);margin-top:8px;
+    }
+    .alert{
+      margin-top:8px;
+      font-size:11px;
+      padding:7px 9px;
+      border-radius:10px;
+    }
+    .alert-error{
+      background:#fef2f2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+    .footer{
+      margin-top:12px;
+      font-size:10px;
+      color:var(--muted);
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="brand-mark">
+    <div class="brand-logo">L</div>
+    <div>
+      <div class="brand-title">Luma Store OS</div>
+      <div class="brand-sub">Unified login • POS • Brands • Super Admin</div>
+    </div>
+  </div>
+
+  <div class="title">Sign in</div>
+  <div class="subtitle">Use your Luma Store OS credentials.</div>
+
+  <div id="login-alert"></div>
+
+  <div class="field">
+    <div class="field-label">Email</div>
+    <input id="email" class="field-input" type="email" placeholder="you@brand.com"/>
+  </div>
+
+  <div class="field">
+    <div class="field-label">Password</div>
+    <input id="password" class="field-input" type="password" placeholder="••••••••"/>
+  </div>
+
+  <button id="btn-login" class="btn">Login</button>
+
+  <div class="hint">
+    Access is managed by your brand owner or the Luma team. If you think you should have access, contact them.
+  </div>
+
+  <div class="footer">
+    © <span id="year"></span> Luma Store OS • Built by Luma
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
+    authDomain: "events-339ce.firebaseapp.com",
+    projectId: "events-339ce",
+    storageBucket: "events-339ce.firebasestorage.app",
+    messagingSenderId: "175601544315",
+    appId: "1:175601544315:web:00c94b4affa972b3a286de"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const emailEl = document.getElementById("email");
+  const passwordEl = document.getElementById("password");
+  const loginBtn = document.getElementById("btn-login");
+  const loginAlert = document.getElementById("login-alert");
+  const yearEl = document.getElementById("year");
+  yearEl.textContent = new Date().getFullYear().toString();
+
+  function showError(msg){
+    loginAlert.innerHTML = `<div class="alert alert-error">${msg}</div>`;
+  }
+
+  async function routeByRole(user){
+    if(!user) return;
+    const ref = doc(db,"platformUsers",user.uid);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      showError("Your account is not configured on the platform. Please contact support.");
+      return;
+    }
+    const data = snap.data() || {};
+    if(data.status === "suspended"){
+      showError("Your account is suspended. Please contact your administrator.");
+      return;
+    }
+
+    const role = data.role;
+    const brandId = data.brandId || data.brand || null;
+    const branchId = data.branchId || data.branch || null;
+
+    if(role === "super_admin"){
+      window.location.href = "super-admin.html";
+    }else if(role === "brand_owner" || role === "branch_manager"){
+      if(brandId){
+        window.location.href = `brand-dashboard.html?brand=${encodeURIComponent(brandId)}`;
+      }else{
+        showError("Your brand is not linked. Please contact support.");
+      }
+    }else if(role === "cashier"){
+      if(brandId && branchId){
+        window.location.href = `pos.html`;
+      }else{
+        showError("Your POS account is missing brand/branch assignment.");
+      }
+    }else{
+      showError("Your role is not recognized. Please contact support.");
+    }
+  }
+
+  loginBtn.addEventListener("click", async ()=>{
+    loginAlert.innerHTML = "";
+    const email = emailEl.value.trim();
+    const password = passwordEl.value;
+    if(!email || !password){
+      showError("Please enter both email and password.");
+      return;
+    }
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Signing in…";
+    try{
+      const cred = await signInWithEmailAndPassword(auth,email,password);
+      await routeByRole(cred.user);
+    }catch(e){
+      console.error(e);
+      showError("Login failed. Check your email and password.");
+    }finally{
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login";
+    }
+  });
+
+  onAuthStateChanged(auth,(user)=>{
+    if(user){
+      routeByRole(user).catch(err=>{
+        console.error(err);
+      });
+    }
+  });
+</script>
+</body>
+</html>

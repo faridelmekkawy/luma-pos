@@ -1422,6 +1422,23 @@
         saveSettingsBtn.textContent = "Save brand settings";
       }
     }
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+// after creating brandRef and setDoc for brand:
+const uid = user.uid;
+await setDoc(doc(db, "users", uid), {
+  name: ownerName,       // from your form
+  email: user.email,
+  role: "brand_owner",
+  brandId: brandRef.id,
+  status: "active",
+  createdAt: serverTimestamp()
+});
 
     async function softDeleteBrand(){
       if(!currentBrandId) return;

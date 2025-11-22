@@ -1381,7 +1381,8 @@
             <div class="empty-state">Loading users…</div>
           </td></tr>`;
 
-        const usersRef = collection(db,"platformUsers");
+        // READ FROM `users` collection INSTEAD OF `platformUsers`
+        const usersRef = collection(db,"users");
         const snap = await getDocs(usersRef);
 
         const list = [];
@@ -1585,14 +1586,15 @@
       saEmailEl.textContent = user.email || "Unknown";
 
       try{
-        const platformUserRef = doc(db,"platformUsers",user.uid);
+        // READ ROLE & NAME FROM `users/{uid}`
+        const platformUserRef = doc(db,"users",user.uid);
         const snap = await getDoc(platformUserRef);
 
         let displayName = user.email || "Super Admin";
 
         if(snap.exists()){
           const data = snap.data() || {};
-          // Role comes from platformUsers, same as the rest of the system
+          // Role comes from `users` collection now
           if(data.role === "super_admin"){
             isSuperAdmin = true;
           }

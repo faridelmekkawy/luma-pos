@@ -742,7 +742,7 @@
 </head>
 <body>
 
-  <!-- LOGIN SCREEN (same page) -->
+  <!-- LOGIN SCREEN -->
   <div id="login-screen">
     <div class="login-card">
       <div class="login-header">
@@ -772,7 +772,7 @@
     </div>
   </div>
 
-  <!-- APP SHELL (hidden until logged in + super_admin) -->
+  <!-- APP SHELL -->
   <div id="app-shell" style="display:none;">
 
     <!-- Sidebar -->
@@ -869,12 +869,8 @@
           </div>
           <div class="toolbar-right">
             <input id="search-input" class="search-input" placeholder="Search brand or owner…"/>
-            <button id="btn-refresh" class="btn-icon" title="Refresh">
-              ⟳
-            </button>
-            <button id="btn-new-brand" class="btn btn-primary">
-              + New brand
-            </button>
+            <button id="btn-refresh" class="btn-icon" title="Refresh">⟳</button>
+            <button id="btn-new-brand" class="btn btn-primary">+ New brand</button>
           </div>
         </div>
 
@@ -911,7 +907,7 @@
         </div>
       </section>
 
-      <!-- PLATFORM USERS VIEW -->
+      <!-- USERS VIEW -->
       <section id="view-users" class="content-area" style="display:none;">
         <div class="toolbar">
           <div class="toolbar-left">
@@ -923,9 +919,7 @@
           </div>
           <div class="toolbar-right">
             <input id="users-search-input" class="search-input" placeholder="Search name, email or brand…"/>
-            <button id="btn-users-refresh" class="btn-icon" title="Refresh">
-              ⟳
-            </button>
+            <button id="btn-users-refresh" class="btn-icon" title="Refresh">⟳</button>
           </div>
         </div>
 
@@ -1004,7 +998,7 @@
           <div class="field">
             <div class="field-label">Global note for brand owners</div>
             <textarea id="setting-global-note" class="field-textarea" rows="3"
-                      placeholder="Example: System will be down for maintenance on Friday at 3 AM Cairo time."></textarea>
+              placeholder="Example: System will be down for maintenance on Friday at 3 AM Cairo time."></textarea>
             <div class="field-hint">
               This message will appear in the brand owner portal for all brands, so you can announce maintenance or news.
             </div>
@@ -1023,9 +1017,7 @@
             <div class="field-label">Current logo preview</div>
             <div class="logo-preview-box">
               <img id="logo-preview-img" class="logo-preview-img" style="display:none;" alt="Luma logo preview"/>
-              <span id="logo-preview-placeholder" class="logo-preview-placeholder">
-                No logo uploaded yet.
-              </span>
+              <span id="logo-preview-placeholder" class="logo-preview-placeholder">No logo uploaded yet.</span>
             </div>
           </div>
 
@@ -1091,8 +1083,7 @@
 
   <!-- Firebase + Super Admin Logic -->
   <script type="module">
-    // Adjust this if your brand portal file name is different
-    const BRAND_PORTAL_PATH = "/brand.html"; // e.g. "/brand-dashboard.html"
+    const BRAND_PORTAL_PATH = "/brand.html"; // brand dashboard file
 
     const BASE_URL = window.location.origin;
 
@@ -1273,8 +1264,7 @@
 
     function showModalAlert(message, type="error"){
       const cls = type === "error" ? "alert-error" : "alert-info";
-      modalAlertContainer.innerHTML =
-        `<div class="alert ${cls}">${message}</div>`;
+      modalAlertContainer.innerHTML = `<div class="alert ${cls}">${message}</div>`;
     }
 
     function renderBrands(filterText=""){
@@ -1361,6 +1351,9 @@
               <button class="btn-mini btn-open-brand" data-id="${b.id}">
                 Open dashboard
               </button>
+              <button class="btn-mini btn-mini-danger btn-delete-brand" data-id="${b.id}">
+                Delete
+              </button>
             </div>
           </td>
         `;
@@ -1413,6 +1406,32 @@
           }
         });
       });
+
+      // DELETE brand (soft delete)
+      qsa(".btn-delete-brand").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const brandId = btn.dataset.id;
+          if(!brandId) return;
+          const confirmed = confirm("Are you sure you want to delete this brand? This will archive it and hide it from the list.");
+          if(!confirmed) return;
+          try{
+            btn.disabled = true;
+            const brandRef = doc(db,"brands",brandId);
+            await updateDoc(brandRef,{
+              status:"deleted",
+              isActive:false,
+              deletedAt: serverTimestamp()
+            });
+            await loadBrands();
+            await loadPlatformStats();
+          }catch(err){
+            console.error("Error deleting brand", err);
+            alert("Failed to delete brand.");
+          }finally{
+            btn.disabled = false;
+          }
+        });
+      });
     }
 
     async function loadBrands(){
@@ -1441,7 +1460,8 @@
           });
         });
 
-        allBrands = list;
+        // Hide deleted brands from UI
+        allBrands = list.filter(b => b.status !== "deleted");
         renderBrands(searchInput.value);
       }catch(err){
         console.error("Error loading brands", err);
@@ -1786,18 +1806,10 @@
     }
 
     // Event bindings
-    if(newBrandBtn){
-      newBrandBtn.addEventListener("click", showModal);
-    }
-    if(modalCloseBtn){
-      modalCloseBtn.addEventListener("click", hideModal);
-    }
-    if(modalCancelBtn){
-      modalCancelBtn.addEventListener("click", hideModal);
-    }
-    if(modalCreateBtn){
-      modalCreateBtn.addEventListener("click", createBrandShell);
-    }
+    if(newBrandBtn){ newBrandBtn.addEventListener("click", showModal); }
+    if(modalCloseBtn){ modalCloseBtn.addEventListener("click", hideModal); }
+    if(modalCancelBtn){ modalCancelBtn.addEventListener("click", hideModal); }
+    if(modalCreateBtn){ modalCreateBtn.addEventListener("click", createBrandShell); }
 
     if(modalBackdrop){
       modalBackdrop.addEventListener("click",(e)=>{
@@ -1891,7 +1903,6 @@
       saEmailEl.textContent = user.email || "Unknown";
 
       try{
-        // Read from `users/{uid}`
         const platformUserRef = doc(db,"users",user.uid);
         const snap = await getDoc(platformUserRef);
 

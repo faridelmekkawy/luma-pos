@@ -23,6 +23,8 @@
       --danger:#ef4444;
       --radius:16px;
       --shadow:0 18px 40px rgba(15,23,42,.1);
+      --ok:#16a34a;
+      --warn:#ca8a04;
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
@@ -372,6 +374,27 @@
     }
     .btn-danger:hover{
       filter:brightness(0.95);
+    }
+    .btn-mini{
+      padding:3px 8px;
+      font-size:11px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--panel-soft);
+      cursor:pointer;
+    }
+    .btn-mini:hover{
+      background:#e5e7eb;
+    }
+    .btn-mini-danger{
+      border-color:#fecaca;
+      background:#fef2f2;
+      color:#b91c1c;
+    }
+    .btn-mini-ok{
+      border-color:#bbf7d0;
+      background:#ecfdf5;
+      color:#15803d;
     }
 
     .card{
@@ -925,10 +948,11 @@
                 <th>Brand / Branch</th>
                 <th>Status</th>
                 <th>Created</th>
+                <th>Actions</th>
               </tr>
               </thead>
               <tbody id="users-tbody">
-              <tr><td colspan="5">
+              <tr><td colspan="6">
                 <div class="empty-state">Loading users…</div>
               </td></tr>
               </tbody>
@@ -1012,10 +1036,64 @@
         </div>
       </section>
     </main>
+
+    <!-- Create Brand Modal -->
+    <div id="modal-backdrop" class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">Create new brand</div>
+            <div class="modal-subtitle">
+              This will create a brand shell with a signup link you can send to the owner.
+            </div>
+          </div>
+          <button class="modal-close" id="modal-close-btn">&times;</button>
+        </div>
+
+        <div id="modal-alert-container"></div>
+
+        <div class="field">
+          <div class="field-label">Brand name</div>
+          <input id="field-brand-name" class="field-input" placeholder="Example: Zed Outfitters"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Country (optional)</div>
+          <input id="field-brand-country" class="field-input" placeholder="Example: Egypt"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Default branch name</div>
+          <input id="field-branch-name" class="field-input" placeholder="Example: Main Store"/>
+          <div class="field-hint">You can add more branches later from the brand dashboard.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Branch code (optional)</div>
+          <input id="field-branch-code" class="field-input" placeholder="Example: MAIN"/>
+          <div class="field-hint">
+            Used as a prefix if you ever want order IDs like <strong>2401-52</strong> per branch per day.
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          After you create the brand, a <strong>signup link</strong> will appear in the brands table.
+          Send that link to the brand owner via WhatsApp or email.
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+          <button class="btn btn-primary" id="modal-create-btn">Create brand</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Firebase + Super Admin Logic -->
   <script type="module">
+    // Adjust this if your brand portal file name is different
+    const BRAND_PORTAL_PATH = "/brand.html"; // e.g. "/brand-dashboard.html"
+
     const BASE_URL = window.location.origin;
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
@@ -1026,6 +1104,7 @@
       getDocs,
       getDoc,
       setDoc,
+      updateDoc,
       serverTimestamp,
       query,
       orderBy
@@ -1250,6 +1329,9 @@
              </div>`
           : `<span class="muted">Not generated</span>`;
 
+        const statusActionLabel = b.status === "suspended" ? "Activate" : "Suspend";
+        const statusActionClass = b.status === "suspended" ? "btn-mini-ok" : "btn-mini-danger";
+
         tr.innerHTML = `
           <td>
             <div style="display:flex;flex-direction:column;gap:2px;">
@@ -1272,9 +1354,14 @@
           <td>${branchesLabel}</td>
           <td>${signupLinkHtml}</td>
           <td style="text-align:right;">
-            <button class="btn btn-ghost btn-open-brand" data-id="${b.id}">
-              Open brand dashboard
-            </button>
+            <div style="display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap;">
+              <button class="btn-mini ${statusActionClass} btn-toggle-brand" data-id="${b.id}" data-status="${b.status || "pending_setup"}">
+                ${statusActionLabel}
+              </button>
+              <button class="btn-mini btn-open-brand" data-id="${b.id}">
+                Open dashboard
+              </button>
+            </div>
           </td>
         `;
 
@@ -1298,8 +1385,32 @@
         btn.addEventListener("click", ()=>{
           const brandId = btn.dataset.id;
           if(!brandId) return;
-          // Super Admin impersonates brand dashboard
-          window.location.href = `brand-dashboard.html?brand=${encodeURIComponent(brandId)}&impersonate=1`;
+          window.location.href = `${BRAND_PORTAL_PATH}?brand=${encodeURIComponent(brandId)}&impersonate=1`;
+        });
+      });
+
+      qsa(".btn-toggle-brand").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const brandId = btn.dataset.id;
+          const currentStatus = btn.dataset.status || "pending_setup";
+          if(!brandId) return;
+
+          const newStatus = currentStatus === "suspended" ? "active" : "suspended";
+          try{
+            btn.disabled = true;
+            const brandRef = doc(db,"brands",brandId);
+            await updateDoc(brandRef,{
+              status:newStatus,
+              isActive:newStatus === "active"
+            });
+            await loadBrands();
+            await loadPlatformStats();
+          }catch(err){
+            console.error("Error updating brand status", err);
+            alert("Failed to update brand status.");
+          }finally{
+            btn.disabled = false;
+          }
         });
       });
     }
@@ -1368,7 +1479,7 @@
         const brandId = doc(collection(db,"brands")).id;
         const token = randomToken();
 
-        const signupLink = `${BASE_URL}/brand-signup.html?brand=${encodeURIComponent(brandId)}&token=${encodeURIComponent(token)}`;
+        const signupLink = `${BASE_URL}${BRAND_PORTAL_PATH}?brand=${encodeURIComponent(brandId)}&token=${encodeURIComponent(token)}`;
 
         const brandDocRef = doc(db,"brands",brandId);
         await setDoc(brandDocRef,{
@@ -1377,6 +1488,7 @@
           status:"pending_setup",
           isActive:true,
           ownerUserId:null,
+          ownerEmail:null,
           createdAt:serverTimestamp(),
           signupToken:token,
           signupLink,
@@ -1420,7 +1532,7 @@
 
       if(filtered.length === 0){
         usersTbody.innerHTML = `
-          <tr><td colspan="5">
+          <tr><td colspan="6">
             <div class="empty-state">
               ${allUsers.length === 0
                 ? "No users found yet."
@@ -1441,6 +1553,9 @@
         let statusClass = "status-active";
         let statusLabel = "Active";
         if(u.status === "suspended"){ statusClass = "status-suspended"; statusLabel = "Suspended"; }
+
+        const statusActionLabel = u.status === "suspended" ? "Activate" : "Suspend";
+        const statusActionClass = u.status === "suspended" ? "btn-mini-ok" : "btn-mini-danger";
 
         tr.innerHTML = `
           <td>
@@ -1467,20 +1582,48 @@
           <td>
             <span class="muted">${createdStr || "—"}</span>
           </td>
+          <td>
+            <button class="btn-mini ${statusActionClass} btn-toggle-user" data-id="${u.id}" data-status="${u.status || "active"}">
+              ${statusActionLabel}
+            </button>
+          </td>
         `;
 
         usersTbody.appendChild(tr);
       }
+
+      qsa(".btn-toggle-user").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const userId = btn.dataset.id;
+          const currentStatus = btn.dataset.status || "active";
+          if(!userId) return;
+          const newStatus = currentStatus === "suspended" ? "active" : "suspended";
+          try{
+            btn.disabled = true;
+            const userRef = doc(db,"users",userId);
+            await updateDoc(userRef,{
+              status:newStatus,
+              updatedAt: serverTimestamp()
+            });
+            await loadUsers();
+            await loadPlatformStats();
+          }catch(err){
+            console.error("Error updating user status", err);
+            alert("Failed to update user status.");
+          }finally{
+            btn.disabled = false;
+          }
+        });
+      });
     }
 
     async function loadUsers(){
       try{
         usersTbody.innerHTML = `
-          <tr><td colspan="5">
+          <tr><td colspan="6">
             <div class="empty-state">Loading users…</div>
           </td></tr>`;
 
-        // Read users from `users` collection
         const usersRef = collection(db,"users");
         const snap = await getDocs(usersRef);
 
@@ -1504,7 +1647,7 @@
       }catch(err){
         console.error("Error loading users", err);
         usersTbody.innerHTML = `
-          <tr><td colspan="5">
+          <tr><td colspan="6">
             <div class="empty-state">
               Error loading users. Check console for details.
             </div>
@@ -1642,73 +1785,100 @@
       appShell.style.display = "flex";
     }
 
-    newBrandBtn.addEventListener("click", showModal);
-    modalCloseBtn.addEventListener("click", hideModal);
-    modalCancelBtn.addEventListener("click", hideModal);
-    modalCreateBtn.addEventListener("click", createBrandShell);
+    // Event bindings
+    if(newBrandBtn){
+      newBrandBtn.addEventListener("click", showModal);
+    }
+    if(modalCloseBtn){
+      modalCloseBtn.addEventListener("click", hideModal);
+    }
+    if(modalCancelBtn){
+      modalCancelBtn.addEventListener("click", hideModal);
+    }
+    if(modalCreateBtn){
+      modalCreateBtn.addEventListener("click", createBrandShell);
+    }
 
-    modalBackdrop.addEventListener("click",(e)=>{
-      if(e.target === modalBackdrop) hideModal();
-    });
+    if(modalBackdrop){
+      modalBackdrop.addEventListener("click",(e)=>{
+        if(e.target === modalBackdrop) hideModal();
+      });
+    }
 
-    searchInput.addEventListener("input", ()=>{
-      renderBrands(searchInput.value);
-    });
+    if(searchInput){
+      searchInput.addEventListener("input", ()=>{
+        renderBrands(searchInput.value);
+      });
+    }
 
-    refreshBtn.addEventListener("click", ()=>{
-      loadBrands().then(loadPlatformStats);
-    });
+    if(refreshBtn){
+      refreshBtn.addEventListener("click", ()=>{
+        loadBrands().then(loadPlatformStats);
+      });
+    }
 
-    usersSearchInput.addEventListener("input", ()=>{
-      renderUsers(usersSearchInput.value);
-    });
+    if(usersSearchInput){
+      usersSearchInput.addEventListener("input", ()=>{
+        renderUsers(usersSearchInput.value);
+      });
+    }
 
-    usersRefreshBtn.addEventListener("click", ()=>{
-      loadUsers().then(loadPlatformStats);
-    });
+    if(usersRefreshBtn){
+      usersRefreshBtn.addEventListener("click", ()=>{
+        loadUsers().then(loadPlatformStats);
+      });
+    }
 
-    saveSettingsBtn.addEventListener("click", savePlatformSettings);
+    if(saveSettingsBtn){
+      saveSettingsBtn.addEventListener("click", savePlatformSettings);
+    }
 
-    logoFileInput.addEventListener("change", ()=>{
-      const file = logoFileInput.files?.[0];
-      if(file){
-        uploadLogo(file);
-      }
-    });
+    if(logoFileInput){
+      logoFileInput.addEventListener("change", ()=>{
+        const file = logoFileInput.files?.[0];
+        if(file){
+          uploadLogo(file);
+        }
+      });
+    }
 
-    logoutBtn.addEventListener("click", async ()=>{
-      try{
-        await signOut(auth);
-      }catch(e){
-        console.error("Error during logout", e);
-      }
-    });
+    if(logoutBtn){
+      logoutBtn.addEventListener("click", async ()=>{
+        try{
+          await signOut(auth);
+        }catch(e){
+          console.error("Error during logout", e);
+        }
+      });
+    }
 
-    loginBtn.addEventListener("click", async ()=>{
-      loginErrorEl.style.display = "none";
-      loginErrorEl.textContent = "";
-      const email = loginEmailInput.value.trim();
-      const pass = loginPasswordInput.value;
+    if(loginBtn){
+      loginBtn.addEventListener("click", async ()=>{
+        loginErrorEl.style.display = "none";
+        loginErrorEl.textContent = "";
+        const email = loginEmailInput.value.trim();
+        const pass = loginPasswordInput.value;
 
-      if(!email || !pass){
-        loginErrorEl.textContent = "Please enter email and password.";
-        loginErrorEl.style.display = "block";
-        return;
-      }
+        if(!email || !pass){
+          loginErrorEl.textContent = "Please enter email and password.";
+          loginErrorEl.style.display = "block";
+          return;
+        }
 
-      try{
-        loginBtn.disabled = true;
-        loginBtn.textContent = "Logging in…";
-        await signInWithEmailAndPassword(auth, email, pass);
-      }catch(err){
-        console.error("Login error", err);
-        loginErrorEl.textContent = "Invalid email or password.";
-        loginErrorEl.style.display = "block";
-      }finally{
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Login";
-      }
-    });
+        try{
+          loginBtn.disabled = true;
+          loginBtn.textContent = "Logging in…";
+          await signInWithEmailAndPassword(auth, email, pass);
+        }catch(err){
+          console.error("Login error", err);
+          loginErrorEl.textContent = "Invalid email or password.";
+          loginErrorEl.style.display = "block";
+        }finally{
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login";
+        }
+      });
+    }
 
     onAuthStateChanged(auth, async (user)=>{
       if(!user){
@@ -1739,7 +1909,6 @@
         }
 
         if(!isSuperAdmin){
-          // Not allowed to access
           await signOut(auth);
           loginErrorEl.textContent = "You do not have permission to access the Super Admin panel.";
           loginErrorEl.style.display = "block";
@@ -1747,7 +1916,6 @@
           return;
         }
 
-        // Allowed
         saNameEl.textContent = displayName;
         saInitialsEl.textContent = initialsFromString(displayName) || initialsFromEmail(user.email || "");
 

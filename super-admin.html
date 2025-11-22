@@ -1,0 +1,1535 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Luma Store OS — Super Admin</title>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg:#f3f4f6;
+      --bg-soft:#e5e7eb;
+      --panel:#ffffff;
+      --panel-soft:#f9fafb;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --accent-soft:#dbeafe;
+      --accent-strong:#1d4ed8;
+      --danger:#ef4444;
+      --radius:16px;
+      --shadow:0 18px 40px rgba(15,23,42,.1);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{
+      height:100%;
+      font-family:"Montserrat", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+    }
+    body{
+      display:flex;
+      min-height:100vh;
+    }
+
+    /* Layout */
+    .sidebar{
+      width:260px;
+      background:#ffffff;
+      border-right:1px solid var(--border);
+      display:flex;
+      flex-direction:column;
+      padding:20px 18px;
+    }
+    .brand-mark{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:24px;
+    }
+    .brand-logo{
+      width:32px;height:32px;border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#a855f7);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;font-size:16px;
+    }
+    .brand-text-title{
+      font-size:16px;font-weight:700;
+    }
+    .brand-text-sub{
+      font-size:11px;color:var(--muted);
+    }
+
+    .nav-section-title{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      color:var(--muted);
+      margin:8px 0 4px;
+    }
+    .nav-list{
+      list-style:none;
+      margin:0;padding:0;
+    }
+    .nav-item{
+      border-radius:999px;
+      padding:9px 12px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color:var(--muted);
+      cursor:pointer;
+      margin-bottom:4px;
+      transition:background .15s ease,color .15s ease;
+    }
+    .nav-item span.icon{
+      width:20px;
+      text-align:center;
+      font-size:14px;
+    }
+    .nav-item.active{
+      background:var(--accent-soft);
+      color:var(--accent-strong);
+      font-weight:600;
+    }
+    .nav-item:hover:not(.active){
+      background:#f3f4ff;
+      color:var(--accent-strong);
+    }
+
+    .sidebar-footer{
+      margin-top:auto;
+      font-size:11px;
+      color:var(--muted);
+      border-top:1px solid var(--border);
+      padding-top:10px;
+    }
+
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      padding:20px 22px;
+      gap:14px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .page-title{
+      font-size:20px;
+      font-weight:700;
+    }
+    .page-subtitle{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+    .user-actions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .user-chip{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:var(--panel);
+      border-radius:999px;
+      padding:6px 10px;
+      border:1px solid var(--border);
+    }
+    .user-chip-initials{
+      width:28px;height:28px;border-radius:999px;
+      background:var(--accent-soft);
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;font-weight:600;color:var(--accent-strong);
+    }
+    .user-chip-text{
+      display:flex;
+      flex-direction:column;
+    }
+    .user-chip-name{
+      font-size:12px;font-weight:600;
+    }
+    .user-chip-role{
+      font-size:10px;color:var(--muted);
+    }
+
+    .content-area{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .toolbar-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .toolbar-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      font-size:11px;
+      padding:4px 9px;
+      border-radius:999px;
+      background:var(--panel-soft);
+      color:var(--muted);
+      border:1px solid var(--border);
+    }
+    .search-input{
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--panel);
+      padding:7px 10px;
+      font-size:12px;
+      min-width:200px;
+    }
+    .search-input:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px var(--accent-soft);
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      border-radius:999px;
+      border:none;
+      padding:7px 12px;
+      font-size:12px;
+      font-weight:600;
+      cursor:pointer;
+      white-space:nowrap;
+      transition:background .15s ease, box-shadow .15s ease, transform .05s ease;
+    }
+    .btn-primary{
+      background:var(--accent);
+      color:#fff;
+      box-shadow:0 10px 25px rgba(37,99,235,.25);
+    }
+    .btn-primary:hover{
+      background:var(--accent-strong);
+      transform:translateY(-1px);
+      box-shadow:0 14px 30px rgba(37,99,235,.25);
+    }
+    .btn-ghost{
+      background:transparent;
+      color:var(--accent-strong);
+      border:1px solid var(--accent-soft);
+    }
+    .btn-ghost:hover{
+      background:var(--accent-soft);
+    }
+    .btn-icon{
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--panel);
+      font-size:13px;
+      cursor:pointer;
+    }
+    .btn-icon:hover{
+      background:var(--panel-soft);
+    }
+    .btn-danger{
+      background:var(--danger);
+      color:#fff;
+      border:none;
+    }
+    .btn-danger:hover{
+      filter:brightness(0.95);
+    }
+
+    .card{
+      background:var(--panel);
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      padding:14px 14px;
+    }
+
+    .card-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{
+      font-size:14px;font-weight:600;
+    }
+    .card-subtitle{
+      font-size:11px;color:var(--muted);
+      margin-top:2px;
+    }
+
+    .table-wrapper{
+      border-radius:calc(var(--radius) - 4px);
+      border:1px solid var(--border);
+      overflow:hidden;
+      background:var(--panel-soft);
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+    }
+    thead{
+      background:#f3f4f6;
+    }
+    th,td{
+      padding:7px 9px;
+      text-align:left;
+      border-bottom:1px solid var(--border);
+      vertical-align:middle;
+    }
+    th{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+    }
+    tbody tr:hover{
+      background:#f9fafb;
+    }
+    .status-pill{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+    }
+    .status-active{
+      background:#dcfce7;
+      color:#16a34a;
+    }
+    .status-pending{
+      background:#fef9c3;
+      color:#ca8a04;
+    }
+    .status-suspended{
+      background:#fee2e2;
+      color:#b91c1c;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .signup-link-box{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .signup-link-input{
+      flex:1;
+      padding:4px 6px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#f9fafb;
+      font-size:11px;
+      color:var(--muted);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .badge{
+      font-size:10px;
+      padding:2px 6px;
+      border-radius:999px;
+      background:#e5e7eb;
+      color:#374151;
+    }
+
+    .empty-state{
+      text-align:center;
+      padding:20px 10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    /* Modal */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.35);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+    }
+    .modal-backdrop.show{
+      display:flex;
+    }
+    .modal{
+      width:100%;
+      max-width:420px;
+      background:var(--panel);
+      border-radius:18px;
+      border:1px solid var(--border);
+      box-shadow:0 22px 55px rgba(15,23,42,.35);
+      padding:16px 16px 14px;
+    }
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .modal-title{
+      font-size:15px;font-weight:600;
+    }
+    .modal-subtitle{
+      font-size:11px;color:var(--muted);
+      margin-top:2px;
+    }
+    .modal-close{
+      border:none;background:transparent;
+      cursor:pointer;
+      font-size:16px;
+      color:var(--muted);
+    }
+
+    .field{
+      margin-bottom:9px;
+    }
+    .field-label{
+      font-size:11px;
+      margin-bottom:3px;
+      color:#4b5563;
+    }
+    .field-input, .field-select, .field-textarea{
+      width:100%;
+      padding:7px 9px;
+      border-radius:9px;
+      border:1px solid var(--border);
+      background:var(--panel-soft);
+      font-size:12px;
+      resize:vertical;
+    }
+    .field-input:focus, .field-select:focus, .field-textarea:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px var(--accent-soft);
+    }
+    .field-hint{
+      font-size:10px;color:var(--muted);margin-top:2px;
+    }
+
+    .modal-footer{
+      display:flex;
+      justify-content:flex-end;
+      gap:6px;
+      margin-top:8px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      font-size:11px;
+      background:var(--panel-soft);
+      border-radius:999px;
+      padding:3px 7px;
+      border:1px solid var(--border);
+    }
+
+    .pill-small{
+      font-size:10px;
+      padding:2px 6px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#4f46e5;
+    }
+
+    .alert{
+      font-size:11px;
+      padding:6px 9px;
+      border-radius:9px;
+      margin-bottom:8px;
+    }
+    .alert-info{
+      background:#eff6ff;
+      color:#1d4ed8;
+      border:1px solid #bfdbfe;
+    }
+    .alert-error{
+      background:#fef2f2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+    .alert-success{
+      background:#ecfdf5;
+      color:#15803d;
+      border:1px solid #bbf7d0;
+    }
+
+    .small-label{
+      font-size:10px;color:var(--muted);
+    }
+
+    .toggle-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .toggle-row-left{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .toggle-input{
+      width:36px;
+      height:18px;
+      position:relative;
+      appearance:none;
+      background:#e5e7eb;
+      border-radius:999px;
+      outline:none;
+      cursor:pointer;
+      transition:background .15s ease;
+    }
+    .toggle-input::before{
+      content:"";
+      position:absolute;
+      top:2px;
+      left:2px;
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      background:#fff;
+      box-shadow:0 1px 2px rgba(0,0,0,.2);
+      transition:transform .15s ease;
+    }
+    .toggle-input:checked{
+      background:#22c55e;
+    }
+    .toggle-input:checked::before{
+      transform:translateX(18px);
+    }
+
+    .logo-preview-box{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:8px;
+      border-radius:10px;
+      border:1px dashed var(--border);
+      background:var(--panel-soft);
+      min-height:52px;
+    }
+    .logo-preview-img{
+      max-height:40px;
+      max-width:140px;
+      object-fit:contain;
+    }
+    .logo-preview-placeholder{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .settings-footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .settings-status{
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    @media(max-width:900px){
+      .sidebar{display:none;}
+      .main{padding:14px 12px;}
+      .topbar{flex-direction:column;align-items:flex-start;}
+      .toolbar{flex-direction:column;align-items:flex-start;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand-mark">
+      <div class="brand-logo">L</div>
+      <div>
+        <div class="brand-text-title">Luma Store OS</div>
+        <div class="brand-text-sub">Super Admin Panel</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="nav-section-title">Navigation</div>
+      <ul class="nav-list">
+        <li class="nav-item active" data-view="brands">
+          <span class="icon">🏬</span>
+          <span>Brands</span>
+        </li>
+        <li class="nav-item" data-view="users">
+          <span class="icon">👥</span>
+          <span>Platform users</span>
+        </li>
+        <li class="nav-item" data-view="settings">
+          <span class="icon">⚙️</span>
+          <span>Platform settings</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar-footer">
+      <div>Logged in as:</div>
+      <div id="sa-email" style="font-size:11px;font-weight:600;">—</div>
+      <div style="margin-top:4px;">Role: <span class="badge">Super Admin</span></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="page-title" id="page-title">Brands</div>
+        <div class="page-subtitle" id="page-subtitle">
+          Create, onboard and manage all brands on the platform.
+        </div>
+      </div>
+      <div class="user-actions">
+        <div class="user-chip" id="user-chip">
+          <div class="user-chip-initials" id="sa-initials">SA</div>
+          <div class="user-chip-text">
+            <div class="user-chip-name" id="sa-name">Super Admin</div>
+            <div class="user-chip-role">Luma Platform</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-ghost">Logout</button>
+      </div>
+    </header>
+
+    <!-- BRANDS VIEW -->
+    <section id="view-brands" class="content-area">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <span class="pill">All brands</span>
+          <span class="chip">
+            <span class="small-label">Total brands:</span>
+            <strong id="brand-count">0</strong>
+          </span>
+        </div>
+        <div class="toolbar-right">
+          <input id="search-input" class="search-input" placeholder="Search brand or owner…"/>
+          <button id="btn-refresh" class="btn-icon" title="Refresh">
+            ⟳
+          </button>
+          <button id="btn-new-brand" class="btn btn-primary">
+            + New brand
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Brands list</div>
+            <div class="card-subtitle">
+              Click “Open brand dashboard” to impersonate the brand owner view.
+            </div>
+          </div>
+          <div class="pill-small">Signup links are visible only to Super Admin.</div>
+        </div>
+
+        <div id="brands-table-container" class="table-wrapper">
+          <table>
+            <thead>
+            <tr>
+              <th>Brand</th>
+              <th>Owner</th>
+              <th>Status</th>
+              <th>Branches</th>
+              <th>Signup link</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="brands-tbody">
+            <tr><td colspan="6">
+              <div class="empty-state">Loading brands…</div>
+            </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLATFORM USERS VIEW -->
+    <section id="view-users" class="content-area" style="display:none;">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <span class="pill">All platform users</span>
+          <span class="chip">
+            <span class="small-label">Total users:</span>
+            <strong id="users-count">0</strong>
+          </span>
+        </div>
+        <div class="toolbar-right">
+          <input id="users-search-input" class="search-input" placeholder="Search name, email or brand…"/>
+          <button id="btn-users-refresh" class="btn-icon" title="Refresh">
+            ⟳
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Platform users</div>
+            <div class="card-subtitle">
+              View all users across all brands, including brand owners, branch managers, and POS cashiers.
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Brand / Branch</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+            </thead>
+            <tbody id="users-tbody">
+            <tr><td colspan="5">
+              <div class="empty-state">Loading users…</div>
+            </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS VIEW -->
+    <section id="view-settings" class="content-area" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Platform defaults & branding</div>
+            <div class="card-subtitle">
+              Control global settings that apply to all brands, plus Luma branding for POS and dashboards.
+            </div>
+          </div>
+        </div>
+
+        <div id="settings-alert-container" style="margin-bottom:8px;"></div>
+
+        <!-- Toggles -->
+        <div class="field">
+          <div class="field-label">Receipts defaults</div>
+
+          <div class="toggle-row">
+            <div class="toggle-row-left">
+              <div style="font-size:12px;font-weight:500;">Email receipts enabled by default</div>
+              <div class="small-label">
+                When a new brand or branch is created, email receipts will be turned on by default.
+              </div>
+            </div>
+            <input type="checkbox" id="setting-email-default" class="toggle-input"/>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-row-left">
+              <div style="font-size:12px;font-weight:500;">WhatsApp receipts enabled by default</div>
+              <div class="small-label">
+                When a new brand or branch is created, WhatsApp receipts will be turned on by default.
+              </div>
+            </div>
+            <input type="checkbox" id="setting-whatsapp-default" class="toggle-input"/>
+          </div>
+        </div>
+
+        <!-- Global note -->
+        <div class="field">
+          <div class="field-label">Global note for brand owners</div>
+          <textarea id="setting-global-note" class="field-textarea" rows="3"
+                    placeholder="Example: System will be down for maintenance on Friday at 3 AM Cairo time."></textarea>
+          <div class="field-hint">
+            This message will appear in the brand owner portal for all brands, so you can announce maintenance or news.
+          </div>
+        </div>
+
+        <!-- Logo upload -->
+        <div class="field">
+          <div class="field-label">Luma logo (for POS & dashboards)</div>
+          <input type="file" id="setting-logo-file" accept="image/*" class="field-input"/>
+          <div class="field-hint">
+            Upload the official Luma logo. It will be used on POS screens, brand dashboards, and emails (where supported).
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Current logo preview</div>
+          <div class="logo-preview-box">
+            <img id="logo-preview-img" class="logo-preview-img" style="display:none;" alt="Luma logo preview"/>
+            <span id="logo-preview-placeholder" class="logo-preview-placeholder">
+              No logo uploaded yet.
+            </span>
+          </div>
+        </div>
+
+        <div class="settings-footer">
+          <div class="settings-status" id="settings-status-text">Settings not saved yet.</div>
+          <button id="btn-save-settings" class="btn btn-primary">Save settings</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Create Brand Modal -->
+  <div id="modal-backdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Create new brand</div>
+          <div class="modal-subtitle">
+            This will create a brand shell with a signup link you can send to the owner.
+          </div>
+        </div>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+
+      <div id="modal-alert-container"></div>
+
+      <div class="field">
+        <div class="field-label">Brand name</div>
+        <input id="field-brand-name" class="field-input" placeholder="Example: Zed Outfitters"/>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Country (optional)</div>
+        <input id="field-brand-country" class="field-input" placeholder="Example: Egypt"/>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Default branch name</div>
+        <input id="field-branch-name" class="field-input" placeholder="Example: Main Store"/>
+        <div class="field-hint">You can add more branches later from the brand dashboard.</div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Branch code (optional)</div>
+        <input id="field-branch-code" class="field-input" placeholder="Example: MAIN"/>
+        <div class="field-hint">
+          Used as a prefix if you ever want order IDs like <strong>2401-52</strong> per branch per day.
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        After you create the brand, a <strong>signup link</strong> will appear in the brands table.
+        Send that link to the brand owner via WhatsApp or email.
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="modal-create-btn">Create brand</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase + Super Admin Logic -->
+  <script type="module">
+    // Use current origin as base for signup links so they're always valid on this domain.
+    const BASE_URL = window.location.origin;
+
+    // --- Firebase init ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      getDocs,
+      getDoc,
+      setDoc,
+      serverTimestamp,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getStorage,
+      ref as storageRef,
+      uploadBytes,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
+      authDomain: "events-339ce.firebaseapp.com",
+      projectId: "events-339ce",
+      storageBucket: "events-339ce.firebasestorage.app",
+      messagingSenderId: "175601544315",
+      appId: "1:175601544315:web:00c94b4affa972b3a286de"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    // DOM helpers
+    const qs = (sel) => document.querySelector(sel);
+    const qsa = (sel) => Array.from(document.querySelectorAll(sel));
+
+    // Views
+    const viewBrands = qs("#view-brands");
+    const viewUsers = qs("#view-users");
+    const viewSettings = qs("#view-settings");
+    const pageTitleEl = qs("#page-title");
+    const pageSubtitleEl = qs("#page-subtitle");
+    const navItems = qsa(".nav-item");
+
+    // Common user display
+    const saEmailEl = qs("#sa-email");
+    const saNameEl = qs("#sa-name");
+    const saInitialsEl = qs("#sa-initials");
+    const logoutBtn = qs("#btn-logout");
+
+    // Brands DOM
+    const brandsTbody = qs("#brands-tbody");
+    const brandCountEl = qs("#brand-count");
+    const searchInput = qs("#search-input");
+    const refreshBtn = qs("#btn-refresh");
+    const newBrandBtn = qs("#btn-new-brand");
+
+    const modalBackdrop = qs("#modal-backdrop");
+    const modalCloseBtn = qs("#modal-close-btn");
+    const modalCancelBtn = qs("#modal-cancel-btn");
+    const modalCreateBtn = qs("#modal-create-btn");
+    const modalAlertContainer = qs("#modal-alert-container");
+
+    const fieldBrandName = qs("#field-brand-name");
+    const fieldBrandCountry = qs("#field-brand-country");
+    const fieldBranchName = qs("#field-branch-name");
+    const fieldBranchCode = qs("#field-branch-code");
+
+    // Users DOM
+    const usersTbody = qs("#users-tbody");
+    const usersCountEl = qs("#users-count");
+    const usersSearchInput = qs("#users-search-input");
+    const usersRefreshBtn = qs("#btn-users-refresh");
+
+    // Settings DOM
+    const emailDefaultToggle = qs("#setting-email-default");
+    const whatsappDefaultToggle = qs("#setting-whatsapp-default");
+    const globalNoteInput = qs("#setting-global-note");
+    const logoFileInput = qs("#setting-logo-file");
+    const logoPreviewImg = qs("#logo-preview-img");
+    const logoPreviewPlaceholder = qs("#logo-preview-placeholder");
+    const saveSettingsBtn = qs("#btn-save-settings");
+    const settingsStatusText = qs("#settings-status-text");
+    const settingsAlertContainer = qs("#settings-alert-container");
+
+    let allBrands = [];
+    let allUsers = [];
+    let currentUser = null;
+    let isSuperAdmin = false;
+
+    const platformSettingsRef = doc(db,"platformSettings","globalConfig");
+
+    function initialsFromEmail(email){
+      if(!email) return "SA";
+      const namePart = email.split("@")[0];
+      if(!namePart) return "SA";
+      const pieces = namePart.split(/[.\-_]/).filter(Boolean);
+      if(pieces.length === 0) return namePart.slice(0,2).toUpperCase();
+      return (pieces[0][0] + (pieces[1]?.[0] || "")).toUpperCase();
+    }
+
+    // ----- VIEW SWITCHING -----
+    function setView(view){
+      // Sidebar active state
+      navItems.forEach(item=>{
+        const v = item.getAttribute("data-view");
+        if(v === view) item.classList.add("active");
+        else item.classList.remove("active");
+      });
+
+      // Show/hide sections
+      viewBrands.style.display = (view === "brands") ? "flex" : "none";
+      viewUsers.style.display = (view === "users") ? "flex" : "none";
+      viewSettings.style.display = (view === "settings") ? "flex" : "none";
+
+      // Title & subtitle
+      if(view === "brands"){
+        pageTitleEl.textContent = "Brands";
+        pageSubtitleEl.textContent = "Create, onboard and manage all brands on the platform.";
+      }else if(view === "users"){
+        pageTitleEl.textContent = "Platform users";
+        pageSubtitleEl.textContent = "See all users across all brands, including brand owners, managers and POS cashiers.";
+      }else if(view === "settings"){
+        pageTitleEl.textContent = "Platform settings";
+        pageSubtitleEl.textContent = "Control global defaults and Luma branding for all brands.";
+      }
+    }
+
+    navItems.forEach(item=>{
+      item.addEventListener("click", ()=>{
+        const view = item.getAttribute("data-view");
+        setView(view);
+      });
+    });
+
+    // ----- MODAL HELPERS -----
+    function showModal(){
+      modalAlertContainer.innerHTML = "";
+      fieldBrandName.value = "";
+      fieldBrandCountry.value = "";
+      fieldBranchName.value = "Main Branch";
+      fieldBranchCode.value = "";
+      modalBackdrop.classList.add("show");
+      fieldBrandName.focus();
+    }
+    function hideModal(){
+      modalBackdrop.classList.remove("show");
+    }
+
+    function showModalAlert(message, type="error"){
+      const cls = type === "error" ? "alert-error" : "alert-info";
+      modalAlertContainer.innerHTML =
+        `<div class="alert ${cls}">${message}</div>`;
+    }
+
+    // ----- BRANDS RENDERING -----
+    function renderBrands(filterText=""){
+      const ft = filterText.trim().toLowerCase();
+      brandsTbody.innerHTML = "";
+
+      const filtered = allBrands.filter(b=>{
+        if(!ft) return true;
+        const hay = `${b.name||""} ${b.ownerEmail||""}`.toLowerCase();
+        return hay.includes(ft);
+      });
+
+      brandCountEl.textContent = allBrands.length.toString();
+
+      if(filtered.length === 0){
+        brandsTbody.innerHTML = `
+          <tr><td colspan="6">
+            <div class="empty-state">
+              ${allBrands.length === 0
+                ? "No brands found yet. Create the first brand to get started."
+                : "No brands match your search."}
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      for(const b of filtered){
+        const tr = document.createElement("tr");
+
+        const createdDate = b.createdAt ? new Date(b.createdAt.seconds*1000) : null;
+        const createdStr = createdDate
+          ? createdDate.toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"})
+          : "";
+
+        const branchesLabel = b.branchCount != null
+          ? `<span>${b.branchCount}</span>`
+          : `<span class="muted">—</span>`;
+
+        let statusClass = "status-pending";
+        let statusLabel = "Pending setup";
+        if(b.status === "active"){ statusClass="status-active"; statusLabel="Active"; }
+        else if(b.status === "suspended"){ statusClass="status-suspended"; statusLabel="Suspended"; }
+
+        const signupLinkHtml = b.signupLink
+          ? `<div class="signup-link-box">
+               <input class="signup-link-input" value="${b.signupLink}" readonly/>
+               <button class="btn-icon btn-copy-link" data-id="${b.id}" title="Copy link">📋</button>
+             </div>`
+          : `<span class="muted">Not generated</span>`;
+
+        tr.innerHTML = `
+          <td>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-weight:600;font-size:12px;">${b.name || "Untitled brand"}</span>
+              <span class="muted">${createdStr || ""}</span>
+            </div>
+          </td>
+          <td>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:12px;">${b.ownerEmail || "<span class='muted'>No owner yet</span>"}</span>
+              <span class="muted">${b.country || ""}</span>
+            </div>
+          </td>
+          <td>
+            <span class="status-pill ${statusClass}">
+              <span style="font-size:10px;">●</span>
+              <span>${statusLabel}</span>
+            </span>
+          </td>
+          <td>${branchesLabel}</td>
+          <td>${signupLinkHtml}</td>
+          <td style="text-align:right;">
+            <button class="btn btn-ghost btn-open-brand" data-id="${b.id}">
+              Open brand dashboard
+            </button>
+          </td>
+        `;
+
+        brandsTbody.appendChild(tr);
+      }
+
+      // Wire copy buttons
+      qsa(".btn-copy-link").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const tr = btn.closest("tr");
+          const input = tr.querySelector(".signup-link-input");
+          if(!input) return;
+          input.select();
+          input.setSelectionRange(0,9999);
+          navigator.clipboard.writeText(input.value).catch(()=>{});
+          btn.textContent = "✓";
+          setTimeout(()=>{btn.textContent="📋";}, 900);
+        });
+      });
+
+      // Wire open brand dashboard buttons
+      qsa(".btn-open-brand").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const brandId = btn.dataset.id;
+          if(!brandId) return;
+          // Redirect to brand-owner dashboard (you will build this page)
+          window.location.href = `brand-dashboard.html?brand=${encodeURIComponent(brandId)}`;
+        });
+      });
+    }
+
+    async function loadBrands(){
+      try{
+        brandsTbody.innerHTML = `
+          <tr><td colspan="6">
+            <div class="empty-state">Loading brands…</div>
+          </td></tr>`;
+
+        const brandsRef = collection(db,"brands");
+        const qBrands = query(brandsRef, orderBy("createdAt","desc"));
+        const snap = await getDocs(qBrands);
+
+        const list = [];
+        snap.forEach(docSnap=>{
+          const data = docSnap.data() || {};
+          list.push({
+            id: docSnap.id,
+            name: data.name || "",
+            ownerEmail: data.ownerEmail || "",
+            country: data.country || "",
+            status: data.status || "pending_setup",
+            branchCount: data.branchCount ?? null,
+            signupLink: data.signupLink || "",
+            createdAt: data.createdAt || null
+          });
+        });
+
+        allBrands = list;
+        renderBrands(searchInput.value);
+      }catch(err){
+        console.error("Error loading brands", err);
+        brandsTbody.innerHTML = `
+          <tr><td colspan="6">
+            <div class="empty-state">
+              Error loading brands. Check console for details.
+            </div>
+          </td></tr>`;
+      }
+    }
+
+    function randomToken(){
+      if(window.crypto?.randomUUID){
+        return crypto.randomUUID().replace(/-/g,"");
+      }
+      return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    }
+
+    async function createBrandShell(){
+      const name = fieldBrandName.value.trim();
+      const country = fieldBrandCountry.value.trim();
+      const branchName = fieldBranchName.value.trim() || "Main Branch";
+      const branchCode = fieldBranchCode.value.trim().toUpperCase();
+
+      if(!name){
+        showModalAlert("Please enter a brand name.","error");
+        return;
+      }
+
+      try{
+        modalCreateBtn.disabled = true;
+        modalCreateBtn.textContent = "Creating…";
+
+        const brandId = doc(collection(db,"brands")).id;
+        const token = randomToken();
+
+        const signupLink = `${BASE_URL}/brand-signup.html?brand=${encodeURIComponent(brandId)}&token=${encodeURIComponent(token)}`;
+
+        const brandDocRef = doc(db,"brands",brandId);
+        await setDoc(brandDocRef,{
+          name,
+          country: country || null,
+          status:"pending_setup",
+          isActive:true,
+          ownerUserId:null,
+          createdAt:serverTimestamp(),
+          signupToken:token,
+          signupLink,
+          branchCount:1,
+          defaultCurrency:null,
+          defaultTaxPercent:null
+        });
+
+        const branchId = doc(collection(brandDocRef,"branches")).id;
+        const branchDocRef = doc(brandDocRef,"branches",branchId);
+        await setDoc(branchDocRef,{
+          name:branchName,
+          code:branchCode || null,
+          location:null,
+          isActive:true,
+          createdAt:serverTimestamp()
+        });
+
+        hideModal();
+        await loadBrands();
+      }catch(err){
+        console.error("Error creating brand", err);
+        showModalAlert("Failed to create brand. Please try again.","error");
+      }finally{
+        modalCreateBtn.disabled = false;
+        modalCreateBtn.textContent = "Create brand";
+      }
+    }
+
+    // ----- PLATFORM USERS -----
+    function renderUsers(filterText=""){
+      const ft = filterText.trim().toLowerCase();
+      usersTbody.innerHTML = "";
+
+      const filtered = allUsers.filter(u=>{
+        if(!ft) return true;
+        const hay = `${u.name||""} ${u.email||""} ${u.brandName||""} ${u.branchName||""} ${u.role||""}`.toLowerCase();
+        return hay.includes(ft);
+      });
+
+      usersCountEl.textContent = allUsers.length.toString();
+
+      if(filtered.length === 0){
+        usersTbody.innerHTML = `
+          <tr><td colspan="5">
+            <div class="empty-state">
+              ${allUsers.length === 0
+                ? "No users found yet."
+                : "No users match your search."}
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      for(const u of filtered){
+        const tr = document.createElement("tr");
+
+        const createdDate = u.createdAt ? new Date(u.createdAt.seconds*1000) : null;
+        const createdStr = createdDate
+          ? createdDate.toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"})
+          : "";
+
+        let statusClass = "status-active";
+        let statusLabel = "Active";
+        if(u.status === "suspended"){ statusClass = "status-suspended"; statusLabel = "Suspended"; }
+
+        tr.innerHTML = `
+          <td>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:12px;font-weight:500;">${u.name || (u.email || "Unknown user")}</span>
+              <span class="muted">${u.email || ""}</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge">${u.role || "—"}</span>
+          </td>
+          <td>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:12px;">${u.brandName || "—"}</span>
+              <span class="muted">${u.branchName || ""}</span>
+            </div>
+          </td>
+          <td>
+            <span class="status-pill ${statusClass}">
+              <span style="font-size:10px;">●</span>
+              <span>${statusLabel}</span>
+            </span>
+          </td>
+          <td>
+            <span class="muted">${createdStr || "—"}</span>
+          </td>
+        `;
+
+        usersTbody.appendChild(tr);
+      }
+    }
+
+    async function loadUsers(){
+      try{
+        usersTbody.innerHTML = `
+          <tr><td colspan="5">
+            <div class="empty-state">Loading users…</div>
+          </td></tr>`;
+
+        const usersRef = collection(db,"platformUsers");
+        const snap = await getDocs(usersRef);
+
+        const list = [];
+        snap.forEach(docSnap=>{
+          const data = docSnap.data() || {};
+          list.push({
+            id: docSnap.id,
+            name: data.name || "",
+            email: data.email || "",
+            role: data.role || "",
+            brandName: data.brandName || data.brand || "",
+            branchName: data.branchName || data.branch || "",
+            status: data.status || "active",
+            createdAt: data.createdAt || null
+          });
+        });
+
+        allUsers = list;
+        renderUsers(usersSearchInput.value);
+      }catch(err){
+        console.error("Error loading users", err);
+        usersTbody.innerHTML = `
+          <tr><td colspan="5">
+            <div class="empty-state">
+              Error loading users. Check console for details.
+            </div>
+          </td></tr>`;
+      }
+    }
+
+    // ----- SETTINGS -----
+    function showSettingsAlert(message, type="success"){
+      const cls = type === "success" ? "alert-success"
+                 : type === "error" ? "alert-error"
+                 : "alert-info";
+      settingsAlertContainer.innerHTML = `<div class="alert ${cls}">${message}</div>`;
+      setTimeout(()=>{ settingsAlertContainer.innerHTML = ""; }, 3500);
+    }
+
+    async function loadPlatformSettings(){
+      try{
+        const snap = await getDoc(platformSettingsRef);
+        if(!snap.exists()){
+          settingsStatusText.textContent = "Using default settings. Not saved yet.";
+          logoPreviewImg.style.display = "none";
+          logoPreviewPlaceholder.style.display = "inline";
+          return;
+        }
+
+        const data = snap.data() || {};
+        emailDefaultToggle.checked = !!data.emailReceiptsDefault;
+        whatsappDefaultToggle.checked = !!data.whatsappReceiptsDefault;
+        globalNoteInput.value = data.globalNote || "";
+
+        if(data.lumaLogoUrl){
+          logoPreviewImg.src = data.lumaLogoUrl;
+          logoPreviewImg.style.display = "block";
+          logoPreviewPlaceholder.style.display = "none";
+        }else{
+          logoPreviewImg.style.display = "none";
+          logoPreviewPlaceholder.style.display = "inline";
+        }
+
+        settingsStatusText.textContent = "Settings loaded.";
+      }catch(err){
+        console.error("Error loading platform settings", err);
+        settingsStatusText.textContent = "Error loading settings. See console.";
+      }
+    }
+
+    async function savePlatformSettings(){
+      try{
+        saveSettingsBtn.disabled = true;
+        saveSettingsBtn.textContent = "Saving…";
+        settingsStatusText.textContent = "Saving settings…";
+
+        const payload = {
+          emailReceiptsDefault: !!emailDefaultToggle.checked,
+          whatsappReceiptsDefault: !!whatsappDefaultToggle.checked,
+          globalNote: globalNoteInput.value.trim(),
+          updatedAt: serverTimestamp()
+        };
+
+        await setDoc(platformSettingsRef, payload, { merge:true });
+
+        settingsStatusText.textContent = "Settings saved.";
+        showSettingsAlert("Settings saved successfully.","success");
+      }catch(err){
+        console.error("Error saving settings", err);
+        settingsStatusText.textContent = "Error saving settings.";
+        showSettingsAlert("Failed to save settings. Please try again.","error");
+      }finally{
+        saveSettingsBtn.disabled = false;
+        saveSettingsBtn.textContent = "Save settings";
+      }
+    }
+
+    async function uploadLogo(file){
+      if(!file) return;
+      try{
+        settingsStatusText.textContent = "Uploading logo…";
+
+        const refPath = "branding/luma-logo.png";
+        const fileRef = storageRef(storage, refPath);
+
+        await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(fileRef);
+
+        await setDoc(platformSettingsRef,{
+          lumaLogoUrl:url,
+          updatedAt:serverTimestamp()
+        },{merge:true});
+
+        logoPreviewImg.src = url;
+        logoPreviewImg.style.display = "block";
+        logoPreviewPlaceholder.style.display = "none";
+
+        settingsStatusText.textContent = "Logo updated.";
+        showSettingsAlert("Luma logo uploaded successfully.","success");
+      }catch(err){
+        console.error("Error uploading logo", err);
+        settingsStatusText.textContent = "Error uploading logo.";
+        showSettingsAlert("Failed to upload logo. Please try again.","error");
+      }
+    }
+
+    // ----- EVENTS -----
+    newBrandBtn.addEventListener("click", showModal);
+    modalCloseBtn.addEventListener("click", hideModal);
+    modalCancelBtn.addEventListener("click", hideModal);
+    modalCreateBtn.addEventListener("click", createBrandShell);
+
+    modalBackdrop.addEventListener("click",(e)=>{
+      if(e.target === modalBackdrop) hideModal();
+    });
+
+    searchInput.addEventListener("input", ()=>{
+      renderBrands(searchInput.value);
+    });
+
+    refreshBtn.addEventListener("click", ()=>{
+      loadBrands();
+    });
+
+    usersSearchInput.addEventListener("input", ()=>{
+      renderUsers(usersSearchInput.value);
+    });
+
+    usersRefreshBtn.addEventListener("click", ()=>{
+      loadUsers();
+    });
+
+    saveSettingsBtn.addEventListener("click", savePlatformSettings);
+
+    logoFileInput.addEventListener("change", ()=>{
+      const file = logoFileInput.files?.[0];
+      if(file){
+        uploadLogo(file);
+      }
+    });
+
+    logoutBtn.addEventListener("click", async ()=>{
+      try{
+        await signOut(auth);
+      }catch(e){
+        console.error("Error during logout", e);
+      }finally{
+        window.location.href = "login.html";
+      }
+    });
+
+    // ----- AUTH + SUPER ADMIN CHECK -----
+    onAuthStateChanged(auth, async (user)=>{
+      if(!user){
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = user;
+      saEmailEl.textContent = user.email || "Unknown";
+      saInitialsEl.textContent = initialsFromEmail(user.email || "");
+      saNameEl.textContent = user.email || "Super Admin";
+
+      try{
+        const platformUserRef = doc(db,"platformUsers",user.uid);
+        const snap = await getDoc(platformUserRef);
+        if(snap.exists()){
+          const data = snap.data();
+          if(data.role === "super_admin"){
+            isSuperAdmin = true;
+          }
+        }
+
+        if(!isSuperAdmin){
+          alert("You do not have permission to access the Super Admin panel.");
+          return;
+        }
+
+        // Load data after verifying role
+        await Promise.all([
+          loadBrands(),
+          loadUsers(),
+          loadPlatformSettings()
+        ]);
+
+        setView("brands");
+      }catch(err){
+        console.error("Error checking platform user role", err);
+        alert("Error verifying permissions. Check console.");
+      }
+    });
+  </script>
+</body>
+</html>

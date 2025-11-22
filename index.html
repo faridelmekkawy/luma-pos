@@ -12,15 +12,16 @@
       --bg:#f3f4f6;
       --panel:#ffffff;
       --panel-soft:#f9fafb;
-      --border:#e5e7eb;
       --ink:#111827;
       --muted:#6b7280;
+      --border:#e5e7eb;
       --accent:#2563eb;
       --accent-soft:#dbeafe;
       --accent-strong:#1d4ed8;
-      --radius:18px;
-      --shadow:0 20px 45px rgba(15,23,42,.12);
-      --status-live:#22c55e;
+      --radius:16px;
+      --shadow:0 18px 40px rgba(15,23,42,.12);
+      --danger:#ef4444;
+      --ok:#16a34a;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{
@@ -29,667 +30,2387 @@
       background:var(--bg);
       color:var(--ink);
     }
-    body{
-      display:flex;
-      min-height:100vh;
-    }
-    .sidebar{
-      width:240px;
-      background:#ffffff;
-      border-right:1px solid var(--border);
-      padding:18px 16px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .brand-mark{
-      display:flex;align-items:center;gap:8px;
-    }
-    .luma-logo-chip{
-      width:30px;height:30px;border-radius:999px;
-      background:linear-gradient(135deg,#2563eb,#a855f7);
-      display:flex;align-items:center;justify-content:center;
-      color:#fff;font-weight:700;font-size:16px;
-    }
-    .brand-logo-img{
-      max-height:26px;
-      max-width:120px;
-      object-fit:contain;
-    }
-    .nav-title{
-      margin-top:8px;
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:.12em;
-      color:var(--muted);
-    }
-    .nav-list{
-      list-style:none;
-      margin:0;padding:0;
-    }
-    .nav-item{
-      border-radius:999px;
-      padding:7px 10px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-size:12px;
-      color:var(--muted);
-      cursor:pointer;
-      margin-bottom:4px;
-      transition:background .15s ease,color .15s ease;
-    }
-    .nav-item span.icon{
-      width:18px;text-align:center;
-    }
-    .nav-item.active{
-      background:var(--accent-soft);
-      color:var(--accent-strong);
-      font-weight:600;
-    }
-    .nav-item:hover:not(.active){
-      background:#eef2ff;
-      color:var(--accent-strong);
-    }
-    .sidebar-footer{
-      margin-top:auto;
-      font-size:11px;
-      color:var(--muted);
-      border-top:1px solid var(--border);
-      padding-top:10px;
-    }
 
-    .main{
-      flex:1;
-      padding:18px 20px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .topbar-left{
-      display:flex;
-      flex-direction:column;
-      gap:3px;
-    }
-    .brand-name{
-      font-size:18px;font-weight:700;
-    }
-    .brand-subtitle{
-      font-size:11px;color:var(--muted);
-    }
-    .user-chip{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      background:var(--panel);
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-    }
-    .user-initials{
-      width:26px;height:26px;border-radius:999px;
-      background:var(--accent-soft);
-      display:flex;align-items:center;justify-content:center;
-      font-size:12px;font-weight:600;color:var(--accent-strong);
-    }
-    .user-text{
-      display:flex;flex-direction:column;
-    }
-    .user-name{
-      font-size:12px;font-weight:600;
-    }
-    .user-role{
-      font-size:10px;color:var(--muted);
-    }
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      border:none;
-      border-radius:999px;
-      padding:7px 12px;
-      font-size:12px;
-      font-weight:600;
-      cursor:pointer;
-      background:var(--accent);
-      color:#fff;
-      box-shadow:0 10px 25px rgba(37,99,235,.25);
-    }
-    .btn:hover{
-      background:var(--accent-strong);
-    }
-    .btn-ghost{
-      background:transparent;
-      color:var(--accent-strong);
-      border:1px solid var(--accent-soft);
-      box-shadow:none;
-    }
-    .btn-ghost:hover{
-      background:var(--accent-soft);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:2fr 1.5fr;
-      gap:12px;
-    }
-    @media(max-width:900px){
-      .sidebar{display:none;}
-      .grid{grid-template-columns:1fr;}
-      .main{padding:14px 12px;}
-      .topbar{flex-direction:column;align-items:flex-start;}
-    }
-
-    .card{
+    /* AUTH WRAPPER */
+    .auth-wrapper{
+      width:100%;
+      max-width:460px;
       background:var(--panel);
       border-radius:var(--radius);
-      border:1px solid var(--border);
       box-shadow:var(--shadow);
-      padding:12px 12px 10px;
+      border:1px solid rgba(148,163,184,.3);
+      padding:18px;
+      margin:40px auto;
     }
-    .card-header{
+    .auth-header{
       display:flex;
-      justify-content:space-between;
       align-items:center;
-      gap:8px;
-      margin-bottom:8px;
+      gap:12px;
+      margin-bottom:10px;
     }
-    .card-title{
-      font-size:14px;font-weight:600;
+    .auth-logo{
+      width:38px;height:38px;border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#a855f7);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;font-size:18px;
+      overflow:hidden;
+      background-size:cover;
+      background-position:center;
     }
-    .card-subtitle{
-      font-size:11px;color:var(--muted);
+    .auth-title{font-size:17px;font-weight:700;}
+    .auth-subtitle{font-size:11px;color:var(--muted);margin-top:2px;}
+
+    .auth-tabs{
+      display:flex;gap:6px;margin:10px 0 12px;
     }
-    .kpi-row{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
-      gap:8px;
-      margin-top:4px;
-    }
-    .kpi-tile{
-      border-radius:12px;
+    .auth-tab{
+      flex:1;
+      padding:6px 8px;
+      border-radius:999px;
       border:1px solid var(--border);
       background:var(--panel-soft);
-      padding:8px 9px;
+      color:var(--muted);
+      font-size:12px;
+      cursor:pointer;
+      text-align:center;
     }
-    .kpi-label{
-      font-size:11px;color:var(--muted);
+    .auth-tab.active{
+      background:var(--accent-soft);
+      border-color:var(--accent-soft);
+      color:var(--accent-strong);
+      font-weight:600;
     }
-    .kpi-value{
-      margin-top:3px;font-size:16px;font-weight:700;
+    .auth-alert{
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:11px;
+      margin-bottom:10px;
     }
-    .kpi-sub{
-      margin-top:3px;font-size:10px;color:var(--muted);
+    .auth-alert-error{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
+    .auth-alert-info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+
+    .field{margin-bottom:10px;}
+    .field-label{font-size:11px;margin-bottom:4px;color:#4b5563;}
+    .field-input,.field-select,textarea.field-input{
+      width:100%;padding:8px;border-radius:9px;
+      border:1px solid var(--border);background:#f9fafb;font-size:12px;
+    }
+    .field-input:focus,.field-select:focus,textarea.field-input:focus{
+      outline:none;border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft);
+    }
+    .field-hint{font-size:10px;color:var(--muted);margin-top:3px;}
+
+    .btn{
+      border:none;border-radius:999px;
+      padding:8px 12px;font-size:12px;font-weight:600;
+      cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+      gap:6px;
+    }
+    .btn-primary{background:var(--accent);color:#fff;}
+    .btn-primary:hover{background:var(--accent-strong);}
+    .btn-ghost{
+      background:transparent;color:var(--accent-strong);
+      border:1px solid var(--accent-soft);
+    }
+    .btn-ghost:hover{background:var(--accent-soft);}
+    .btn-danger{background:var(--danger);color:#fff;}
+
+    .auth-footer{text-align:center;margin-top:8px;font-size:10px;color:var(--muted);}
+
+    /* APP LAYOUT */
+    .app-shell{
+      display:none;
+      height:100vh;width:100%;
+    }
+    .sidebar{
+      width:220px;background:var(--panel);
+      border-right:1px solid var(--border);
+      display:flex;flex-direction:column;
+      padding:20px 12px;
+    }
+    .sidebar-brand{
+      display:flex;align-items:center;gap:10px;margin-bottom:18px;
+    }
+    .sidebar-logo{
+      width:36px;height:36px;border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#a855f7);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;
+      overflow:hidden;
+      background-size:cover;
+      background-position:center;
+    }
+    .sidebar-brand-name{font-size:15px;font-weight:700;}
+    .sidebar-nav{
+      display:flex;flex-direction:column;gap:6px;margin-top:10px;flex:1;
+    }
+    .nav-item{
+      padding:9px 12px;border-radius:10px;
+      cursor:pointer;font-size:13px;
+      border:none;background:transparent;text-align:left;color:var(--ink);
+    }
+    .nav-item:hover{background:var(--panel-soft);}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent-strong);font-weight:600;}
+    .nav-item.logout{
+      margin-top:auto;
+      background:#fee2e2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+    .nav-item.logout:hover{background:#fecaca;}
+
+    .topbar{
+      height:70px;background:var(--panel);
+      border-bottom:1px solid var(--border);
+      padding:12px 18px;
+      display:flex;justify-content:space-between;align-items:center;
+    }
+    .topbar-title{font-size:16px;font-weight:700;}
+    .topbar-sub{font-size:11px;color:var(--muted);}
+    .topbar-branch-filter{display:flex;align-items:center;gap:10px;font-size:12px;}
+    .topbar-branch-filter select{
+      padding:6px 9px;border-radius:8px;
+      border:1px solid var(--border);background:var(--panel-soft);
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
+    .content-area{flex:1;padding:20px;overflow-y:auto;background:var(--bg);}
+    .page{display:none;}
+    .page.active{display:block;}
+    .page-header{
+      display:flex;justify-content:space-between;
+      align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;
+    }
+    .page-title{font-size:18px;font-weight:700;}
+    .page-sub{font-size:12px;color:var(--muted);}
+    .page-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+    .toolbar{
+      display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;
       font-size:12px;
     }
-    th,td{
-      text-align:left;
-      padding:6px 8px;
-      border-bottom:1px solid var(--border);
+    .toolbar input{
+      padding:6px 9px;border-radius:9px;
+      border:1px solid var(--border);background:#fff;font-size:12px;
     }
-    thead{
-      background:#f3f4f6;
+    .toolbar select{
+      padding:6px 9px;border-radius:9px;
+      border:1px solid var(--border);background:#fff;font-size:12px;
     }
+
+    .cards-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:12px;margin-bottom:22px;
+    }
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .card-title{font-size:13px;color:var(--muted);margin-bottom:4px;}
+    .card-number{font-size:20px;font-weight:700;}
+    .card-note{font-size:11px;color:var(--muted);margin-top:6px;}
+
+    .table-wrapper{
+      background:#fff;border-radius:12px;border:1px solid var(--border);
+      overflow-x:auto;
+    }
+    table{width:100%;border-collapse:collapse;font-size:12px;}
+    thead{background:var(--panel-soft);}
+    th,td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:left;}
     th{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      color:var(--muted);
+      font-size:11px;text-transform:uppercase;color:var(--muted);
+      letter-spacing:.04em;
     }
-    tbody tr:hover{
-      background:#f9fafb;
+    tbody tr:hover{background:#f9fafb;}
+    .table-empty{text-align:center;padding:20px;font-size:12px;color:var(--muted);}
+
+    .settings-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:16px;margin-top:14px;
     }
-    .status-dot{
-      display:inline-flex;align-items:center;gap:4px;font-size:11px;
+    .settings-card{
+      background:var(--panel);
+      border-radius:14px;
+      border:1px solid var(--border);
+      padding:16px;
     }
-    .status-dot span.dot{
-      width:7px;height:7px;border-radius:999px;background:var(--status-live);
+    .settings-title{font-size:14px;font-weight:600;margin-bottom:12px;}
+
+    /* MODAL */
+    #modal-container{
+      position:fixed;inset:0;
+      display:none;justify-content:center;align-items:center;
+      background:rgba(0,0,0,.35);z-index:9999;
     }
-    .small-muted{
-      font-size:10px;color:var(--muted);
+    .modal{
+      background:var(--panel);
+      width:100%;max-width:480px;
+      border-radius:16px;
+      padding:18px;
+      box-shadow:var(--shadow);
+      animation:fadeIn .2s ease;
     }
-    .pill{
-      font-size:10px;
-      padding:2px 6px;
-      border-radius:999px;
-      background:#eef2ff;
-      color:#4f46e5;
+    .modal-title{font-size:16px;font-weight:700;margin-bottom:14px;}
+    .modal-actions{margin-top:16px;display:flex;justify-content:flex-end;gap:8px;}
+
+    .variant-row{
+      display:flex;gap:8px;margin-bottom:6px;
+    }
+    .variant-row input{flex:1;}
+    .variant-row .variant-qty{max-width:80px;}
+
+    @keyframes fadeIn{
+      from{transform:scale(.96);opacity:0;}
+      to{transform:scale(1);opacity:1;}
+    }
+
+    @media(max-width:768px){
+      .app-shell{flex-direction:column;}
+      .sidebar{width:100%;flex-direction:row;overflow-x:auto;height:auto;}
+      .sidebar-nav{flex-direction:row;}
+      .topbar{flex-direction:column;align-items:flex-start;gap:8px;height:auto;}
     }
   </style>
 </head>
 <body>
-<aside class="sidebar">
-  <div class="brand-mark">
-    <div class="luma-logo-chip">L</div>
-    <img id="brand-logo-img" class="brand-logo-img" alt="Brand logo" style="display:none;"/>
+
+  <!-- AUTH VIEW -->
+  <div id="auth-view" class="auth-wrapper">
+    <div class="auth-header">
+      <div class="auth-logo">B</div>
+      <div>
+        <div class="auth-title">Luma Store OS — Brand Portal</div>
+        <div id="auth-subtitle" class="auth-subtitle">Sign in or create your brand</div>
+      </div>
+    </div>
+
+    <div id="auth-alert-container"></div>
+
+    <div class="auth-tabs">
+      <button type="button" id="tab-login" class="auth-tab active">Sign in</button>
+      <button type="button" id="tab-create" class="auth-tab">Create brand</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="login-form">
+      <div class="field">
+        <div class="field-label">Email</div>
+        <input id="login-email" class="field-input" type="email" placeholder="you@example.com"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Password</div>
+        <input id="login-password" class="field-input" type="password" placeholder="Your password"/>
+      </div>
+      <button type="submit" id="login-btn" class="btn btn-primary" style="width:100%;">Sign in</button>
+    </form>
+
+    <!-- CREATE BRAND -->
+    <form id="create-form" style="display:none;">
+      <div class="field">
+        <div class="field-label">Brand name</div>
+        <input id="brand-name" class="field-input" placeholder="Example: Luma Coffee"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Country (optional)</div>
+        <input id="brand-country" class="field-input" placeholder="Egypt, UAE, Germany…"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Your full name</div>
+        <input id="owner-name" class="field-input" placeholder="Owner / manager name"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Email</div>
+        <input id="owner-email" class="field-input" type="email" placeholder="owner@example.com"/>
+      </div>
+      <div class="field">
+        <div class="field-label">Password</div>
+        <input id="owner-password" class="field-input" type="password" placeholder="Minimum 6 characters"/>
+      </div>
+      <button type="submit" id="create-btn" class="btn btn-primary" style="width:100%;">Create brand</button>
+    </form>
+
+    <div class="auth-footer">
+      After login, you will access your full dashboard.
+    </div>
   </div>
 
-  <div class="nav-title">Dashboard</div>
-  <ul class="nav-list">
-    <li class="nav-item active" data-view="overview">
-      <span class="icon">📊</span><span>Overview</span>
-    </li>
-    <li class="nav-item" data-view="branches">
-      <span class="icon">🏪</span><span>Branches</span>
-    </li>
-    <li class="nav-item" data-view="settings">
-      <span class="icon">⚙️</span><span>Brand settings</span>
-    </li>
-  </ul>
-
-  <div class="sidebar-footer">
-    <div id="global-note" class="small-muted">Loading platform note…</div>
-  </div>
-</aside>
-
-<main class="main">
-  <header class="topbar">
-    <div class="topbar-left">
-      <div class="brand-name" id="brand-name">Brand</div>
-      <div class="brand-subtitle" id="brand-subtitle">Loading brand info…</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <button id="btn-open-pos" class="btn-ghost">Open POS</button>
-      <div class="user-chip">
-        <div class="user-initials" id="user-initials">BO</div>
-        <div class="user-text">
-          <div class="user-name" id="user-name">Brand Owner</div>
-          <div class="user-role" id="user-role">Brand Owner</div>
-        </div>
+  <!-- APP VIEW -->
+  <div id="app-view" class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div id="sidebar-brand-logo" class="sidebar-logo">B</div>
+        <div id="sidebar-brand-name" class="sidebar-brand-name">Brand</div>
       </div>
-      <button id="btn-logout" class="btn-ghost">Logout</button>
-    </div>
-  </header>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-page="page-dashboard">Dashboard</button>
+        <button class="nav-item" data-page="page-products">Products</button>
+        <button class="nav-item" data-page="page-branches">Branches</button>
+        <button class="nav-item" data-page="page-staff">Staff</button>
+        <button class="nav-item" data-page="page-customers">Customers</button>
+        <button class="nav-item" data-page="page-orders">Orders</button>
+        <button class="nav-item" data-page="page-settings">Settings</button>
+      </nav>
+      <button id="btn-logout" class="nav-item logout">Logout</button>
+    </aside>
 
-  <!-- OVERVIEW -->
-  <section id="view-overview">
-    <div class="grid">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Today’s performance</div>
-            <div class="card-subtitle">Key metrics for your brand.</div>
-          </div>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi-tile">
-            <div class="kpi-label">Sales (today)</div>
-            <div class="kpi-value" id="bd-sales-today">—</div>
-            <div class="kpi-sub">Sum of completed orders.</div>
-          </div>
-          <div class="kpi-tile">
-            <div class="kpi-label">Orders (today)</div>
-            <div class="kpi-value" id="bd-orders-today">—</div>
-            <div class="kpi-sub">Completed orders only.</div>
-          </div>
-          <div class="kpi-tile">
-            <div class="kpi-label">Average basket</div>
-            <div class="kpi-value" id="bd-avg-basket">—</div>
-            <div class="kpi-sub">Sales ÷ orders.</div>
-          </div>
-          <div class="kpi-tile">
-            <div class="kpi-label">Active branches</div>
-            <div class="kpi-value" id="bd-active-branches">—</div>
-            <div class="kpi-sub">Branches marked active.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Live status</div>
-            <div class="card-subtitle">Branches & POS activity.</div>
-          </div>
-        </div>
-        <div style="font-size:12px;">
-          <div class="status-dot" id="bd-live-status">
-            <span class="dot"></span><span>Monitoring POS sessions coming soon.</span>
-          </div>
-          <div class="small-muted" style="margin-top:4px;">
-            In the next step you can add live POS session tracking per branch.
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- BRANCHES -->
-  <section id="view-branches" style="display:none;">
-    <div class="card">
-      <div class="card-header">
+    <!-- MAIN -->
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <header class="topbar">
         <div>
-          <div class="card-title">Branches</div>
-          <div class="card-subtitle">All branches under this brand.</div>
+          <div id="topbar-brand-title" class="topbar-title">Brand Dashboard</div>
+          <div class="topbar-sub">Control center for your brand</div>
         </div>
-      </div>
-      <div class="table-wrapper" style="border-radius:14px;border:1px solid var(--border);overflow:hidden;background:var(--panel-soft);">
+        <div class="topbar-branch-filter">
+          <span>Branch:</span>
+          <select id="global-branch-select">
+            <option value="global">All branches</option>
+          </select>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <!-- DASHBOARD -->
+        <section id="page-dashboard" class="page active">
+          <div class="cards-grid">
+            <div class="card">
+              <div class="card-title">Sales Today</div>
+              <div id="dash-sales-today" class="card-number">0</div>
+              <div class="card-note">Net of returns, all branches.</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Orders Today</div>
+              <div id="dash-orders-today" class="card-number">0</div>
+              <div class="card-note">Sales + returns.</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Active Branches</div>
+              <div id="dash-active-branches" class="card-number">0</div>
+              <div class="card-note">Branches marked as active.</div>
+            </div>
+          </div>
+
+          <div class="page-header" style="margin-top:4px;">
+            <div>
+              <div class="page-title" style="font-size:15px;">Recent Orders</div>
+              <div class="page-sub">Last 10 orders across all branches.</div>
+            </div>
+          </div>
+          <div id="table-recent-orders" class="table-wrapper"></div>
+        </section>
+
+        <!-- PRODUCTS -->
+        <section id="page-products" class="page">
+          <div class="page-header">
+            <div>
+              <div class="page-title">Products</div>
+              <div class="page-sub">Manage products, images, variants & stock</div>
+            </div>
+            <div class="page-actions">
+              <button id="btn-add-product" class="btn btn-primary">Add Product</button>
+              <button id="btn-import-excel" class="btn btn-ghost">Import (Excel/CSV)</button>
+              <button id="btn-download-sample" class="btn btn-ghost">Sample CSV</button>
+              <button id="btn-export-products" class="btn btn-ghost">Export CSV</button>
+            </div>
+          </div>
+          <div id="products-analytics" class="cards-grid" style="margin-top:4px;"></div>
+          <div class="toolbar">
+            <input id="search-products" placeholder="Search products by name or SKU"/>
+            <select id="sort-products">
+              <option value="name-asc">Name A → Z</option>
+              <option value="name-desc">Name Z → A</option>
+              <option value="price-desc">Price high → low</option>
+              <option value="price-asc">Price low → high</option>
+              <option value="stock-asc">Stock low → high</option>
+              <option value="stock-desc">Stock high → low</option>
+            </select>
+          </div>
+          <div id="products-table" class="table-wrapper"></div>
+        </section>
+
+        <!-- BRANCHES -->
+        <section id="page-branches" class="page">
+          <div class="page-header">
+            <div>
+              <div class="page-title">Branches</div>
+              <div class="page-sub">Manage multiple locations</div>
+            </div>
+            <div class="page-actions">
+              <button id="btn-add-branch" class="btn btn-primary">Add Branch</button>
+              <button id="btn-export-branches" class="btn btn-ghost">Export CSV</button>
+            </div>
+          </div>
+          <div id="branches-analytics" class="cards-grid" style="margin-top:4px;"></div>
+          <div class="toolbar">
+            <input id="search-branches" placeholder="Search branches"/>
+            <select id="sort-branches">
+              <option value="name-asc">Name A → Z</option>
+              <option value="name-desc">Name Z → A</option>
+              <option value="active-first">Active first</option>
+              <option value="inactive-first">Inactive first</option>
+            </select>
+          </div>
+          <div id="branches-table" class="table-wrapper"></div>
+        </section>
+
+        <!-- STAFF -->
+        <section id="page-staff" class="page">
+          <div class="page-header">
+            <div>
+              <div class="page-title">Staff & POS Users</div>
+              <div class="page-sub">Manage access to POS and branch roles</div>
+            </div>
+            <div class="page-actions">
+              <button id="btn-add-staff" class="btn btn-primary">Add Staff User</button>
+              <button id="btn-export-staff" class="btn btn-ghost">Export CSV</button>
+            </div>
+          </div>
+          <div id="staff-analytics" class="cards-grid" style="margin-top:4px;"></div>
+          <div class="toolbar">
+            <input id="search-staff" placeholder="Search staff by username or name"/>
+            <select id="sort-staff">
+              <option value="username-asc">Username A → Z</option>
+              <option value="username-desc">Username Z → A</option>
+              <option value="role">By role</option>
+              <option value="active-first">Active first</option>
+            </select>
+          </div>
+          <div id="staff-table" class="table-wrapper"></div>
+        </section>
+
+        <!-- CUSTOMERS -->
+        <section id="page-customers" class="page">
+          <div class="page-header">
+            <div>
+              <div class="page-title">Customers</div>
+              <div class="page-sub">Customer database & purchase history</div>
+            </div>
+            <div class="page-actions">
+              <button id="btn-export-customers" class="btn btn-ghost">Export CSV</button>
+            </div>
+          </div>
+          <div id="customers-analytics" class="cards-grid" style="margin-top:4px;"></div>
+          <div class="toolbar">
+            <input id="search-customers" placeholder="Search by name, phone or email"/>
+            <select id="sort-customers">
+              <option value="name-asc">Name A → Z</option>
+              <option value="name-desc">Name Z → A</option>
+              <option value="total-desc">Total spent high → low</option>
+              <option value="orders-desc">Most orders</option>
+            </select>
+          </div>
+          <div id="customers-table" class="table-wrapper"></div>
+        </section>
+
+        <!-- ORDERS -->
+        <section id="page-orders" class="page">
+          <div class="page-header">
+            <div>
+              <div class="page-title">Orders</div>
+              <div class="page-sub">Track purchases and returns</div>
+            </div>
+            <div class="page-actions">
+              <button id="btn-export-orders" class="btn btn-ghost">Export CSV</button>
+            </div>
+          </div>
+          <div id="orders-analytics" class="cards-grid" style="margin-top:4px;"></div>
+          <div class="toolbar">
+            <input id="search-orders" placeholder="Search orders by ID or customer name"/>
+            <select id="sort-orders">
+              <option value="date-desc">Newest first</option>
+              <option value="date-asc">Oldest first</option>
+              <option value="total-desc">Total high → low</option>
+              <option value="total-asc">Total low → high</option>
+            </select>
+          </div>
+          <div id="orders-table" class="table-wrapper"></div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="page-settings" class="page">
+          <div class="page-header">
+            <div>
+              <div class="page-title">Settings</div>
+              <div class="page-sub">Brand details & configurations</div>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <div class="settings-title">Brand Information</div>
+              <div class="field">
+                <div class="field-label">Brand Name</div>
+                <input id="set-brand-name" class="field-input"/>
+              </div>
+              <div class="field">
+                <div class="field-label">Country</div>
+                <input id="set-brand-country" class="field-input"/>
+              </div>
+              <div class="field">
+                <div class="field-label">Brand Logo</div>
+                <input id="set-brand-logo" class="field-input" type="file" accept="image/*"/>
+                <div class="field-hint">
+                  Used on POS and dashboard. Stored under brands/&lt;brandId&gt;/branding/.
+                </div>
+              </div>
+              <button id="btn-save-brand-settings" class="btn btn-primary">Save</button>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-title">Financial Settings</div>
+              <div class="field">
+                <div class="field-label">VAT %</div>
+                <input id="set-vat" class="field-input" type="number"/>
+              </div>
+              <div class="field">
+                <div class="field-label">Service Fee %</div>
+                <input id="set-service-fee" class="field-input" type="number"/>
+              </div>
+              <button id="btn-save-financial-settings" class="btn btn-primary">Save</button>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-title">Receipt Settings</div>
+              <div class="field">
+                <label><input type="checkbox" id="set-send-email"/> Always send email receipts</label>
+              </div>
+              <!-- WhatsApp option removed as requested -->
+              <button id="btn-save-receipt-settings" class="btn btn-primary">Save</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="modal-container"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore, doc, collection, collectionGroup, addDoc, setDoc, getDoc, getDocs,
+      updateDoc, deleteDoc, query, where, limit, serverTimestamp, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
+      signInWithEmailAndPassword, updateProfile, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getStorage, ref, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+    import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+
+    /* FIREBASE CONFIG */
+    const firebaseConfig = {
+      apiKey:"AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
+      authDomain:"events-339ce.firebaseapp.com",
+      projectId:"events-339ce",
+      storageBucket:"events-339ce.firebasestorage.app",
+      messagingSenderId:"175601544315",
+      appId:"1:175601544315:web:00c94b4affa972b3a286de"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+
+    /* DOM HELPERS */
+    const qs = s => document.querySelector(s);
+    const qsa = s => document.querySelectorAll(s);
+
+    /* AUTH DOM */
+    const authView = qs("#auth-view");
+    const authAlertContainer = qs("#auth-alert-container");
+    const tabLogin = qs("#tab-login");
+    const tabCreate = qs("#tab-create");
+    const loginForm = qs("#login-form");
+    const createForm = qs("#create-form");
+
+    /* APP DOM */
+    const appView = qs("#app-view");
+    const sidebarBrandLogo = qs("#sidebar-brand-logo");
+    const sidebarBrandName = qs("#sidebar-brand-name");
+    const topbarBrandTitle = qs("#topbar-brand-title");
+    const globalBranchSelect = qs("#global-branch-select");
+
+    /* TABLE CONTAINERS */
+    const productsTable = qs("#products-table");
+    const branchesTable = qs("#branches-table");
+    const staffTable = qs("#staff-table");
+    const customersTable = qs("#customers-table");
+    const ordersTable = qs("#orders-table");
+    const recentOrdersTable = qs("#table-recent-orders");
+    const modalContainer = qs("#modal-container");
+
+    /* ANALYTICS BLOCKS */
+    const dashSalesTodayEl = qs("#dash-sales-today");
+    const dashOrdersTodayEl = qs("#dash-orders-today");
+    const dashActiveBranchesEl = qs("#dash-active-branches");
+    const productsAnalyticsEl = qs("#products-analytics");
+    const branchesAnalyticsEl = qs("#branches-analytics");
+    const staffAnalyticsEl = qs("#staff-analytics");
+    const customersAnalyticsEl = qs("#customers-analytics");
+    const ordersAnalyticsEl = qs("#orders-analytics");
+
+    /* STATE */
+    let currentUser = null;
+    let brandId = null;
+    let brandData = {};
+    let branches = [];
+    let products = [];
+    let staffUsers = [];
+    let customersList = [];
+    let ordersList = [];
+    let ordersUnsub = null;
+
+    /* ALERTS + MODALS */
+    function showAuthAlert(msg, type = "error") {
+      const cls = type === "error" ? "auth-alert-error" : "auth-alert-info";
+      authAlertContainer.innerHTML = `
+        <div class="auth-alert ${cls}">${msg}</div>
+      `;
+    }
+    function clearAuthAlert() {
+      authAlertContainer.innerHTML = "";
+    }
+
+    function openModal(innerHtml) {
+      modalContainer.style.display = "flex";
+      modalContainer.innerHTML = `
+        <div class="modal">
+          ${innerHtml}
+        </div>
+      `;
+    }
+
+    function closeModal() {
+      modalContainer.style.display = "none";
+      modalContainer.innerHTML = "";
+    }
+    window.closeModal = closeModal;
+
+    /* AUTH TABS */
+    tabLogin.addEventListener("click", () => {
+      tabLogin.classList.add("active");
+      tabCreate.classList.remove("active");
+      loginForm.style.display = "block";
+      createForm.style.display = "none";
+    });
+
+    tabCreate.addEventListener("click", () => {
+      tabCreate.classList.add("active");
+      tabLogin.classList.remove("active");
+      loginForm.style.display = "none";
+      createForm.style.display = "block";
+    });
+
+    /* SHOW/HIDE APP */
+    function showApp() {
+      authView.style.display = "none";
+      appView.style.display = "flex";
+    }
+    function showAuth() {
+      appView.style.display = "none";
+      authView.style.display = "block";
+    }
+
+    /* DATE HELPERS */
+    function todayDate() {
+      const d = new Date();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${d.getFullYear()}-${m}-${day}`;
+    }
+
+    function formatDate(d) {
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${d.getFullYear()}-${m}-${day}`;
+    }
+
+    function orderDate(o) {
+      if (o.date) return o.date;
+      if (o.createdAt && typeof o.createdAt.toDate === "function") {
+        return formatDate(o.createdAt.toDate());
+      }
+      if (o.createdAtLocal && typeof o.createdAtLocal === "string") {
+        return o.createdAtLocal.slice(0, 10);
+      }
+      return "";
+    }
+
+    /* CSV DOWNLOAD */
+    function downloadCsv(filename, rows) {
+      const escapeVal = v => {
+        if (v === null || v === undefined) return "";
+        const s = String(v).replace(/"/g, '""');
+        if (/[" ,\n]/.test(s)) return `"${s}"`;
+        return s;
+      };
+      const csv = rows.map(r => r.map(escapeVal).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    /* IMAGE UPLOAD HELPER */
+    async function uploadImageToStorage(file, path) {
+      if (!file) return null;
+      const safeName = file.name.replace(/\s+/g, "_");
+      const refPath = `${path}/${safeName}`;
+      const storageRef = ref(storage, refPath);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      return url;
+    }
+
+    /* LOGIN */
+    loginForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      clearAuthAlert();
+      const email = qs("#login-email").value.trim();
+      const pw = qs("#login-password").value;
+      if (!email || !pw) {
+        showAuthAlert("Enter email and password.");
+        return;
+      }
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+      } catch (err) {
+        let msg = "Login failed.";
+        if (err.code === "auth/user-not-found") msg = "User not found.";
+        if (err.code === "auth/wrong-password") msg = "Wrong password.";
+        showAuthAlert(msg);
+      }
+    });
+
+    /* CREATE BRAND */
+    createForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      clearAuthAlert();
+
+      const brandName = qs("#brand-name").value.trim();
+      const brandCountry = qs("#brand-country").value.trim();
+      const ownerName = qs("#owner-name").value.trim();
+      const email = qs("#owner-email").value.trim();
+      const pw = qs("#owner-password").value;
+
+      if (!brandName || !ownerName || !email || !pw) {
+        showAuthAlert("Fill all required fields.");
+        return;
+      }
+      if (pw.length < 6) {
+        showAuthAlert("Password must be at least 6 characters.");
+        return;
+      }
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        const user = cred.user;
+        await updateProfile(user, { displayName: ownerName });
+
+        const brandRef = await addDoc(collection(db, "brands"), {
+          name: brandName,
+          country: brandCountry || null,
+          ownerUserId: user.uid,
+          ownerEmail: email,
+          status: "active",
+          vat: 0,
+          serviceFee: 0,
+          sendEmail: false,
+          createdAt: serverTimestamp()
+        });
+
+        await setDoc(doc(db, "userBrands", user.uid), {
+          primaryBrandId: brandRef.id,
+          brandIds: [brandRef.id]
+        });
+
+        await addDoc(collection(brandRef, "branches"), {
+          name: "Main Branch",
+          code: "MAIN",
+          isActive: true,
+          createdAt: serverTimestamp()
+        });
+
+        await setDoc(doc(brandRef, "staff", user.uid), {
+          userId: user.uid,
+          name: ownerName,
+          email,
+          role: "brand_owner",
+          isActive: true,
+          createdAt: serverTimestamp()
+        });
+
+      } catch (err) {
+        console.error(err);
+        let msg = "Failed to create brand.";
+        if (err.code === "auth/email-already-in-use") msg = "Email already in use.";
+        showAuthAlert(msg);
+      }
+    });
+
+    /* AUTH STATE */
+    onAuthStateChanged(auth, async user => {
+      try {
+        clearAuthAlert();
+        if (!user) {
+          currentUser = null;
+          brandId = null;
+          showAuth();
+          return;
+        }
+        currentUser = user;
+
+        // Resolve brand from userBrands first
+        const ubRef = doc(db, "userBrands", user.uid);
+        const ubSnap = await getDoc(ubRef);
+        if (ubSnap.exists()) {
+          brandId = ubSnap.data().primaryBrandId;
+        } else {
+          const qBrands = query(
+            collection(db, "brands"),
+            where("ownerUserId", "==", user.uid),
+            limit(1)
+          );
+          const snap = await getDocs(qBrands);
+          if (!snap.empty) {
+            const brandDoc = snap.docs[0];
+            brandId = brandDoc.id;
+            await setDoc(
+              ubRef,
+              { primaryBrandId: brandId, brandIds: [brandId] },
+              { merge: true }
+            );
+          }
+        }
+
+        if (!brandId) {
+          showAuth();
+          showAuthAlert("No brand found for this account.");
+          return;
+        }
+
+        await loadBrand();
+        await loadBranches();
+        await loadProducts();
+        await loadStaff();
+        await loadCustomers();
+        await loadOrders();
+        listenToOrdersRealtime();
+
+        updateDashboardUI();
+        renderProductsTable();
+        renderBranchesTable();
+        renderStaffTable();
+        renderCustomersTable();
+        renderOrdersTable();
+        renderRecentOrdersTable();
+
+        showApp();
+      } catch (err) {
+        console.error("Error during auth/brand loading:", err);
+        showAuth();
+        showAuthAlert("Error loading dashboard. Check console / Firestore rules.");
+      }
+    });
+
+    /* LOAD BRAND */
+    async function loadBrand() {
+      const snap = await getDoc(doc(db, "brands", brandId));
+      if (!snap.exists()) return;
+      brandData = snap.data();
+
+      const name = brandData.name || "Brand";
+      sidebarBrandName.textContent = name;
+      topbarBrandTitle.textContent = `${name} Dashboard`;
+
+      // Initial (no logo)
+      sidebarBrandLogo.textContent = name[0] || "B";
+      sidebarBrandLogo.style.backgroundImage = "";
+
+      if (brandData.logoUrl) {
+        sidebarBrandLogo.style.backgroundImage = `url(${brandData.logoUrl})`;
+        sidebarBrandLogo.textContent = "";
+      }
+
+      const authLogo = document.querySelector(".auth-logo");
+      if (authLogo) {
+        authLogo.textContent = name[0] || "B";
+        authLogo.style.backgroundImage = "";
+        if (brandData.logoUrl) {
+          authLogo.style.backgroundImage = `url(${brandData.logoUrl})`;
+          authLogo.textContent = "";
+        }
+      }
+
+      qs("#set-brand-name").value = name;
+      qs("#set-brand-country").value = brandData.country || "";
+      qs("#set-vat").value = brandData.vat ?? "";
+      qs("#set-service-fee").value = brandData.serviceFee ?? "";
+      qs("#set-send-email").checked = !!brandData.sendEmail;
+    }
+
+    /* LOAD BRANCHES */
+    async function loadBranches() {
+      branches = [];
+      globalBranchSelect.innerHTML = `<option value="global">All branches</option>`;
+      const snap = await getDocs(collection(db, "brands", brandId, "branches"));
+      snap.forEach(d => {
+        const data = d.data();
+        const b = { id: d.id, ...data };
+        branches.push(b);
+        const opt = document.createElement("option");
+        opt.value = b.id;
+        opt.textContent = b.name || "Branch";
+        globalBranchSelect.appendChild(opt);
+      });
+    }
+
+    /* LOAD PRODUCTS */
+    async function loadProducts() {
+      products = [];
+      for (const b of branches) {
+        const snap = await getDocs(collection(db, "brands", brandId, "branches", b.id, "products"));
+        snap.forEach(d => {
+          products.push({
+            id: d.id,
+            branchId: b.id,
+            branchName: b.name,
+            ...d.data()
+          });
+        });
+      }
+    }
+
+    /* LOAD STAFF */
+    async function loadStaff() {
+      staffUsers = [];
+      const qUsers = query(collection(db, "posUsers"), where("brandId", "==", brandId));
+      const snap = await getDocs(qUsers);
+      snap.forEach(d => staffUsers.push({ id: d.id, ...d.data() }));
+    }
+
+    /* LOAD CUSTOMERS */
+    async function loadCustomers() {
+      customersList = [];
+      const snap = await getDocs(collection(db, "brands", brandId, "customers"));
+      snap.forEach(d => customersList.push({ id: d.id, ...d.data() }));
+    }
+
+    /* LOAD ORDERS */
+    async function loadOrders() {
+      ordersList = [];
+      const cg = collectionGroup(db, "orders");
+      const qOrders = query(cg, where("brandId", "==", brandId));
+      const snap = await getDocs(qOrders);
+      snap.forEach(d => {
+        const o = d.data();
+        const b = branches.find(x => x.id === o.branchId);
+        ordersList.push({
+          id: d.id,
+          branchId: o.branchId || null,
+          branchName: b ? b.name : "",
+          ...o
+        });
+      });
+    }
+
+    /* REALTIME ORDERS */
+    function listenToOrdersRealtime() {
+      if (ordersUnsub) {
+        ordersUnsub();
+        ordersUnsub = null;
+      }
+      const cg = collectionGroup(db, "orders");
+      const qOrders = query(cg, where("brandId", "==", brandId));
+      ordersUnsub = onSnapshot(qOrders, snap => {
+        ordersList = [];
+        snap.forEach(d => {
+          const o = d.data();
+          const b = branches.find(x => x.id === o.branchId);
+          ordersList.push({
+            id: d.id,
+            branchId: o.branchId || null,
+            branchName: b ? b.name : "",
+            ...o
+          });
+        });
+        updateDashboardUI();
+        renderOrdersTable();
+        renderRecentOrdersTable();
+        renderCustomersTable();
+      });
+    }
+
+    /* DASHBOARD UI */
+    function updateDashboardUI() {
+      const today = todayDate();
+      let salesToday = 0;
+      let ordersToday = 0;
+
+      ordersList.forEach(o => {
+        const d = orderDate(o);
+        if (d === today) {
+          ordersToday++;
+          const total = Number(o.total) || 0;
+          if (o.type === "return") {
+            salesToday -= Math.abs(total);
+          } else {
+            salesToday += total;
+          }
+        }
+      });
+
+      dashSalesTodayEl.textContent = salesToday.toFixed(2);
+      dashOrdersTodayEl.textContent = ordersToday;
+      dashActiveBranchesEl.textContent = branches.filter(b => b.isActive !== false).length;
+    }
+
+    /* NAVIGATION */
+    qsa(".nav-item").forEach(btn => {
+      const pageId = btn.dataset.page;
+      if (!pageId) return;
+      btn.addEventListener("click", () => {
+        qsa(".nav-item").forEach(n => n.classList.remove("active"));
+        btn.classList.add("active");
+        qsa(".page").forEach(p => p.classList.remove("active"));
+        qs("#" + pageId).classList.add("active");
+      });
+    });
+
+    /* VARIANTS UI */
+    function initVariantRows(existing) {
+      const container = qs("#variants-rows");
+      const addBtn = qs("#btn-add-variant-row");
+      if (!container || !addBtn) return;
+
+      function addRow(v = { label: "", stockQty: "" }) {
+        const row = document.createElement("div");
+        row.className = "variant-row";
+        row.innerHTML = `
+          <input class="field-input variant-label" placeholder="Label (e.g. S, Red)" value="${v.label || ""}"/>
+          <input class="field-input variant-qty" type="number" placeholder="Qty" value="${v.stockQty ?? ""}"/>
+          <button type="button" class="btn btn-ghost" style="padding:4px 8px;">×</button>
+        `;
+        const removeBtn = row.querySelector("button");
+        removeBtn.addEventListener("click", () => row.remove());
+        container.appendChild(row);
+      }
+
+      (existing && existing.length ? existing : [{}]).forEach(addRow);
+      addBtn.addEventListener("click", () => addRow());
+    }
+
+    function getVariantsFromModal() {
+      const rows = modalContainer.querySelectorAll(".variant-row");
+      const variants = [];
+      rows.forEach(r => {
+        const label = r.querySelector(".variant-label")?.value.trim();
+        const qtyStr = r.querySelector(".variant-qty")?.value;
+        if (label) {
+          variants.push({
+            label,
+            stockQty: qtyStr !== "" ? Number(qtyStr) : null
+          });
+        }
+      });
+      return variants;
+    }
+
+    /* PRODUCTS ANALYTICS & TABLE */
+    function renderProductsAnalytics() {
+      const branchFilter = globalBranchSelect.value;
+      const list = products.filter(p => {
+        if (branchFilter !== "global" && p.branchId !== branchFilter) return false;
+        return true;
+      });
+      const total = list.length;
+      const active = list.filter(p => p.isActive !== false).length;
+      const lowStock = list.filter(
+        p => p.stockMode === "limited" && (p.stockQty ?? 0) <= 5
+      ).length;
+
+      productsAnalyticsEl.innerHTML = `
+        <div class="card">
+          <div class="card-title">Total Products</div>
+          <div class="card-number">${total}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Active Products</div>
+          <div class="card-number">${active}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Low Stock (≤5)</div>
+          <div class="card-number">${lowStock}</div>
+        </div>
+      `;
+    }
+
+    function renderProductsTable() {
+      renderProductsAnalytics();
+      const term = qs("#search-products").value.trim().toLowerCase();
+      const branchFilter = globalBranchSelect.value;
+      const sortVal = (qs("#sort-products")?.value) || "name-asc";
+
+      let rows = products.filter(p => {
+        if (branchFilter !== "global" && p.branchId !== branchFilter) return false;
+        if (!term) return true;
+        const text = `${p.name || ""} ${p.code || ""}`.toLowerCase();
+        return text.includes(term);
+      });
+
+      rows.sort((a, b) => {
+        const stockA = a.stockMode === "limited" ? (a.stockQty ?? 0) : Infinity;
+        const stockB = b.stockMode === "limited" ? (b.stockQty ?? 0) : Infinity;
+        switch (sortVal) {
+          case "name-asc":
+            return (a.name || "").localeCompare(b.name || "");
+          case "name-desc":
+            return (b.name || "").localeCompare(a.name || "");
+          case "price-asc":
+            return (Number(a.price) || 0) - (Number(b.price) || 0);
+          case "price-desc":
+            return (Number(b.price) || 0) - (Number(a.price) || 0);
+          case "stock-asc":
+            return stockA - stockB;
+          case "stock-desc":
+            return stockB - stockA;
+          default:
+            return 0;
+        }
+      });
+
+      if (rows.length === 0) {
+        productsTable.innerHTML = `<div class="table-empty">No products found.</div>`;
+        return;
+      }
+
+      let html = `
         <table>
           <thead>
-          <tr>
-            <th>Name</th>
-            <th>Code</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>SKU</th>
+              <th>Price</th>
+              <th>Branch</th>
+              <th>Stock</th>
+              <th>Variant Group</th>
+              <th>Variants</th>
+              <th>Active</th>
+              <th></th>
+            </tr>
           </thead>
-          <tbody id="branches-tbody">
-          <tr><td colspan="4"><div style="text-align:center;padding:14px;font-size:12px;color:var(--muted);">Loading branches…</div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- BRAND SETTINGS -->
-  <section id="view-settings" style="display:none;">
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Brand configuration</div>
-          <div class="card-subtitle">Defaults for tax, service and receipts.</div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
-        <div>
-          <div class="card-subtitle" style="margin-bottom:4px;">Tax & service</div>
-          <div style="font-size:12px;margin-bottom:4px;">
-            Tax: <span id="cfg-tax">—</span>%
-          </div>
-          <div style="font-size:12px;margin-bottom:4px;">
-            Service: <span id="cfg-service">—</span>%
-          </div>
-          <div class="small-muted">These values are used by POS when calculating totals.</div>
-        </div>
-
-        <div>
-          <div class="card-subtitle" style="margin-bottom:4px;">Receipts</div>
-          <div style="font-size:12px;margin-bottom:4px;">
-            Email receipts: <span id="cfg-email">—</span>
-          </div>
-          <div style="font-size:12px;margin-bottom:4px;">
-            WhatsApp receipts: <span id="cfg-whatsapp">—</span>
-          </div>
-          <div class="small-muted">Defaults can be overridden per branch later.</div>
-        </div>
-      </div>
-
-      <div style="margin-top:10px;">
-        <span class="small-muted">Brand configs are stored in <code>brandConfigs/{brandId}</code>. Super Admin can edit them from the control tower.</span>
-      </div>
-    </div>
-  </section>
-</main>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    collection,
-    getDocs
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
-    authDomain: "events-339ce.firebaseapp.com",
-    projectId: "events-339ce",
-    storageBucket: "events-339ce.firebasestorage.app",
-    messagingSenderId: "175601544315",
-    appId: "1:175601544315:web:00c94b4affa972b3a286de"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
-  const navItems = Array.from(document.querySelectorAll(".nav-item"));
-  const viewOverview = document.getElementById("view-overview");
-  const viewBranches = document.getElementById("view-branches");
-  const viewSettings = document.getElementById("view-settings");
-
-  const brandNameEl = document.getElementById("brand-name");
-  const brandSubtitleEl = document.getElementById("brand-subtitle");
-  const globalNoteEl = document.getElementById("global-note");
-  const brandLogoImg = document.getElementById("brand-logo-img");
-  const branchesTbody = document.getElementById("branches-tbody");
-
-  const bdSalesTodayEl = document.getElementById("bd-sales-today");
-  const bdOrdersTodayEl = document.getElementById("bd-orders-today");
-  const bdAvgBasketEl = document.getElementById("bd-avg-basket");
-  const bdActiveBranchesEl = document.getElementById("bd-active-branches");
-
-  const cfgTaxEl = document.getElementById("cfg-tax");
-  const cfgServiceEl = document.getElementById("cfg-service");
-  const cfgEmailEl = document.getElementById("cfg-email");
-  const cfgWhatsappEl = document.getElementById("cfg-whatsapp");
-
-  const userInitialsEl = document.getElementById("user-initials");
-  const userNameEl = document.getElementById("user-name");
-  const userRoleEl = document.getElementById("user-role");
-  const btnLogout = document.getElementById("btn-logout");
-  const btnOpenPos = document.getElementById("btn-open-pos");
-
-  function setView(view){
-    navItems.forEach(item=>{
-      const v = item.getAttribute("data-view");
-      if(v === view) item.classList.add("active");
-      else item.classList.remove("active");
-    });
-    viewOverview.style.display = view === "overview" ? "block" : "none";
-    viewBranches.style.display = view === "branches" ? "block" : "none";
-    viewSettings.style.display = view === "settings" ? "block" : "none";
-  }
-
-  navItems.forEach(item=>{
-    item.addEventListener("click",()=>{
-      const view = item.getAttribute("data-view");
-      setView(view);
-    });
-  });
-
-  function initialsFromNameOrEmail(name,email){
-    if(name){
-      const parts = name.split(" ").filter(Boolean);
-      if(parts.length >= 2) return (parts[0][0]+parts[1][0]).toUpperCase();
-      return name.slice(0,2).toUpperCase();
-    }
-    if(email){
-      const part = email.split("@")[0] || "";
-      return part.slice(0,2).toUpperCase();
-    }
-    return "BO";
-  }
-
-  function getQueryBrandId(){
-    const params = new URLSearchParams(window.location.search);
-    return params.get("brand") || null;
-  }
-
-  async function loadPlatformNoteAndLogo(){
-    const settingsRef = doc(db,"platformSettings","globalConfig");
-    const snap = await getDoc(settingsRef);
-    if(snap.exists()){
-      const data = snap.data() || {};
-      globalNoteEl.textContent = data.globalNote || "No platform note at the moment.";
-    }else{
-      globalNoteEl.textContent = "No platform note at the moment.";
-    }
-  }
-
-  async function loadBrand(brandId){
-    const ref = doc(db,"brands",brandId);
-    const snap = await getDoc(ref);
-    if(!snap.exists()){
-      brandNameEl.textContent = "Unknown brand";
-      brandSubtitleEl.textContent = "This brand does not exist.";
-      return;
-    }
-    const data = snap.data() || {};
-    brandNameEl.textContent = data.name || "Unnamed brand";
-    const country = data.country || "No country";
-    const status = data.status || "pending_setup";
-    brandSubtitleEl.textContent = `${country} • Status: ${status}`;
-    if(data.logoUrl){
-      brandLogoImg.src = data.logoUrl;
-      brandLogoImg.style.display = "block";
-    }
-  }
-
-  async function loadBrandStats(brandId){
-    try{
-      const ref = doc(db,"brandStats",brandId);
-      const snap = await getDoc(ref);
-      if(!snap.exists()){
-        bdSalesTodayEl.textContent = "0";
-        bdOrdersTodayEl.textContent = "0";
-        bdAvgBasketEl.textContent = "0";
-        return;
-      }
-      const data = snap.data() || {};
-      const salesToday = data.salesToday ?? 0;
-      const ordersToday = data.ordersToday ?? 0;
-      bdSalesTodayEl.textContent = salesToday.toLocaleString(undefined,{maximumFractionDigits:0});
-      bdOrdersTodayEl.textContent = ordersToday.toString();
-      bdAvgBasketEl.textContent = ordersToday > 0 ? Math.round(salesToday/ordersToday).toString() : "0";
-    }catch(e){
-      console.error("Error loading brand stats", e);
-      bdSalesTodayEl.textContent = "—";
-      bdOrdersTodayEl.textContent = "—";
-      bdAvgBasketEl.textContent = "—";
-    }
-  }
-
-  async function loadBranches(brandId){
-    try{
-      const coll = collection(db,"brands",brandId,"branches");
-      const snap = await getDocs(coll);
-      const rows = [];
-      let activeCount = 0;
-      snap.forEach(docSnap=>{
-        const data = docSnap.data() || {};
-        const createdDate = data.createdAt ? new Date(data.createdAt.seconds*1000) : null;
-        const createdStr = createdDate
-          ? createdDate.toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"})
-          : "—";
-        const isActive = data.isActive !== false;
-        if(isActive) activeCount++;
-        rows.push(`
+          <tbody>
+      `;
+      rows.forEach(p => {
+        const stockText = p.stockMode === "limited" ? (p.stockQty ?? 0) : "Unlimited";
+        const variantsStr = Array.isArray(p.variants)
+          ? p.variants.map(v => `${v.label || ""} (${v.stockQty ?? ""})`).join(", ")
+          : "";
+        const imgHtml = p.imageUrl
+          ? `<img src="${p.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"/>`
+          : "";
+        html += `
           <tr>
-            <td>${data.name || "Unnamed branch"}</td>
-            <td>${data.code || "<span class='small-muted'>—</span>"}</td>
-            <td><span class="pill">${isActive ? "Active" : "Inactive"}</span></td>
-            <td><span class="small-muted">${createdStr}</span></td>
+            <td>${imgHtml}</td>
+            <td>${p.name || ""}</td>
+            <td>${p.code || ""}</td>
+            <td>${p.price ?? ""}</td>
+            <td>${p.branchName || ""}</td>
+            <td>${stockText}</td>
+            <td>${p.variantGroup || ""}</td>
+            <td>${variantsStr}</td>
+            <td>${p.isActive === false ? "No" : "Yes"}</td>
+            <td><button class="btn btn-ghost" data-edit-product-branch="${p.branchId}" data-edit-product-id="${p.id}">Edit</button></td>
           </tr>
-        `);
+        `;
       });
-      branchesTbody.innerHTML = rows.length ? rows.join("") :
-        `<tr><td colspan="4"><div style="text-align:center;padding:14px;font-size:12px;color:var(--muted);">No branches yet.</div></td></tr>`;
-      bdActiveBranchesEl.textContent = activeCount.toString();
-    }catch(e){
-      console.error("Error loading branches", e);
-      branchesTbody.innerHTML = `<tr><td colspan="4"><div style="text-align:center;padding:14px;font-size:12px;color:var(--muted);">Error loading branches.</div></td></tr>`;
-    }
-  }
+      html += `</tbody></table>`;
+      productsTable.innerHTML = html;
 
-  async function loadBrandConfig(brandId){
-    try{
-      const ref = doc(db,"brandConfigs",brandId);
-      const snap = await getDoc(ref);
-      if(!snap.exists()){
-        cfgTaxEl.textContent = "0";
-        cfgServiceEl.textContent = "0";
-        cfgEmailEl.textContent = "Default";
-        cfgWhatsappEl.textContent = "Default";
+      productsTable.querySelectorAll("button[data-edit-product-id]").forEach(btn => {
+        const branchId = btn.getAttribute("data-edit-product-branch");
+        const productId = btn.getAttribute("data-edit-product-id");
+        btn.addEventListener("click", () => editProduct(branchId, productId));
+      });
+    }
+
+    qs("#search-products").addEventListener("input", renderProductsTable);
+    qs("#sort-products").addEventListener("change", renderProductsTable);
+    globalBranchSelect.addEventListener("change", () => {
+      renderProductsTable();
+      renderOrdersTable();
+      renderRecentOrdersTable();
+    });
+
+    /* BRANCHES ANALYTICS & TABLE */
+    function renderBranchesAnalytics() {
+      const total = branches.length;
+      const active = branches.filter(b => b.isActive !== false).length;
+      const inactive = total - active;
+
+      branchesAnalyticsEl.innerHTML = `
+        <div class="card">
+          <div class="card-title">Total Branches</div>
+          <div class="card-number">${total}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Active Branches</div>
+          <div class="card-number">${active}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Inactive Branches</div>
+          <div class="card-number">${inactive}</div>
+        </div>
+      `;
+    }
+
+    function renderBranchesTable() {
+      renderBranchesAnalytics();
+      const term = qs("#search-branches").value.trim().toLowerCase();
+      const sortVal = (qs("#sort-branches")?.value) || "name-asc";
+
+      let rows = branches.filter(b => {
+        if (!term) return true;
+        return `${b.name || ""} ${b.code || ""}`.toLowerCase().includes(term);
+      });
+
+      rows.sort((a, b) => {
+        switch (sortVal) {
+          case "name-asc":
+            return (a.name || "").localeCompare(b.name || "");
+          case "name-desc":
+            return (b.name || "").localeCompare(a.name || "");
+          case "active-first":
+            return (b.isActive !== false ? 1 : 0) - (a.isActive !== false ? 1 : 0);
+          case "inactive-first":
+            return (a.isActive !== false ? 1 : 0) - (b.isActive !== false ? 1 : 0);
+          default:
+            return 0;
+        }
+      });
+
+      if (rows.length === 0) {
+        branchesTable.innerHTML = `<div class="table-empty">No branches.</div>`;
         return;
       }
-      const data = snap.data() || {};
-      cfgTaxEl.textContent = (data.taxPercent ?? 0).toString();
-      cfgServiceEl.textContent = (data.servicePercent ?? 0).toString();
-      cfgEmailEl.textContent = (data.emailReceiptsEnabled ?? true) ? "Enabled" : "Disabled";
-      cfgWhatsappEl.textContent = (data.whatsappReceiptsEnabled ?? true) ? "Enabled" : "Disabled";
-    }catch(e){
-      console.error("Error loading brand config", e);
-    }
-  }
 
-  btnLogout.addEventListener("click",async()=>{
-    try{
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Active</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      rows.forEach(b => {
+        html += `
+          <tr>
+            <td>${b.name || ""}</td>
+            <td>${b.code || ""}</td>
+            <td>${b.isActive === false ? "No" : "Yes"}</td>
+            <td><button class="btn btn-ghost" data-edit-branch-id="${b.id}">Edit</button></td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      branchesTable.innerHTML = html;
+
+      branchesTable.querySelectorAll("button[data-edit-branch-id]").forEach(btn => {
+        const id = btn.getAttribute("data-edit-branch-id");
+        btn.addEventListener("click", () => editBranch(id));
+      });
+    }
+
+    qs("#search-branches").addEventListener("input", renderBranchesTable);
+    qs("#sort-branches").addEventListener("change", renderBranchesTable);
+
+    /* STAFF ANALYTICS & TABLE */
+    function renderStaffAnalytics() {
+      const total = staffUsers.length;
+      const active = staffUsers.filter(s => s.isActive !== false).length;
+      const cashiers = staffUsers.filter(s => s.role === "cashier").length;
+
+      staffAnalyticsEl.innerHTML = `
+        <div class="card">
+          <div class="card-title">Total Staff</div>
+          <div class="card-number">${total}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Active Staff</div>
+          <div class="card-number">${active}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Cashiers</div>
+          <div class="card-number">${cashiers}</div>
+        </div>
+      `;
+    }
+
+    function renderStaffTable() {
+      renderStaffAnalytics();
+      const term = qs("#search-staff").value.trim().toLowerCase();
+      const sortVal = (qs("#sort-staff")?.value) || "username-asc";
+
+      let rows = [...staffUsers].filter(s => {
+        const label = `${s.username || ""} ${s.displayName || ""}`.toLowerCase();
+        if (term && !label.includes(term)) return false;
+        return true;
+      });
+
+      rows.sort((a, b) => {
+        const userA = (a.username || "").toLowerCase();
+        const userB = (b.username || "").toLowerCase();
+        switch (sortVal) {
+          case "username-asc":
+            return userA.localeCompare(userB);
+          case "username-desc":
+            return userB.localeCompare(userA);
+          case "role":
+            return (a.role || "").localeCompare(b.role || "");
+          case "active-first":
+            return (b.isActive !== false ? 1 : 0) - (a.isActive !== false ? 1 : 0);
+          default:
+            return 0;
+        }
+      });
+
+      if (rows.length === 0) {
+        staffTable.innerHTML = `<div class="table-empty">No staff users.</div>`;
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Display</th>
+              <th>Branch</th>
+              <th>Role</th>
+              <th>Active</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      rows.forEach(s => {
+        const b = branches.find(x => x.id === s.branchId);
+        html += `
+          <tr>
+            <td>${s.username || ""}</td>
+            <td>${s.displayName || ""}</td>
+            <td>${b ? b.name : "—"}</td>
+            <td>${s.role || ""}</td>
+            <td>${s.isActive === false ? "No" : "Yes"}</td>
+            <td><button class="btn btn-ghost" data-edit-staff-id="${s.id}">Edit</button></td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      staffTable.innerHTML = html;
+
+      staffTable.querySelectorAll("button[data-edit-staff-id]").forEach(btn => {
+        const id = btn.getAttribute("data-edit-staff-id");
+        btn.addEventListener("click", () => editStaff(id));
+      });
+    }
+
+    qs("#search-staff").addEventListener("input", renderStaffTable);
+    qs("#sort-staff").addEventListener("change", renderStaffTable);
+
+    /* CUSTOMERS ANALYTICS & TABLE */
+    function buildCustomerStats() {
+      const stats = {};
+      ordersList.forEach(o => {
+        const cid = o.customerId || o.customerEmail || o.customerPhone || o.customerName;
+        if (!cid) return;
+        if (!stats[cid]) stats[cid] = { orders: 0, total: 0 };
+        stats[cid].orders++;
+        const t = Number(o.total) || 0;
+        if (o.type === "return") stats[cid].total -= Math.abs(t);
+        else stats[cid].total += t;
+      });
+      return stats;
+    }
+
+    function renderCustomersAnalytics() {
+      const stats = buildCustomerStats();
+      const rows = customersList.map(c => {
+        const key = c.id || c.email || c.phone || c.name;
+        const st = key ? stats[key] : null;
+        return { ...c, _orders: st ? st.orders : 0, _total: st ? st.total : 0 };
+      });
+
+      const total = rows.length;
+      const withOrders = rows.filter(r => r._orders > 0).length;
+      const highValue = rows.filter(r => r._total > 1000).length;
+
+      customersAnalyticsEl.innerHTML = `
+        <div class="card">
+          <div class="card-title">Total Customers</div>
+          <div class="card-number">${total}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">With Orders</div>
+          <div class="card-number">${withOrders}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">High-Value (&gt; 1000)</div>
+          <div class="card-number">${highValue}</div>
+        </div>
+      `;
+    }
+
+    function renderCustomersTable() {
+      const stats = buildCustomerStats();
+      renderCustomersAnalytics();
+      const term = qs("#search-customers").value.trim().toLowerCase();
+      const sortVal = (qs("#sort-customers")?.value) || "name-asc";
+
+      let rows = customersList.map(c => {
+        const key = c.id || c.email || c.phone || c.name;
+        const st = key ? stats[key] : null;
+        return { ...c, _orders: st ? st.orders : 0, _total: st ? st.total : 0 };
+      });
+
+      rows = rows.filter(c => {
+        const label = `${c.name || ""} ${c.phone || ""} ${c.email || ""}`.toLowerCase();
+        if (term && !label.includes(term)) return false;
+        return true;
+      });
+
+      rows.sort((a, b) => {
+        switch (sortVal) {
+          case "name-asc":
+            return (a.name || "").localeCompare(b.name || "");
+          case "name-desc":
+            return (b.name || "").localeCompare(a.name || "");
+          case "total-desc":
+            return b._total - a._total;
+          case "orders-desc":
+            return b._orders - a._orders;
+          default:
+            return 0;
+        }
+      });
+
+      if (rows.length === 0) {
+        customersTable.innerHTML = `<div class="table-empty">No customers yet.</div>`;
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Orders</th>
+              <th>Total Spent</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      rows.forEach(c => {
+        html += `
+          <tr>
+            <td>${c.name || ""}</td>
+            <td>${c.phone || ""}</td>
+            <td>${c.email || ""}</td>
+            <td>${c._orders}</td>
+            <td>${c._total.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      customersTable.innerHTML = html;
+    }
+
+    qs("#search-customers").addEventListener("input", renderCustomersTable);
+    qs("#sort-customers").addEventListener("change", renderCustomersTable);
+
+    /* ORDERS ANALYTICS & TABLE */
+    function renderOrdersAnalytics() {
+      let totalOrders = ordersList.length;
+      let totalSales = 0;
+      let returns = 0;
+
+      ordersList.forEach(o => {
+        const t = Number(o.total) || 0;
+        if (o.type === "return") {
+          returns++;
+          totalSales -= Math.abs(t);
+        } else {
+          totalSales += t;
+        }
+      });
+
+      ordersAnalyticsEl.innerHTML = `
+        <div class="card">
+          <div class="card-title">Total Orders</div>
+          <div class="card-number">${totalOrders}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Net Sales</div>
+          <div class="card-number">${totalSales.toFixed(2)}</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Returns</div>
+          <div class="card-number">${returns}</div>
+        </div>
+      `;
+    }
+
+    function renderOrdersTable() {
+      renderOrdersAnalytics();
+      const term = qs("#search-orders").value.trim().toLowerCase();
+      const branchFilter = globalBranchSelect.value;
+      const sortVal = (qs("#sort-orders")?.value) || "date-desc";
+
+      let rows = ordersList.filter(o => {
+        if (branchFilter !== "global" && o.branchId !== branchFilter) return false;
+        if (!term) return true;
+        const label = `${o.id || ""} ${o.orderId || ""} ${o.customerName || ""}`.toLowerCase();
+        return label.includes(term);
+      });
+
+      rows.sort((a, b) => {
+        const da = orderDate(a) || "";
+        const db = orderDate(b) || "";
+        const ta = Number(a.total) || 0;
+        const tb = Number(b.total) || 0;
+        switch (sortVal) {
+          case "date-asc":
+            return da.localeCompare(db);
+          case "date-desc":
+            return db.localeCompare(da);
+          case "total-asc":
+            return ta - tb;
+          case "total-desc":
+            return tb - ta;
+          default:
+            return 0;
+        }
+      });
+
+      if (rows.length === 0) {
+        ordersTable.innerHTML = `<div class="table-empty">No orders yet.</div>`;
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Branch</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>Payment</th>
+              <th>Type</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      rows.forEach(o => {
+        html += `
+          <tr>
+            <td>${o.orderId || o.id}</td>
+            <td>${orderDate(o) || ""}</td>
+            <td>${o.branchName || ""}</td>
+            <td>${o.customerName || ""}</td>
+            <td>${o.total ?? ""}</td>
+            <td>${o.paymentMethod || ""}</td>
+            <td>${o.type || "sale"}</td>
+            <td>${o.status || "normal"}</td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      ordersTable.innerHTML = html;
+    }
+
+    qs("#search-orders").addEventListener("input", renderOrdersTable);
+    qs("#sort-orders").addEventListener("change", renderOrdersTable);
+
+    /* RECENT ORDERS */
+    function renderRecentOrdersTable() {
+      if (ordersList.length === 0) {
+        recentOrdersTable.innerHTML = `<div class="table-empty">No recent orders.</div>`;
+        return;
+      }
+
+      const rows = [...ordersList]
+        .sort((a, b) => {
+          const da = orderDate(a) || "";
+          const db = orderDate(b) || "";
+          return db.localeCompare(da);
+        })
+        .slice(0, 10);
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Branch</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      rows.forEach(o => {
+        html += `
+          <tr>
+            <td>${o.orderId || o.id}</td>
+            <td>${orderDate(o) || ""}</td>
+            <td>${o.branchName || ""}</td>
+            <td>${o.total ?? ""}</td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      recentOrdersTable.innerHTML = html;
+    }
+
+    /* SAMPLE CSV */
+    qs("#btn-download-sample").addEventListener("click", () => {
+      const rows = [
+        ["name","code","price","stockMode","stockQty","variantGroup","variants"],
+        ["Latte","LATT001",70,"unlimited","", "", ""],
+        ["T-Shirt Black","TS-BLK",350,"limited",20,"Size","S|10;M|5;L|5"]
+      ];
+      downloadCsv("sample_products.csv", rows);
+    });
+
+    /* IMPORT (EXCEL/CSV) */
+    qs("#btn-import-excel").addEventListener("click", () => {
+      openModal(`
+        <div class="modal-title">Import Products</div>
+        <div class="field">
+          <div class="field-label">File</div>
+          <input id="import-file" type="file" accept=".xlsx,.xls,.csv"/>
+          <div class="field-hint">
+            Columns: name, code (SKU), price, stockMode, stockQty,
+            variantGroup, variants (like S|10;M|5).
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" id="btn-process-import">Import</button>
+        </div>
+      `);
+
+      qs("#btn-process-import").addEventListener("click", processImport);
+    });
+
+    async function processImport() {
+      const fileInput = qs("#import-file");
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const data = await file.arrayBuffer();
+      let rows;
+
+      if (file.name.toLowerCase().endsWith(".csv")) {
+        const text = new TextDecoder("utf-8").decode(data);
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        const headers = lines[0].split(",");
+        rows = lines.slice(1).map(line => {
+          const parts = line.split(",");
+          const obj = {};
+          headers.forEach((h, i) => {
+            obj[h.trim()] = parts[i];
+          });
+          return obj;
+        });
+      } else {
+        const wb = XLSX.read(data, { type: "array" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      }
+
+      let count = 0;
+      for (const row of rows) {
+        const name = (row.name || row.Name || "").toString().trim();
+        const sku = (row.code || row.Code || row.sku || row.SKU || "").toString().trim();
+        const price = Number(row.price || row.Price || 0);
+        const stockModeRaw = (row.stockMode || row.stock_mode || "").toString().toLowerCase();
+        const stockMode = stockModeRaw === "limited" ? "limited" : "unlimited";
+        const stockQty = stockMode === "limited"
+          ? Number(row.stockQty || row.stock_qty || row.quantity || 0)
+          : null;
+        const variantGroup = (row.variantGroup || row.variant_group || "").toString().trim();
+        const variantsRaw = row.variants || row.Variants || "";
+        const variants = variantsRaw
+          ? variantsRaw.toString().split(/[;,\n]/).map(s => s.trim()).filter(Boolean).map(s => {
+              const [label, qty] = s.split("|");
+              return {
+                label: label?.trim() || "",
+                stockQty: qty ? Number(qty) : null
+              };
+            })
+          : [];
+
+        if (!name || !price) continue;
+
+        for (const b of branches) {
+          await addDoc(collection(db, "brands", brandId, "branches", b.id, "products"), {
+            name,
+            code: sku || null,
+            price,
+            stockMode,
+            stockQty,
+            variantGroup: variantGroup || null,
+            variants,
+            isActive: true,
+            createdAt: serverTimestamp()
+          });
+          count++;
+        }
+      }
+
+      closeModal();
+      await loadProducts();
+      renderProductsTable();
+      alert(`Imported ${count} products.`);
+    }
+
+    /* ADD PRODUCT */
+    qs("#btn-add-product").addEventListener("click", () => {
+      openModal(`
+        <div class="modal-title">Add Product</div>
+
+        <div class="field">
+          <div class="field-label">Name</div>
+          <input id="p-name" class="field-input"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">SKU</div>
+          <input id="p-sku" class="field-input" placeholder="Optional unique code"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Price</div>
+          <input id="p-price" class="field-input" type="number" placeholder="Base price"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Stock Mode</div>
+          <select id="p-stock-mode" class="field-select">
+            <option value="unlimited">Unlimited</option>
+            <option value="limited">Limited quantity</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Stock Qty (for non-variant or total)</div>
+          <input id="p-stock-qty" class="field-input" type="number"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Image</div>
+          <input id="p-image" class="field-input" type="file" accept="image/*"/>
+          <div class="field-hint">
+            Stored under brands/&lt;brandId&gt;/products/&lt;sku-or-id&gt;/ in Firebase Storage.
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Variant Group (optional)</div>
+          <input id="p-variant-group" class="field-input" placeholder="e.g. Size, Color"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Variants</div>
+          <div id="variants-rows"></div>
+          <button type="button" id="btn-add-variant-row" class="btn btn-ghost" style="margin-top:6px;">Add variant</button>
+          <div class="field-hint">
+            Each variant is selectable in POS. Example: S (qty 10), M (qty 5)…
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" id="btn-save-product">Save</button>
+        </div>
+      `);
+
+      initVariantRows([]);
+
+      qs("#btn-save-product").addEventListener("click", saveProduct);
+    });
+
+    async function saveProduct() {
+      const name = qs("#p-name").value.trim();
+      const sku = qs("#p-sku").value.trim();
+      const price = Number(qs("#p-price").value);
+      const stockMode = qs("#p-stock-mode").value;
+      const stockQty = stockMode === "limited" ? Number(qs("#p-stock-qty").value || 0) : null;
+      const imageFile = qs("#p-image").files[0];
+      const variantGroup = qs("#p-variant-group").value.trim();
+      const variants = getVariantsFromModal();
+
+      if (!name || !price) {
+        alert("Name and price are required.");
+        return;
+      }
+
+      if (sku && products.some(p => p.code === sku)) {
+        alert("A product with this SKU already exists.");
+        return;
+      }
+
+      const uidKey = sku || `prod-${Date.now()}`;
+      const imageUrl = imageFile
+        ? await uploadImageToStorage(imageFile, `brands/${brandId}/products/${uidKey}`)
+        : null;
+
+      for (const b of branches) {
+        await addDoc(collection(db, "brands", brandId, "branches", b.id, "products"), {
+          name,
+          code: sku || null,
+          price,
+          stockMode,
+          stockQty,
+          imageUrl,
+          variantGroup: variantGroup || null,
+          variants,
+          isActive: true,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      closeModal();
+      await loadProducts();
+      renderProductsTable();
+    }
+
+    function editProduct(branchId, productId) {
+      const p = products.find(x => x.id === productId && x.branchId === branchId);
+      if (!p) return;
+
+      const variants = Array.isArray(p.variants) ? p.variants : [];
+
+      const currentImageHtml = p.imageUrl
+        ? `<img src="${p.imageUrl}" style="max-width:100%;max-height:120px;border-radius:8px;margin-bottom:6px;"/>`
+        : `<div class="field-hint">No image yet.</div>`;
+
+      openModal(`
+        <div class="modal-title">Edit Product</div>
+
+        <div class="field">
+          <div class="field-label">Name</div>
+          <input id="ep-name" class="field-input" value="${p.name || ""}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">SKU</div>
+          <input id="ep-sku" class="field-input" value="${p.code || ""}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Price</div>
+          <input id="ep-price" class="field-input" type="number" value="${p.price || 0}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Stock Mode</div>
+          <select id="ep-stock-mode" class="field-select">
+            <option value="unlimited" ${p.stockMode === "unlimited" ? "selected" : ""}>Unlimited</option>
+            <option value="limited" ${p.stockMode === "limited" ? "selected" : ""}>Limited</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Stock Qty</div>
+          <input id="ep-stock-qty" class="field-input" type="number" value="${p.stockQty ?? ""}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Current Image</div>
+          ${currentImageHtml}
+          <input id="ep-image" class="field-input" type="file" accept="image/*"/>
+          <div class="field-hint">Choose a file to replace the image. Leave empty to keep current.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Variant Group</div>
+          <input id="ep-variant-group" class="field-input" value="${p.variantGroup || ""}" placeholder="e.g. Size, Color"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Variants</div>
+          <div id="variants-rows"></div>
+          <button type="button" id="btn-add-variant-row" class="btn btn-ghost" style="margin-top:6px;">Add variant</button>
+          <div class="field-hint">One variant per row (label + qty).</div>
+        </div>
+
+        <div class="field">
+          <button id="btn-delete-product" class="btn btn-danger" type="button">Delete</button>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" id="btn-update-product">Save</button>
+        </div>
+      `);
+
+      initVariantRows(variants);
+
+      qs("#btn-update-product").addEventListener("click", () => updateProduct(branchId, productId));
+      qs("#btn-delete-product").addEventListener("click", () => deleteProduct(branchId, productId));
+    }
+
+    async function updateProduct(branchId, productId) {
+      const name = qs("#ep-name").value.trim();
+      const sku = qs("#ep-sku").value.trim();
+      const price = Number(qs("#ep-price").value);
+      const stockMode = qs("#ep-stock-mode").value;
+      const stockQty = stockMode === "limited" ? Number(qs("#ep-stock-qty").value || 0) : null;
+      const variantGroup = qs("#ep-variant-group").value.trim();
+      const variants = getVariantsFromModal();
+      const imageFile = qs("#ep-image").files[0];
+
+      if (!name || !price) {
+        alert("Name and price required.");
+        return;
+      }
+
+      const conflicts = products.some(
+        p => p.code === sku && !(p.id === productId && p.branchId === branchId)
+      );
+      if (sku && conflicts) {
+        alert("Another product already uses this SKU.");
+        return;
+      }
+
+      const pRef = doc(db, "brands", brandId, "branches", branchId, "products", productId);
+      const snap = await getDoc(pRef);
+      const old = snap.exists() ? snap.data() : {};
+      let imageUrl = old.imageUrl || null;
+
+      if (imageFile) {
+        const key = sku || old.code || productId;
+        imageUrl = await uploadImageToStorage(imageFile, `brands/${brandId}/products/${key}`);
+      }
+
+      await updateDoc(pRef, {
+        name,
+        code: sku || null,
+        price,
+        stockMode,
+        stockQty,
+        variants,
+        variantGroup: variantGroup || null,
+        imageUrl
+      });
+
+      closeModal();
+      await loadProducts();
+      renderProductsTable();
+    }
+
+    async function deleteProduct(branchId, productId) {
+      if (!confirm("Delete this product from this branch?")) return;
+      await deleteDoc(doc(db, "brands", brandId, "branches", branchId, "products", productId));
+      closeModal();
+      await loadProducts();
+      renderProductsTable();
+    }
+
+    /* ADD STAFF */
+    qs("#btn-add-staff").addEventListener("click", () => {
+      const branchOptions = branches
+        .map(b => `<option value="${b.id}">${b.name}</option>`)
+        .join("");
+
+      openModal(`
+        <div class="modal-title">Add Staff User</div>
+
+        <div class="field">
+          <div class="field-label">Username</div>
+          <input id="s-username" class="field-input"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">PIN</div>
+          <input id="s-pin" class="field-input" type="number"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Display Name</div>
+          <input id="s-display" class="field-input"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Branch</div>
+          <select id="s-branch" class="field-select">
+            ${branchOptions}
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" id="btn-save-staff">Save</button>
+        </div>
+      `);
+
+      qs("#btn-save-staff").addEventListener("click", saveStaff);
+    });
+
+    async function saveStaff() {
+      const username = qs("#s-username").value.trim();
+      const pin = qs("#s-pin").value.trim();
+      const display = qs("#s-display").value.trim();
+      const branch = qs("#s-branch").value;
+
+      if (!username || !pin) {
+        alert("Username and PIN required.");
+        return;
+      }
+
+      await addDoc(collection(db, "posUsers"), {
+        username,
+        pin,
+        displayName: display || username,
+        branchId: branch,
+        brandId,
+        role: "cashier",
+        isActive: true,
+        createdAt: serverTimestamp()
+      });
+
+      closeModal();
+      await loadStaff();
+      renderStaffTable();
+    }
+
+    function editStaff(id) {
+      const u = staffUsers.find(x => x.id === id);
+      if (!u) return;
+
+      const branchOptions = branches
+        .map(b => `<option value="${b.id}" ${b.id === u.branchId ? "selected" : ""}>${b.name}</option>`)
+        .join("");
+
+      openModal(`
+        <div class="modal-title">Edit Staff</div>
+
+        <div class="field">
+          <div class="field-label">Username</div>
+          <input id="es-username" class="field-input" value="${u.username || ""}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">PIN</div>
+          <input id="es-pin" class="field-input" value="${u.pin || ""}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Display Name</div>
+          <input id="es-display" class="field-input" value="${u.displayName || ""}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Branch</div>
+          <select id="es-branch" class="field-select">
+            ${branchOptions}
+          </select>
+        </div>
+
+        <div class="field">
+          <button id="btn-delete-staff" class="btn btn-danger" type="button">Delete</button>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" id="btn-update-staff">Save</button>
+        </div>
+      `);
+
+      qs("#btn-update-staff").addEventListener("click", () => updateStaff(id));
+      qs("#btn-delete-staff").addEventListener("click", () => deleteStaff(id));
+    }
+
+    async function updateStaff(id) {
+      const username = qs("#es-username").value.trim();
+      const pin = qs("#es-pin").value.trim();
+      const display = qs("#es-display").value.trim();
+      const branch = qs("#es-branch").value;
+
+      await updateDoc(doc(db, "posUsers", id), {
+        username,
+        pin,
+        displayName: display,
+        branchId: branch
+      });
+
+      closeModal();
+      await loadStaff();
+      renderStaffTable();
+    }
+
+    async function deleteStaff(id) {
+      if (!confirm("Delete staff user?")) return;
+      await deleteDoc(doc(db, "posUsers", id));
+      closeModal();
+      await loadStaff();
+      renderStaffTable();
+    }
+
+    /* BRANCH ADD/EDIT */
+    qs("#btn-add-branch").addEventListener("click", () => {
+      openModal(`
+        <div class="modal-title">Add Branch</div>
+
+        <div class="field">
+          <div class="field-label">Branch Name</div>
+          <input id="b-name" class="field-input"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Code</div>
+          <input id="b-code" class="field-input"/>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" id="btn-save-branch">Save</button>
+        </div>
+      `);
+
+      qs("#btn-save-branch").addEventListener("click", saveBranch);
+    });
+
+    async function saveBranch() {
+      const name = qs("#b-name").value.trim();
+      const code = qs("#b-code").value.trim();
+      if (!name) {
+        alert("Name required.");
+        return;
+      }
+
+      await addDoc(collection(db, "brands", brandId, "branches"), {
+        name,
+        code,
+        isActive: true,
+        createdAt: serverTimestamp()
+      });
+
+      closeModal();
+      await loadBranches();
+      renderBranchesTable();
+    }
+
+    function editBranch(id) {
+      const b = branches.find(x => x.id === id);
+      if (!b) return;
+
+      openModal(`
+        <div class="modal-title">Edit Branch</div>
+
+        <div class="field">
+          <div class="field-label">Name</div>
+          <input id="eb-name" class="field-input" value="${b.name || ""}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Code</div>
+          <input id="eb-code" class="field-input" value="${b.code || ""}"/>
+        </div>
+
+        <div class="field">
+          <label>
+            <input id="eb-active" type="checkbox" ${b.isActive !== false ? "checked" : ""}/>
+            Active
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" id="btn-update-branch">Save</button>
+        </div>
+      `);
+
+      qs("#btn-update-branch").addEventListener("click", () => updateBranch(id));
+    }
+
+    async function updateBranch(id) {
+      const name = qs("#eb-name").value.trim();
+      const code = qs("#eb-code").value.trim();
+      const isActive = qs("#eb-active").checked;
+
+      await updateDoc(doc(db, "brands", brandId, "branches", id), {
+        name,
+        code,
+        isActive
+      });
+
+      closeModal();
+      await loadBranches();
+      renderBranchesTable();
+    }
+
+    /* SETTINGS SAVE (with brand logo upload) */
+    qs("#btn-save-brand-settings").addEventListener("click", async () => {
+      const name = qs("#set-brand-name").value.trim();
+      const country = qs("#set-brand-country").value.trim();
+      const logoFile = qs("#set-brand-logo").files[0];
+
+      const updates = { name, country };
+      if (logoFile) {
+        const logoUrl = await uploadImageToStorage(logoFile, `brands/${brandId}/branding`);
+        updates.logoUrl = logoUrl;
+      }
+
+      await updateDoc(doc(db, "brands", brandId), updates);
+      brandData = { ...brandData, ...updates };
+
+      if (brandData.logoUrl) {
+        sidebarBrandLogo.style.backgroundImage = `url(${brandData.logoUrl})`;
+        sidebarBrandLogo.textContent = "";
+        const authLogo = document.querySelector(".auth-logo");
+        if (authLogo) {
+          authLogo.style.backgroundImage = `url(${brandData.logoUrl})`;
+          authLogo.textContent = "";
+        }
+      } else {
+        sidebarBrandLogo.style.backgroundImage = "";
+        sidebarBrandLogo.textContent = name[0] || "B";
+      }
+
+      sidebarBrandName.textContent = name || "Brand";
+      topbarBrandTitle.textContent = `${name || "Brand"} Dashboard`;
+
+      alert("Brand settings saved.");
+    });
+
+    qs("#btn-save-financial-settings").addEventListener("click", async () => {
+      const vat = Number(qs("#set-vat").value || 0);
+      const fee = Number(qs("#set-service-fee").value || 0);
+      await updateDoc(doc(db, "brands", brandId), { vat, serviceFee: fee });
+      alert("Financial settings saved.");
+    });
+
+    qs("#btn-save-receipt-settings").addEventListener("click", async () => {
+      const sendEmail = qs("#set-send-email").checked;
+      await updateDoc(doc(db, "brands", brandId), { sendEmail });
+      alert("Receipt settings saved.");
+    });
+
+    /* EXPORT BUTTONS */
+    qs("#btn-export-products").addEventListener("click", () => {
+      const rows = [["branch","name","code","price","stockMode","stockQty","variantGroup","variants","imageUrl"]];
+      products.forEach(p => {
+        const variantsStr = Array.isArray(p.variants)
+          ? p.variants.map(v => `${v.label || ""} (${v.stockQty ?? ""})`).join(";")
+          : "";
+        rows.push([
+          p.branchName || "",
+          p.name || "",
+          p.code || "",
+          p.price ?? "",
+          p.stockMode || "",
+          p.stockQty ?? "",
+          p.variantGroup || "",
+          variantsStr,
+          p.imageUrl || ""
+        ]);
+      });
+      downloadCsv("products.csv", rows);
+    });
+
+    qs("#btn-export-branches").addEventListener("click", () => {
+      const rows = [["name","code","isActive"]];
+      branches.forEach(b => {
+        rows.push([b.name || "", b.code || "", b.isActive !== false ? "yes" : "no"]);
+      });
+      downloadCsv("branches.csv", rows);
+    });
+
+    qs("#btn-export-staff").addEventListener("click", () => {
+      const rows = [["username","displayName","branch","role","isActive"]];
+      staffUsers.forEach(s => {
+        const b = branches.find(x => x.id === s.branchId);
+        rows.push([
+          s.username || "",
+          s.displayName || "",
+          b ? b.name : "",
+          s.role || "",
+          s.isActive !== false ? "yes" : "no"
+        ]);
+      });
+      downloadCsv("staff.csv", rows);
+    });
+
+    qs("#btn-export-customers").addEventListener("click", () => {
+      const stats = buildCustomerStats();
+      const rows = [["name","phone","email","orders","totalSpent"]];
+
+      customersList.forEach(c => {
+        const key = c.id || c.email || c.phone || c.name;
+        const st = key ? stats[key] : null;
+        rows.push([
+          c.name || "",
+          c.phone || "",
+          c.email || "",
+          st ? st.orders : 0,
+          st ? st.total : 0
+        ]);
+      });
+
+      downloadCsv("customers.csv", rows);
+    });
+
+    qs("#btn-export-orders").addEventListener("click", () => {
+      const rows = [["orderId","date","branch","customer","total","paymentMethod","type","status"]];
+      ordersList.forEach(o => {
+        rows.push([
+          o.orderId || o.id,
+          orderDate(o) || "",
+          o.branchName || "",
+          o.customerName || "",
+          o.total ?? "",
+          o.paymentMethod || "",
+          o.type || "sale",
+          o.status || "normal"
+        ]);
+      });
+      downloadCsv("orders.csv", rows);
+    });
+
+    /* LOGOUT */
+    qs("#btn-logout").addEventListener("click", async () => {
+      if (ordersUnsub) {
+        ordersUnsub();
+        ordersUnsub = null;
+      }
       await signOut(auth);
-    }catch(e){
-      console.error(e);
-    }finally{
-      window.location.href = "login.html";
-    }
-  });
-
-  btnOpenPos.addEventListener("click",()=>{
-    window.location.href = "pos.html";
-  });
-
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){
-      window.location.href = "login.html";
-      return;
-    }
-    const platformUserRef = doc(db,"platformUsers",user.uid);
-    const snap = await getDoc(platformUserRef);
-    if(!snap.exists()){
-      alert("Your platform user record is missing.");
-      window.location.href = "login.html";
-      return;
-    }
-    const data = snap.data() || {};
-    const role = data.role || "brand_owner";
-    const brandIdFromUser = data.brandId || data.brand || null;
-    const brandIdFromQuery = getQueryBrandId();
-    const brandId = brandIdFromQuery || brandIdFromUser;
-
-    if(!brandId){
-      alert("No brand is linked to your account.");
-      window.location.href = "login.html";
-      return;
-    }
-
-    if(role !== "brand_owner" && role !== "branch_manager" && role !== "super_admin"){
-      alert("You do not have permission to access the brand dashboard.");
-      window.location.href = "login.html";
-      return;
-    }
-
-    userNameEl.textContent = data.name || user.email || "Brand user";
-    userRoleEl.textContent = role.replace("_"," ");
-    userInitialsEl.textContent = initialsFromNameOrEmail(data.name,user.email);
-
-    await loadPlatformNoteAndLogo();
-    await Promise.all([
-      loadBrand(brandId),
-      loadBrandStats(brandId),
-      loadBranches(brandId),
-      loadBrandConfig(brandId)
-    ]);
-    setView("overview");
-  });
-</script>
+      showAuth();
+    });
+  </script>
 </body>
 </html>
+

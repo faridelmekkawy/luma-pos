@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport"content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Luma Store OS — Brand Dashboard</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
   <style>
     :root{
@@ -91,7 +91,28 @@
       transform:translateY(-1px);
       box-shadow:0 14px 30px rgba(37,99,235,.25);
     }
-    .auth-helper{margin-top:10px;font-size:11px;color:var(--muted);}
+    .auth-btn-secondary{
+      width:100%;
+      border-radius:999px;
+      padding:8px 10px;
+      background:#111827;
+      color:#fff;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      margin-top:8px;
+      border:none;
+    }
+    .auth-btn-secondary:hover{
+      filter:brightness(1.05);
+    }
+    .auth-helper{
+      margin-top:10px;font-size:11px;color:var(--muted);
+    }
     .auth-error{
       font-size:11px;margin-top:6px;padding:6px 8px;border-radius:9px;
       background:#fef2f2;color:#b91c1c;border:1px solid:#fecaca;display:none;
@@ -384,16 +405,22 @@
         <label for="login-password" class="auth-label">Password</label>
         <input id="login-password" type="password" class="auth-input" placeholder="••••••••"/>
         <button id="login-btn" class="auth-btn">Login</button>
+
+        <!-- NEW: Create brand button -->
+        <button id="go-create-brand" class="auth-btn-secondary">
+          Create a brand on Luma Store OS
+        </button>
+
         <div id="login-error" class="auth-error"></div>
         <div class="auth-helper">
-          Use the email & password of your brand owner or manager account.  
-          If you received a special signup link, use that link first to create your account.
+          Use the email & password of your brand owner / manager account.  
+          Or press <strong>Create a brand</strong> to set up a new brand.
         </div>
       </div>
     </div>
   </div>
 
-  <!-- OWNER SIGNUP (when opened with ?brand=..&token=..) -->
+  <!-- OWNER SIGNUP / CREATE BRAND -->
   <div id="signup-screen" class="auth-wrapper" style="display:none;">
     <div class="auth-card">
       <div class="auth-header">
@@ -404,7 +431,17 @@
         </div>
       </div>
       <div id="signup-alert" class="auth-error" style="display:none;"></div>
+
+      <!-- Brand fields (used for self-create, readonly for link signup) -->
       <div>
+        <label class="auth-label" for="signup-brand-name">Brand name</label>
+        <input id="signup-brand-name" class="auth-input" placeholder="Brand name"/>
+
+        <label class="auth-label" for="signup-country">Country (optional)</label>
+        <input id="signup-country" class="auth-input" placeholder="Country"/>
+      </div>
+
+      <div style="margin-top:6px;">
         <label class="auth-label" for="signup-name">Your name</label>
         <input id="signup-name" class="auth-input" placeholder="Full name"/>
 
@@ -414,8 +451,8 @@
         <label class="auth-label" for="signup-password">Password</label>
         <input id="signup-password" type="password" class="auth-input" placeholder="Choose a strong password"/>
 
-        <button id="signup-btn" class="auth-btn">Create owner account</button>
-        <div class="auth-helper">
+        <button id="signup-btn" class="auth-btn">Continue</button>
+        <div class="auth-helper" id="signup-helper-text">
           This will create your brand owner account and connect it to this brand.
         </div>
       </div>
@@ -680,7 +717,7 @@
         <div class="variant-group-header">
           <input id="variant-group-name" class="field-input" placeholder="Example: Size"/>
         </div>
-        <div class="field-hint">Old style you asked for: one group (e.g., Size) and multiple labels below (S, M, L…).</div>
+        <div class="field-hint">Old style: one group (e.g., Size) and multiple labels below (S, M, L…)</div>
       </div>
 
       <div class="field">
@@ -712,7 +749,6 @@
       deleteDoc,
       query,
       orderBy,
-      where,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
     import {
@@ -756,14 +792,18 @@
     const loginPassword = qs("#login-password");
     const loginBtn = qs("#login-btn");
     const loginError = qs("#login-error");
+    const goCreateBrandBtn = qs("#go-create-brand");
 
     // Signup elements
     const signupBrandLabel = qs("#signup-brand-label");
+    const signupBrandNameInput = qs("#signup-brand-name");
+    const signupCountryInput = qs("#signup-country");
     const signupName = qs("#signup-name");
     const signupEmail = qs("#signup-email");
     const signupPassword = qs("#signup-password");
     const signupBtn = qs("#signup-btn");
     const signupAlert = qs("#signup-alert");
+    const signupHelperText = qs("#signup-helper-text");
 
     // App shell elements
     const pageTitleEl = qs("#page-title");
@@ -837,15 +877,21 @@
     let currentBrandDoc = null;
     let allProducts = [];
     let allCustomers = [];
+
     let editingProductId = null;
     let editingProductExistingImageUrl = null;
+
+    // Signup modes
+    let signupMode = null;        // "link" or "self"
+    let signupBrandId = null;
+    let signupToken = null;
+    let signupBrandData = null;
 
     function parseQuery(){
       const params = new URLSearchParams(window.location.search);
       return {
         brand: params.get("brand"),
-        token: params.get("token"),
-        impersonate: params.get("impersonate")
+        token: params.get("token")
       };
     }
 
@@ -1264,12 +1310,11 @@
         today.setHours(0,0,0,0);
         const tomorrow = new Date(today.getTime()+24*60*60*1000);
 
-        const ordersRef = collection(db,"brands",currentBrandId,"branches");
-        // Simple: iterate all branches then their orders
+        const branchesRef = collection(db,"brands",currentBrandId,"branches");
         let ordersToday = 0;
         let salesToday = 0;
 
-        const branchesSnap = await getDocs(ordersRef);
+        const branchesSnap = await getDocs(branchesRef);
         for(const branchDoc of branchesSnap.docs){
           const ordersCol = collection(branchDoc.ref,"orders");
           const snapOrders = await getDocs(ordersCol);
@@ -1285,7 +1330,7 @@
               if(type === "sale"){
                 salesToday += total;
               }else if(type === "return"){
-                salesToday += total; // total is negative for returns
+                salesToday += total; // assume negative for returns
               }
             }
           });
@@ -1405,7 +1450,7 @@
     saveSettingsBtn.addEventListener("click",saveBrandSettings);
     deleteBrandBtn.addEventListener("click",softDeleteBrand);
 
-    // Search and refresh events
+    // Search & refresh
     productsSearchInput.addEventListener("input",()=>renderProducts(productsSearchInput.value));
     productsRefreshBtn.addEventListener("click",()=>loadProducts());
     customersSearchInput.addEventListener("input",()=>renderCustomers(customersSearchInput.value));
@@ -1441,7 +1486,28 @@
       try{await signOut(auth);}catch(e){console.error(e);}
     });
 
-    // Signup from link
+    // NEW: Self-create brand button
+    goCreateBrandBtn.addEventListener("click",()=>{
+      signupMode = "self";
+      signupBrandId = null;
+      signupToken = null;
+      signupBrandData = null;
+      signupBrandLabel.textContent = "Create a new brand on Luma Store OS";
+      signupHelperText.textContent = "This will create both your brand and your owner account.";
+      signupAlert.style.display = "none";
+
+      signupBrandNameInput.value = "";
+      signupBrandNameInput.disabled = false;
+      signupCountryInput.value = "";
+      signupCountryInput.disabled = false;
+
+      signupName.value = "";
+      signupEmail.value = "";
+      signupPassword.value = "";
+
+      showSignup();
+    });
+
     async function initSignupFromLink(){
       const {brand,token} = parseQuery();
       if(!brand || !token) return false;
@@ -1452,9 +1518,18 @@
           signupBrandLabel.textContent = "Brand not found.";
           signupAlert.textContent = "This signup link is invalid (brand not found).";
           signupAlert.style.display = "block";
+          signupMode = "link";
+          signupBrandId = brand;
+          signupToken = token;
+          signupBrandData = null;
           return true;
         }
         const data = snap.data() || {};
+        signupMode = "link";
+        signupBrandId = brand;
+        signupToken = token;
+        signupBrandData = data;
+
         if(data.status === "deleted"){
           signupBrandLabel.textContent = data.name || "Deleted brand";
           signupAlert.textContent = "This brand has been deleted. Contact support.";
@@ -1467,61 +1542,145 @@
           signupAlert.style.display = "block";
           return true;
         }
+
         signupBrandLabel.textContent = `Brand: ${data.name || "Untitled"}`;
+        signupHelperText.textContent = "This will create your brand owner account and connect it to this existing brand.";
         signupAlert.style.display = "none";
 
-        signupBtn.addEventListener("click",async()=>{
-          signupAlert.style.display="none";
-          const name = signupName.value.trim();
-          const email = signupEmail.value.trim();
-          const pass = signupPassword.value;
-          if(!name || !email || !pass){
-            signupAlert.textContent = "Fill all fields.";
-            signupAlert.style.display = "block";
-            return;
-          }
-          try{
-            signupBtn.disabled = true;
-            signupBtn.textContent = "Creating…";
-            const cred = await createUserWithEmailAndPassword(auth,email,pass);
-            const uid = cred.user.uid;
-            await setDoc(doc(db,"users",uid),{
-              name,
-              email,
-              role:"brand_owner",
-              brandId: brand,
-              brandName: data.name || null,
-              status:"active",
-              createdAt: serverTimestamp()
-            });
-            await updateDoc(brandRef,{
-              ownerUserId: uid,
-              ownerEmail: email,
-              signupToken: token,
-              signupCompletedAt: serverTimestamp(),
-              status: data.status === "pending_setup" ? "active" : (data.status || "active")
-            });
-            // onAuthStateChanged will handle dashboard
-          }catch(err){
-            console.error("Signup error",err);
-            signupAlert.textContent = "Failed to create account. Maybe email already used.";
-            signupAlert.style.display = "block";
-          }finally{
-            signupBtn.disabled = false;
-            signupBtn.textContent = "Create owner account";
-          }
-        });
+        // Pre-fill and lock brand name/country from existing doc
+        signupBrandNameInput.value = data.name || "";
+        signupBrandNameInput.disabled = true;
+        signupCountryInput.value = data.country || "";
+        signupCountryInput.disabled = true;
 
         return true;
       }catch(err){
-        console.error("Error initializing signup",err);
+        console.error("Error initializing signup from link",err);
         signupAlert.textContent = "Error loading brand. Check console.";
         signupAlert.style.display = "block";
+        signupMode = "link";
+        signupBrandId = brand;
+        signupToken = token;
+        signupBrandData = null;
         return true;
       }
     }
 
-    // onAuthStateChanged
+    async function handleSignupSubmit(){
+      signupAlert.style.display = "none";
+      signupAlert.textContent = "";
+
+      const brandName = signupBrandNameInput.value.trim();
+      const country = signupCountryInput.value.trim();
+      const name = signupName.value.trim();
+      const email = signupEmail.value.trim();
+      const pass = signupPassword.value;
+
+      if(!name || !email || !pass){
+        signupAlert.textContent = "Fill your name, email and password.";
+        signupAlert.style.display = "block";
+        return;
+      }
+
+      // For self-create mode we also require brand name
+      if(signupMode === "self" && !brandName){
+        signupAlert.textContent = "Please enter a brand name.";
+        signupAlert.style.display = "block";
+        return;
+      }
+
+      try{
+        signupBtn.disabled = true;
+        signupBtn.textContent = "Working…";
+
+        if(signupMode === "link" && signupBrandId && signupToken){
+          // Connect owner to existing brand created by Super Admin
+          const cred = await createUserWithEmailAndPassword(auth,email,pass);
+          const uid = cred.user.uid;
+
+          const brandRef = doc(db,"brands",signupBrandId);
+          const brandSnap = await getDoc(brandRef);
+          const brandData = brandSnap.exists() ? brandSnap.data() : (signupBrandData || {});
+          const finalBrandName = brandData.name || brandName || null;
+          const finalCountry = brandData.country || country || null;
+
+          await setDoc(doc(db,"users",uid),{
+            name,
+            email,
+            role:"brand_owner",
+            brandId: signupBrandId,
+            brandName: finalBrandName,
+            status:"active",
+            createdAt: serverTimestamp()
+          });
+
+          await updateDoc(brandRef,{
+            name: finalBrandName,
+            country: finalCountry,
+            ownerUserId: uid,
+            ownerEmail: email,
+            signupToken: signupToken,
+            signupCompletedAt: serverTimestamp(),
+            status: brandData.status === "pending_setup" ? "active" : (brandData.status || "active")
+          });
+
+          // onAuthStateChanged will continue
+        }else{
+          // Self-create brand: new brand doc + default branch + owner user
+          const cred = await createUserWithEmailAndPassword(auth,email,pass);
+          const uid = cred.user.uid;
+
+          const brandsCol = collection(db,"brands");
+          const brandRef = doc(brandsCol);
+          const newBrandId = brandRef.id;
+
+          await setDoc(brandRef,{
+            name: brandName,
+            country: country || null,
+            status:"active",
+            isActive:true,
+            ownerUserId: uid,
+            ownerEmail: email,
+            createdAt: serverTimestamp(),
+            branchCount:1,
+            defaultCurrency:null,
+            defaultTaxPercent:null
+          });
+
+          const branchRef = doc(brandRef,"branches",doc(collection(brandRef,"branches")).id);
+          await setDoc(branchRef,{
+            name:"Main Branch",
+            code:"MAIN",
+            location:null,
+            isActive:true,
+            createdAt: serverTimestamp()
+          });
+
+          await setDoc(doc(db,"users",uid),{
+            name,
+            email,
+            role:"brand_owner",
+            brandId: newBrandId,
+            brandName,
+            status:"active",
+            createdAt: serverTimestamp()
+          });
+
+          // onAuthStateChanged will continue
+        }
+      }catch(err){
+        console.error("Signup error",err);
+        signupAlert.textContent = "Failed to create account. Maybe email already used.";
+        signupAlert.style.display = "block";
+      }finally{
+        signupBtn.disabled = false;
+        signupBtn.textContent = "Continue";
+      }
+    }
+
+    signupBtn.addEventListener("click",handleSignupSubmit);
+
+    // Auth state
     onAuthStateChanged(auth,async(user)=>{
       if(!user){
         currentUser = null;
@@ -1529,11 +1688,11 @@
         currentBrandId = null;
         currentBrandDoc = null;
 
-        // Decide which auth screen
-        const hasSignupParams = !!(parseQuery().brand && parseQuery().token);
-        if(hasSignupParams){
+        const {brand,token} = parseQuery();
+        if(brand && token){
           showSignup();
-          initSignupFromLink();
+          signupMode = "link";
+          await initSignupFromLink();
         }else{
           showLogin();
         }
@@ -1584,11 +1743,12 @@
       }
     });
 
-    // Initial: decide screen (before auth listener fires) – just for UX
+    // Simple initial UI
     (async ()=>{
       const {brand,token} = parseQuery();
       if(brand && token){
         showSignup();
+        signupMode = "link";
         await initSignupFromLink();
       }else{
         showLogin();

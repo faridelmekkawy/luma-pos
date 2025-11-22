@@ -1416,19 +1416,42 @@
 
   async function loadProducts(){
     productsListEl.innerHTML = `<div class="empty">Loading products…</div>`;
-    // PRODUCTS IN A FIXED PLACE SHARED WITH DASHBOARD:
-    // brands/{brandId}/products
-    const productsCol = collection(db,"brands",brandId,"products");
+    const productsCol = collection(db,"brands",brandId,"branches",branchId,"products");
     const snap = await getDocs(productsCol);
     products = [];
     snap.forEach(d=>{
       const p = d.data() || {};
       if(p.isActive === false) return;
-      const rawStock =
-        typeof p.stock === "number" ? p.stock :
-        (typeof p.quantity === "number" ? p.quantity :
+
+      // Prefer quantity as canonical, then stock/qty/currentStock, then compute from variants
+      let rawStock =
+        typeof p.quantity === "number" ? p.quantity :
+        (typeof p.stock === "number" ? p.stock :
         (typeof p.qty === "number" ? p.qty :
         (typeof p.currentStock === "number" ? p.currentStock : null)));
+
+      if(rawStock == null && Array.isArray(p.variants) && p.variants.length){
+        let total = 0;
+        p.variants.forEach(v=>{
+          if(Array.isArray(v.labels) && v.labels.length){
+            v.labels.forEach(lbl=>{
+              const q =
+                typeof lbl.quantity === "number" ? lbl.quantity :
+                (typeof lbl.qty === "number" ? lbl.qty :
+                (typeof lbl.stock === "number" ? lbl.stock : 0));
+              total += q;
+            });
+          }else{
+            const q =
+              typeof v.quantity === "number" ? v.quantity :
+              (typeof v.qty === "number" ? v.qty :
+              (typeof v.stock === "number" ? v.stock : 0));
+            total += q;
+          }
+        });
+        rawStock = total;
+      }
+
       products.push({
         id:d.id,
         name:p.name || "Item",
@@ -1436,6 +1459,7 @@
         price:typeof p.price==="number" ? p.price : 0,
         variants:Array.isArray(p.variants)? p.variants : null,
         stock: rawStock,
+        quantity: rawStock,
         imageUrl: p.imageUrl || p.photoUrl || p.image || null,
         productUrl: p.productUrl || p.url || null
       });
@@ -1511,18 +1535,41 @@
     }
     let prod = findProductInMemoryByCode(code);
     if(!prod){
-      // Same fixed products path as dashboard
-      const productsCol = collection(db,"brands",brandId,"products");
+      const productsCol = collection(db,"brands",brandId,"branches",branchId,"products");
       const qCode = query(productsCol, where("code","==",code), limit(1));
       const snap = await getDocs(qCode);
       if(!snap.empty){
         const d = snap.docs[0];
         const p = d.data() || {};
-        const rawStock =
-          typeof p.stock === "number" ? p.stock :
-          (typeof p.quantity === "number" ? p.quantity :
+
+        let rawStock =
+          typeof p.quantity === "number" ? p.quantity :
+          (typeof p.stock === "number" ? p.stock :
           (typeof p.qty === "number" ? p.qty :
           (typeof p.currentStock === "number" ? p.currentStock : null)));
+
+        if(rawStock == null && Array.isArray(p.variants) && p.variants.length){
+          let total = 0;
+          p.variants.forEach(v=>{
+            if(Array.isArray(v.labels) && v.labels.length){
+              v.labels.forEach(lbl=>{
+                const q =
+                  typeof lbl.quantity === "number" ? lbl.quantity :
+                  (typeof lbl.qty === "number" ? lbl.qty :
+                  (typeof lbl.stock === "number" ? lbl.stock : 0));
+                total += q;
+              });
+            }else{
+              const q =
+                typeof v.quantity === "number" ? v.quantity :
+                (typeof v.qty === "number" ? v.qty :
+                (typeof v.stock === "number" ? v.stock : 0));
+              total += q;
+            }
+          });
+          rawStock = total;
+        }
+
         prod = {
           id:d.id,
           name:p.name || "Item",
@@ -1530,6 +1577,7 @@
           price:typeof p.price==="number" ? p.price : 0,
           variants:Array.isArray(p.variants)? p.variants : null,
           stock: rawStock,
+          quantity: rawStock,
           imageUrl: p.imageUrl || p.photoUrl || p.image || null,
           productUrl: p.productUrl || p.url || null
         };
@@ -1662,6 +1710,7 @@
         originalQty,
         variantKey: it.variantKey || null,
         variantChoices: Array.isArray(it.variantChoices) ? it.variantChoices : null,
+        variantMeta: it.variantMeta || null,
         imageUrl: it.productImageUrl || it.imageUrl || null,
         productUrl: it.productUrl || it.url || null
       });
@@ -2120,47 +2169,148 @@
     codeInputEl.focus();
   }
 
-  async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId){
+  // NEW: variant-aware stock adjustment that keeps POS & Dashboard in sync
+  async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId, branchIdParam = branchId){
     const sign = mode==="return" ? 1 : -1; // sale reduces stock, return adds back
-    const deltas = {};
+
+    const changesByProduct = {};
+
     cartItemsSource.forEach(i=>{
       const pid = i.baseId || i.id;
       if(!pid) return;
+
+      if(!changesByProduct[pid]){
+        changesByProduct[pid] = {
+          stockDelta:0,
+          variants:{}
+        };
+      }
+
       const delta = sign * i.qty;
-      deltas[pid] = (deltas[pid] || 0) + delta;
+      changesByProduct[pid].stockDelta += delta;
+
+      if(i.variantMeta && typeof i.variantMeta.groupIndex === "number"){
+        const gIdx = i.variantMeta.groupIndex;
+        const lIdx = (typeof i.variantMeta.labelIndex === "number") ? i.variantMeta.labelIndex : null;
+        const key = `${gIdx}:${lIdx != null ? lIdx : -1}`;
+        if(!changesByProduct[pid].variants[key]){
+          changesByProduct[pid].variants[key] = {
+            groupIndex:gIdx,
+            labelIndex:lIdx,
+            delta:0
+          };
+        }
+        changesByProduct[pid].variants[key].delta += delta;
+      }
     });
 
-    for(const [pid,delta] of Object.entries(deltas)){
-      // STOCK IS UPDATED IN THE SAME GLOBAL PRODUCTS COLLECTION:
-      // brands/{brandId}/products/{productId}
-      const productRef = doc(db,"brands",brandIdParam,"products",pid);
+    const productIds = Object.keys(changesByProduct);
+
+    for(const pid of productIds){
+      const productRef = doc(db,"brands",brandIdParam,"branches",branchIdParam,"products",pid);
+      const change = changesByProduct[pid];
+
       try{
-        await runTransaction(db, async (tx)=>{
+        await runTransaction(db, async tx=>{
           const snap = await tx.get(productRef);
           if(!snap.exists()) return;
           const data = snap.data() || {};
-          const baseStock =
-            typeof data.stock === "number" ? data.stock :
-            (typeof data.quantity === "number" ? data.quantity :
-            (typeof data.qty === "number" ? data.qty : 0));
-          const newStock = Math.max(0, baseStock + delta);
+
+          let variants = Array.isArray(data.variants)
+            ? JSON.parse(JSON.stringify(data.variants))
+            : null;
+
+          // Adjust variant-level quantities
+          if(variants && Object.keys(change.variants).length){
+            Object.values(change.variants).forEach(vChange=>{
+              const gIdx = vChange.groupIndex;
+              const lIdx = vChange.labelIndex;
+              if(!variants[gIdx]) return;
+
+              if(Array.isArray(variants[gIdx].labels) && lIdx != null && lIdx >= 0 && variants[gIdx].labels[lIdx]){
+                const lbl = variants[gIdx].labels[lIdx];
+                const baseQty =
+                  typeof lbl.quantity === "number" ? lbl.quantity :
+                  (typeof lbl.qty === "number" ? lbl.qty :
+                  (typeof lbl.stock === "number" ? lbl.stock : 0));
+                const newQty = Math.max(0, baseQty + vChange.delta);
+                lbl.quantity = newQty;
+                lbl.qty = newQty;
+                lbl.stock = newQty;
+              }else{
+                const vg = variants[gIdx];
+                const baseQty =
+                  typeof vg.quantity === "number" ? vg.quantity :
+                  (typeof vg.qty === "number" ? vg.qty :
+                  (typeof vg.stock === "number" ? vg.stock : 0));
+                const newQty = Math.max(0, baseQty + vChange.delta);
+                vg.quantity = newQty;
+                vg.qty = newQty;
+                vg.stock = newQty;
+              }
+            });
+          }
+
+          // Base top-level stock before applying delta
+          let baseStock =
+            typeof data.quantity === "number" ? data.quantity :
+            (typeof data.stock === "number" ? data.stock :
+            (typeof data.qty === "number" ? data.qty :
+            (typeof data.currentStock === "number" ? data.currentStock : 0)));
+
+          let newStock = Math.max(0, baseStock + change.stockDelta);
+
+          // If variants exist, recompute stock from them to keep everything consistent
+          if(variants){
+            let totalFromVariants = 0;
+            variants.forEach(v=>{
+              if(Array.isArray(v.labels) && v.labels.length){
+                v.labels.forEach(lbl=>{
+                  const q =
+                    typeof lbl.quantity === "number" ? lbl.quantity :
+                    (typeof lbl.qty === "number" ? lbl.qty :
+                    (typeof lbl.stock === "number" ? lbl.stock : 0));
+                  totalFromVariants += q;
+                });
+              }else{
+                const q =
+                  typeof v.quantity === "number" ? v.quantity :
+                  (typeof v.qty === "number" ? v.qty :
+                  (typeof v.stock === "number" ? v.stock : 0));
+                totalFromVariants += q;
+              }
+            });
+            newStock = Math.max(0, totalFromVariants);
+          }
+
           tx.set(productRef,{
             stock:newStock,
-            quantity:newStock
+            quantity:newStock,
+            variants: variants || data.variants || null
           },{ merge:true });
         });
-        if(brandIdParam === brandId){
-          const idx = products.findIndex(p=>p.id===pid);
-          if(idx>=0){
-            const currentLocal = typeof products[idx].stock === "number" ? products[idx].stock : 0;
-            const newLocal = Math.max(0, currentLocal + delta);
-            products[idx].stock = newLocal;
+
+        // Update local cache for current POS branch so UI stays in sync
+        if(brandIdParam === brandId && branchIdParam === branchId){
+          const idx = products.findIndex(p=>p.id === pid);
+          if(idx >= 0){
+            let p = products[idx];
+            let localBase =
+              typeof p.quantity === "number" ? p.quantity :
+              (typeof p.stock === "number" ? p.stock :
+              (typeof p.qty === "number" ? p.qty :
+              (typeof p.currentStock === "number" ? p.currentStock : 0)));
+            let newLocal = Math.max(0, localBase + change.stockDelta);
+            p.stock = newLocal;
+            p.quantity = newLocal;
           }
         }
+
       }catch(e){
         console.warn("Failed to adjust stock for product",pid,e);
       }
     }
+
     renderProductsList(topSearchEl.value);
   }
 
@@ -2192,6 +2342,7 @@
             lineTotal:lineTotalVal,
             variantKey:i.variantKey || null,
             variantChoices:i.variantChoices || null,
+            variantMeta:i.variantMeta || null,
             productImageUrl:i.productImageUrl || i.imageUrl || null,
             productUrl:i.productUrl || null
           };
@@ -2228,7 +2379,7 @@
         await setDoc(orderRef,orderData);
 
         try{
-          await adjustStockForOrder(o.cartItems, o.mode, o.brandId);
+          await adjustStockForOrder(o.cartItems, o.mode, o.brandId, o.branchId);
         }catch(e){
           console.warn("Stock adjust (sync) failed",e);
         }
@@ -2369,6 +2520,7 @@
           lineTotal:lineTotalVal,
           variantKey:i.variantKey || null,
           variantChoices:i.variantChoices || null,
+          variantMeta:i.variantMeta || null,
           productImageUrl:i.imageUrl || null,
           productUrl:i.productUrl || null
         };
@@ -2419,9 +2571,9 @@
 
       await setDoc(orderRef,orderData);
 
-      // Update stock (online) in global products collection
+      // Update stock (online)
       try{
-        await adjustStockForOrder(cartItems, currentMode, brandId);
+        await adjustStockForOrder(cartItems, currentMode, brandId, branchId);
       }catch(e){
         console.warn("Stock adjust failed",e);
       }
@@ -2786,7 +2938,7 @@
             if((i.baseId || i.id) === product.id && i.variantKey === variantKey){
               return sum + i.qty;
             }
-            return 0;
+            return 0 + sum;
           },0);
           availableQtyForVariant = selectedVariant.qty - usedInCartVariant;
         }
@@ -2839,4 +2991,3 @@
   </script>
 </body>
 </html>
-

@@ -33,11 +33,118 @@
       color:var(--ink);
     }
     body{
-      display:flex;
       min-height:100vh;
     }
 
-    /* Layout */
+    /* LOGIN SCREEN */
+    #login-screen{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .login-card{
+      width:100%;
+      max-width:380px;
+      background:var(--panel);
+      border-radius:20px;
+      border:1px solid var(--border);
+      box-shadow:0 18px 40px rgba(15,23,42,.12);
+      padding:20px 18px 16px;
+    }
+    .login-header{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .login-logo{
+      width:32px;height:32px;border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#a855f7);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;font-size:16px;
+    }
+    .login-title-block{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .login-title{
+      font-size:16px;
+      font-weight:700;
+    }
+    .login-subtitle{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .login-body{
+      margin-top:10px;
+    }
+    .login-label{
+      font-size:11px;
+      margin-bottom:4px;
+      color:#4b5563;
+    }
+    .login-input{
+      width:100%;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:var(--panel-soft);
+      font-size:12px;
+      margin-bottom:8px;
+    }
+    .login-input:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px var(--accent-soft);
+    }
+    .login-btn{
+      width:100%;
+      border:none;
+      border-radius:999px;
+      padding:8px 10px;
+      background:var(--accent);
+      color:#fff;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      margin-top:4px;
+      box-shadow:0 10px 25px rgba(37,99,235,.25);
+      transition:background .15s ease,transform .05s ease, box-shadow .15s ease;
+    }
+    .login-btn:hover{
+      background:var(--accent-strong);
+      transform:translateY(-1px);
+      box-shadow:0 14px 30px rgba(37,99,235,.25);
+    }
+    .login-helper{
+      margin-top:10px;
+      font-size:11px;
+      color:var(--muted);
+    }
+    .login-error{
+      font-size:11px;
+      margin-top:6px;
+      padding:6px 8px;
+      border-radius:9px;
+      background:#fef2f2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+      display:none;
+    }
+
+    /* APP SHELL LAYOUT */
+    #app-shell{
+      min-height:100vh;
+      display:flex;
+    }
+
     .sidebar{
       width:260px;
       background:#ffffff;
@@ -612,316 +719,299 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="brand-mark">
-      <div class="brand-logo">L</div>
+  <!-- LOGIN SCREEN (same page) -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">L</div>
+        <div class="login-title-block">
+          <div class="login-title">Luma Store OS</div>
+          <div class="login-subtitle">Super Admin login</div>
+        </div>
+      </div>
+      <div class="login-body">
+        <label class="login-label" for="login-email">Email</label>
+        <input id="login-email" type="email" class="login-input" placeholder="you@luma.com"/>
+
+        <label class="login-label" for="login-password">Password</label>
+        <input id="login-password" type="password" class="login-input" placeholder="••••••••"/>
+
+        <button id="login-btn" class="login-btn">
+          <span>Login</span>
+        </button>
+
+        <div id="login-error" class="login-error"></div>
+
+        <div class="login-helper">
+          Use your Luma Super Admin account. Only users with role <strong>super_admin</strong> can access this panel.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP SHELL (hidden until logged in + super_admin) -->
+  <div id="app-shell" style="display:none;">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-mark">
+        <div class="brand-logo">L</div>
+        <div>
+          <div class="brand-text-title">Luma Store OS</div>
+          <div class="brand-text-sub">Super Admin Panel</div>
+        </div>
+      </div>
+
       <div>
-        <div class="brand-text-title">Luma Store OS</div>
-        <div class="brand-text-sub">Super Admin Panel</div>
+        <div class="nav-section-title">Navigation</div>
+        <ul class="nav-list">
+          <li class="nav-item active" data-view="brands">
+            <span class="icon">🏬</span>
+            <span>Brands</span>
+          </li>
+          <li class="nav-item" data-view="users">
+            <span class="icon">👥</span>
+            <span>Platform users</span>
+          </li>
+          <li class="nav-item" data-view="settings">
+            <span class="icon">⚙️</span>
+            <span>Platform settings</span>
+          </li>
+        </ul>
       </div>
-    </div>
 
-    <div>
-      <div class="nav-section-title">Navigation</div>
-      <ul class="nav-list">
-        <li class="nav-item active" data-view="brands">
-          <span class="icon">🏬</span>
-          <span>Brands</span>
-        </li>
-        <li class="nav-item" data-view="users">
-          <span class="icon">👥</span>
-          <span>Platform users</span>
-        </li>
-        <li class="nav-item" data-view="settings">
-          <span class="icon">⚙️</span>
-          <span>Platform settings</span>
-        </li>
-      </ul>
-    </div>
-
-    <div class="sidebar-footer">
-      <div>Logged in as:</div>
-      <div id="sa-email" style="font-size:11px;font-weight:600;">—</div>
-      <div style="margin-top:4px;">Role: <span class="badge">Super Admin</span></div>
-    </div>
-  </aside>
-
-  <!-- Main -->
-  <main class="main">
-    <header class="topbar">
-      <div>
-        <div class="page-title" id="page-title">Brands</div>
-        <div class="page-subtitle" id="page-subtitle">
-          Create, onboard and manage all brands on the platform.
-        </div>
+      <div class="sidebar-footer">
+        <div>Logged in as:</div>
+        <div id="sa-email" style="font-size:11px;font-weight:600;">—</div>
+        <div style="margin-top:4px;">Role: <span class="badge">Super Admin</span></div>
       </div>
-      <div class="user-actions">
-        <div class="user-chip" id="user-chip">
-          <div class="user-chip-initials" id="sa-initials">SA</div>
-          <div class="user-chip-text">
-            <div class="user-chip-name" id="sa-name">Super Admin</div>
-            <div class="user-chip-role">Luma Platform</div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="page-title" id="page-title">Brands</div>
+          <div class="page-subtitle" id="page-subtitle">
+            Create, onboard and manage all brands on the platform.
           </div>
         </div>
-        <button id="btn-logout" class="btn btn-ghost">Logout</button>
-      </div>
-    </header>
-
-    <!-- Overview KPIs -->
-    <section id="overview-section" class="content-area">
-      <div class="overview-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">Total sales (today)</div>
-          <div class="kpi-value" id="kpi-sales-today">0</div>
-          <div class="kpi-sub">Across all brands & branches</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Orders (today)</div>
-          <div class="kpi-value" id="kpi-orders-today">0</div>
-          <div class="kpi-sub">Completed orders only</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Active brands</div>
-          <div class="kpi-value" id="kpi-active-brands">0</div>
-          <div class="kpi-sub">Brands with status = active</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Active POS users</div>
-          <div class="kpi-value" id="kpi-active-pos">0</div>
-          <div class="kpi-sub">Role = cashier, status = active</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- BRANDS VIEW -->
-    <section id="view-brands" class="content-area">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <span class="pill">All brands</span>
-          <span class="chip">
-            <span class="small-label">Total brands:</span>
-            <strong id="brand-count">0</strong>
-          </span>
-        </div>
-        <div class="toolbar-right">
-          <input id="search-input" class="search-input" placeholder="Search brand or owner…"/>
-          <button id="btn-refresh" class="btn-icon" title="Refresh">
-            ⟳
-          </button>
-          <button id="btn-new-brand" class="btn btn-primary">
-            + New brand
-          </button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Brands list</div>
-            <div class="card-subtitle">
-              Click “Open brand dashboard” to view the brand owner view.
+        <div class="user-actions">
+          <div class="user-chip" id="user-chip">
+            <div class="user-chip-initials" id="sa-initials">SA</div>
+            <div class="user-chip-text">
+              <div class="user-chip-name" id="sa-name">Super Admin</div>
+              <div class="user-chip-role">Luma Platform</div>
             </div>
           </div>
-          <div class="pill-small">Signup links are visible only to Super Admin.</div>
+          <button id="btn-logout" class="btn btn-ghost">Logout</button>
         </div>
+      </header>
 
-        <div id="brands-table-container" class="table-wrapper">
-          <table>
-            <thead>
-            <tr>
-              <th>Brand</th>
-              <th>Owner</th>
-              <th>Status</th>
-              <th>Branches</th>
-              <th>Signup link</th>
-              <th style="text-align:right;">Actions</th>
-            </tr>
-            </thead>
-            <tbody id="brands-tbody">
-            <tr><td colspan="6">
-              <div class="empty-state">Loading brands…</div>
-            </td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- PLATFORM USERS VIEW -->
-    <section id="view-users" class="content-area" style="display:none;">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <span class="pill">All platform users</span>
-          <span class="chip">
-            <span class="small-label">Total users:</span>
-            <strong id="users-count">0</strong>
-          </span>
-        </div>
-        <div class="toolbar-right">
-          <input id="users-search-input" class="search-input" placeholder="Search name, email or brand…"/>
-          <button id="btn-users-refresh" class="btn-icon" title="Refresh">
-            ⟳
-          </button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Platform users</div>
-            <div class="card-subtitle">
-              View all users across all brands, including brand owners, branch managers, and POS cashiers.
-            </div>
+      <!-- Overview KPIs -->
+      <section id="overview-section" class="content-area">
+        <div class="overview-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total sales (today)</div>
+            <div class="kpi-value" id="kpi-sales-today">0</div>
+            <div class="kpi-sub">Across all brands & branches</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Orders (today)</div>
+            <div class="kpi-value" id="kpi-orders-today">0</div>
+            <div class="kpi-sub">Completed orders only</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Active brands</div>
+            <div class="kpi-value" id="kpi-active-brands">0</div>
+            <div class="kpi-sub">Brands with status = active</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Active POS users</div>
+            <div class="kpi-value" id="kpi-active-pos">0</div>
+            <div class="kpi-sub">Role = cashier, status = active</div>
           </div>
         </div>
+      </section>
 
-        <div class="table-wrapper">
-          <table>
-            <thead>
-            <tr>
-              <th>User</th>
-              <th>Role</th>
-              <th>Brand / Branch</th>
-              <th>Status</th>
-              <th>Created</th>
-            </tr>
-            </thead>
-            <tbody id="users-tbody">
-            <tr><td colspan="5">
-              <div class="empty-state">Loading users…</div>
-            </td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- SETTINGS VIEW -->
-    <section id="view-settings" class="content-area" style="display:none;">
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Platform defaults & branding</div>
-            <div class="card-subtitle">
-              Control global settings that apply to all brands, plus Luma branding for POS and dashboards.
-            </div>
-          </div>
-        </div>
-
-        <div id="settings-alert-container" style="margin-bottom:8px;"></div>
-
-        <!-- Toggles -->
-        <div class="field">
-          <div class="field-label">Receipts defaults</div>
-
-          <div class="toggle-row">
-            <div class="toggle-row-left">
-              <div style="font-size:12px;font-weight:500;">Email receipts enabled by default</div>
-              <div class="small-label">
-                When a new brand or branch is created, email receipts will be turned on by default.
-              </div>
-            </div>
-            <input type="checkbox" id="setting-email-default" class="toggle-input"/>
-          </div>
-
-          <div class="toggle-row">
-            <div class="toggle-row-left">
-              <div style="font-size:12px;font-weight:500;">WhatsApp receipts enabled by default</div>
-              <div class="small-label">
-                When a new brand or branch is created, WhatsApp receipts will be turned on by default.
-              </div>
-            </div>
-            <input type="checkbox" id="setting-whatsapp-default" class="toggle-input"/>
-          </div>
-        </div>
-
-        <!-- Global note -->
-        <div class="field">
-          <div class="field-label">Global note for brand owners</div>
-          <textarea id="setting-global-note" class="field-textarea" rows="3"
-                    placeholder="Example: System will be down for maintenance on Friday at 3 AM Cairo time."></textarea>
-          <div class="field-hint">
-            This message will appear in the brand owner portal for all brands, so you can announce maintenance or news.
-          </div>
-        </div>
-
-        <!-- Logo upload -->
-        <div class="field">
-          <div class="field-label">Luma logo (for POS & dashboards)</div>
-          <input type="file" id="setting-logo-file" accept="image/*" class="field-input"/>
-          <div class="field-hint">
-            Upload the official Luma logo. It will be used on POS screens, brand dashboards, and emails (where supported).
-          </div>
-        </div>
-
-        <div class="field">
-          <div class="field-label">Current logo preview</div>
-          <div class="logo-preview-box">
-            <img id="logo-preview-img" class="logo-preview-img" style="display:none;" alt="Luma logo preview"/>
-            <span id="logo-preview-placeholder" class="logo-preview-placeholder">
-              No logo uploaded yet.
+      <!-- BRANDS VIEW -->
+      <section id="view-brands" class="content-area">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="pill">All brands</span>
+            <span class="chip">
+              <span class="small-label">Total brands:</span>
+              <strong id="brand-count">0</strong>
             </span>
           </div>
-        </div>
-
-        <div class="settings-footer">
-          <div class="settings-status" id="settings-status-text">Settings not saved yet.</div>
-          <button id="btn-save-settings" class="btn btn-primary">Save settings</button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Create Brand Modal -->
-  <div id="modal-backdrop" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <div>
-          <div class="modal-title">Create new brand</div>
-          <div class="modal-subtitle">
-            This will create a brand shell with a signup link you can send to the owner.
+          <div class="toolbar-right">
+            <input id="search-input" class="search-input" placeholder="Search brand or owner…"/>
+            <button id="btn-refresh" class="btn-icon" title="Refresh">
+              ⟳
+            </button>
+            <button id="btn-new-brand" class="btn btn-primary">
+              + New brand
+            </button>
           </div>
         </div>
-        <button class="modal-close" id="modal-close-btn">&times;</button>
-      </div>
 
-      <div id="modal-alert-container"></div>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Brands list</div>
+              <div class="card-subtitle">
+                Click “Open brand dashboard” to view the brand owner view.
+              </div>
+            </div>
+            <div class="pill-small">Signup links are visible only to Super Admin.</div>
+          </div>
 
-      <div class="field">
-        <div class="field-label">Brand name</div>
-        <input id="field-brand-name" class="field-input" placeholder="Example: Zed Outfitters"/>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Country (optional)</div>
-        <input id="field-brand-country" class="field-input" placeholder="Example: Egypt"/>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Default branch name</div>
-        <input id="field-branch-name" class="field-input" placeholder="Example: Main Store"/>
-        <div class="field-hint">You can add more branches later from the brand dashboard.</div>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Branch code (optional)</div>
-        <input id="field-branch-code" class="field-input" placeholder="Example: MAIN"/>
-        <div class="field-hint">
-          Used as a prefix if you ever want order IDs like <strong>2401-52</strong> per branch per day.
+          <div id="brands-table-container" class="table-wrapper">
+            <table>
+              <thead>
+              <tr>
+                <th>Brand</th>
+                <th>Owner</th>
+                <th>Status</th>
+                <th>Branches</th>
+                <th>Signup link</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+              </thead>
+              <tbody id="brands-tbody">
+              <tr><td colspan="6">
+                <div class="empty-state">Loading brands…</div>
+              </td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="alert alert-info">
-        After you create the brand, a <strong>signup link</strong> will appear in the brands table.
-        Send that link to the brand owner via WhatsApp or email.
-      </div>
+      <!-- PLATFORM USERS VIEW -->
+      <section id="view-users" class="content-area" style="display:none;">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="pill">All platform users</span>
+            <span class="chip">
+              <span class="small-label">Total users:</span>
+              <strong id="users-count">0</strong>
+            </span>
+          </div>
+          <div class="toolbar-right">
+            <input id="users-search-input" class="search-input" placeholder="Search name, email or brand…"/>
+            <button id="btn-users-refresh" class="btn-icon" title="Refresh">
+              ⟳
+            </button>
+          </div>
+        </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
-        <button class="btn btn-primary" id="modal-create-btn">Create brand</button>
-      </div>
-    </div>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Platform users</div>
+              <div class="card-subtitle">
+                View all users across all brands, including brand owners, branch managers, and POS cashiers.
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Brand / Branch</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+              </thead>
+              <tbody id="users-tbody">
+              <tr><td colspan="5">
+                <div class="empty-state">Loading users…</div>
+              </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section id="view-settings" class="content-area" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Platform defaults & branding</div>
+              <div class="card-subtitle">
+                Control global settings that apply to all brands, plus Luma branding for POS and dashboards.
+              </div>
+            </div>
+          </div>
+
+          <div id="settings-alert-container" style="margin-bottom:8px;"></div>
+
+          <!-- Toggles -->
+          <div class="field">
+            <div class="field-label">Receipts defaults</div>
+
+            <div class="toggle-row">
+              <div class="toggle-row-left">
+                <div style="font-size:12px;font-weight:500;">Email receipts enabled by default</div>
+                <div class="small-label">
+                  When a new brand or branch is created, email receipts will be turned on by default.
+                </div>
+              </div>
+              <input type="checkbox" id="setting-email-default" class="toggle-input"/>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-row-left">
+                <div style="font-size:12px;font-weight:500;">WhatsApp receipts enabled by default</div>
+                <div class="small-label">
+                  When a new brand or branch is created, WhatsApp receipts will be turned on by default.
+                </div>
+              </div>
+              <input type="checkbox" id="setting-whatsapp-default" class="toggle-input"/>
+            </div>
+          </div>
+
+          <!-- Global note -->
+          <div class="field">
+            <div class="field-label">Global note for brand owners</div>
+            <textarea id="setting-global-note" class="field-textarea" rows="3"
+                      placeholder="Example: System will be down for maintenance on Friday at 3 AM Cairo time."></textarea>
+            <div class="field-hint">
+              This message will appear in the brand owner portal for all brands, so you can announce maintenance or news.
+            </div>
+          </div>
+
+          <!-- Logo upload -->
+          <div class="field">
+            <div class="field-label">Luma logo (for POS & dashboards)</div>
+            <input type="file" id="setting-logo-file" accept="image/*" class="field-input"/>
+            <div class="field-hint">
+              Upload the official Luma logo. It will be used on POS screens, brand dashboards, and emails (where supported).
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Current logo preview</div>
+            <div class="logo-preview-box">
+              <img id="logo-preview-img" class="logo-preview-img" style="display:none;" alt="Luma logo preview"/>
+              <span id="logo-preview-placeholder" class="logo-preview-placeholder">
+                No logo uploaded yet.
+              </span>
+            </div>
+          </div>
+
+          <div class="settings-footer">
+            <div class="settings-status" id="settings-status-text">Settings not saved yet.</div>
+            <button id="btn-save-settings" class="btn btn-primary">Save settings</button>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
   <!-- Firebase + Super Admin Logic -->
@@ -943,7 +1033,8 @@
     import {
       getAuth,
       onAuthStateChanged,
-      signOut
+      signOut,
+      signInWithEmailAndPassword
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import {
       getStorage,
@@ -968,6 +1059,14 @@
 
     const qs = (sel) => document.querySelector(sel);
     const qsa = (sel) => Array.from(document.querySelectorAll(sel));
+
+    // LOGIN DOM
+    const loginScreen = qs("#login-screen");
+    const appShell = qs("#app-shell");
+    const loginEmailInput = qs("#login-email");
+    const loginPasswordInput = qs("#login-password");
+    const loginBtn = qs("#login-btn");
+    const loginErrorEl = qs("#login-error");
 
     // Views
     const viewBrands = qs("#view-brands");
@@ -1381,7 +1480,7 @@
             <div class="empty-state">Loading users…</div>
           </td></tr>`;
 
-        // READ FROM `users` collection INSTEAD OF `platformUsers`
+        // Read users from `users` collection
         const usersRef = collection(db,"users");
         const snap = await getDocs(usersRef);
 
@@ -1532,6 +1631,17 @@
       }
     }
 
+    function showLogin(){
+      appShell.style.display = "none";
+      loginScreen.style.display = "flex";
+      loginErrorEl.style.display = "none";
+    }
+
+    function showApp(){
+      loginScreen.style.display = "none";
+      appShell.style.display = "flex";
+    }
+
     newBrandBtn.addEventListener("click", showModal);
     modalCloseBtn.addEventListener("click", hideModal);
     modalCancelBtn.addEventListener("click", hideModal);
@@ -1571,30 +1681,55 @@
         await signOut(auth);
       }catch(e){
         console.error("Error during logout", e);
+      }
+    });
+
+    loginBtn.addEventListener("click", async ()=>{
+      loginErrorEl.style.display = "none";
+      loginErrorEl.textContent = "";
+      const email = loginEmailInput.value.trim();
+      const pass = loginPasswordInput.value;
+
+      if(!email || !pass){
+        loginErrorEl.textContent = "Please enter email and password.";
+        loginErrorEl.style.display = "block";
+        return;
+      }
+
+      try{
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Logging in…";
+        await signInWithEmailAndPassword(auth, email, pass);
+      }catch(err){
+        console.error("Login error", err);
+        loginErrorEl.textContent = "Invalid email or password.";
+        loginErrorEl.style.display = "block";
       }finally{
-        // Same login page used by the rest of Store OS
-        window.location.href = "login.html";
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Login";
       }
     });
 
     onAuthStateChanged(auth, async (user)=>{
       if(!user){
-        window.location.href = "login.html";
+        currentUser = null;
+        isSuperAdmin = false;
+        showLogin();
         return;
       }
       currentUser = user;
       saEmailEl.textContent = user.email || "Unknown";
 
       try{
-        // READ ROLE & NAME FROM `users/{uid}`
+        // Read from `users/{uid}`
         const platformUserRef = doc(db,"users",user.uid);
         const snap = await getDoc(platformUserRef);
 
         let displayName = user.email || "Super Admin";
+        isSuperAdmin = false;
 
         if(snap.exists()){
           const data = snap.data() || {};
-          // Role comes from `users` collection now
           if(data.role === "super_admin"){
             isSuperAdmin = true;
           }
@@ -1604,13 +1739,19 @@
         }
 
         if(!isSuperAdmin){
-          alert("You do not have permission to access the Super Admin panel.");
-          window.location.href = "login.html";
+          // Not allowed to access
+          await signOut(auth);
+          loginErrorEl.textContent = "You do not have permission to access the Super Admin panel.";
+          loginErrorEl.style.display = "block";
+          showLogin();
           return;
         }
 
+        // Allowed
         saNameEl.textContent = displayName;
         saInitialsEl.textContent = initialsFromString(displayName) || initialsFromEmail(user.email || "");
+
+        showApp();
 
         await Promise.all([
           loadBrands(),
@@ -1621,8 +1762,10 @@
         setView("brands");
       }catch(err){
         console.error("Error checking platform user role", err);
-        alert("Error verifying permissions. Check console.");
-        window.location.href = "login.html";
+        await signOut(auth);
+        loginErrorEl.textContent = "Error verifying permissions. Please try again.";
+        loginErrorEl.style.display = "block";
+        showLogin();
       }
     });
   </script>

@@ -1,4 +1,4 @@
-<!doctype html><!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -114,6 +114,7 @@
     }
     .btn-ghost:hover{background:var(--accent-soft);}
     .btn-danger{background:var(--danger);color:#fff;}
+    .btn-danger:hover{background:#b91c1c;}
 
     .auth-footer{text-align:center;margin-top:8px;font-size:10px;color:var(--muted);}
 
@@ -556,7 +557,10 @@
                   Used on POS and dashboard. Stored under brands/&lt;brandId&gt;/branding/.
                 </div>
               </div>
-              <button id="btn-save-brand-settings" class="btn btn-primary">Save</button>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+                <button id="btn-save-brand-settings" class="btn btn-primary">Save</button>
+                <button id="btn-delete-brand" class="btn btn-danger">Delete Brand</button>
+              </div>
             </div>
 
             <div class="settings-card">
@@ -976,20 +980,19 @@
       });
     }
 
-    /* LOAD PRODUCTS */
+    /* LOAD PRODUCTS (single fixed collection: brands/{brandId}/products) */
     async function loadProducts() {
       products = [];
-      for (const b of branches) {
-        const snap = await getDocs(collection(db, "brands", brandId, "branches", b.id, "products"));
-        snap.forEach(d => {
-          products.push({
-            id: d.id,
-            branchId: b.id,
-            branchName: b.name,
-            ...d.data()
-          });
+      const snap = await getDocs(collection(db, "brands", brandId, "products"));
+      snap.forEach(d => {
+        const data = d.data();
+        const b = branches.find(x => x.id === data.branchId);
+        products.push({
+          id: d.id,
+          ...data,
+          branchName: b ? b.name : (data.branchName || "")
         });
-      }
+      });
     }
 
     /* LOAD STAFF */
@@ -1232,7 +1235,7 @@
             <td>${p.variantGroup || ""}</td>
             <td>${variantsStr}</td>
             <td>${p.isActive === false ? "No" : "Yes"}</td>
-            <td><button class="btn btn-ghost" data-edit-product-branch="${p.branchId}" data-edit-product-id="${p.id}">Edit</button></td>
+            <td><button class="btn btn-ghost" data-edit-product-id="${p.id}">Edit</button></td>
           </tr>
         `;
       });
@@ -1240,9 +1243,8 @@
       productsTable.innerHTML = html;
 
       productsTable.querySelectorAll("button[data-edit-product-id]").forEach(btn => {
-        const branchId = btn.getAttribute("data-edit-product-branch");
         const productId = btn.getAttribute("data-edit-product-id");
-        btn.addEventListener("click", () => editProduct(branchId, productId));
+        btn.addEventListener("click", () => editProduct(productId));
       });
     }
 
@@ -1774,8 +1776,9 @@
 
         if (!name || !price) continue;
 
+        // create a product per branch so stock is per-branch but path is fixed
         for (const b of branches) {
-          await addDoc(collection(db, "brands", brandId, "branches", b.id, "products"), {
+          await addDoc(collection(db, "brands", brandId, "products"), {
             name,
             code: sku || null,
             price,
@@ -1784,6 +1787,8 @@
             variantGroup: variantGroup || null,
             variants,
             isActive: true,
+            branchId: b.id,
+            branchName: b.name || "",
             createdAt: serverTimestamp()
           });
           count++;
@@ -1798,6 +1803,10 @@
 
     /* ADD PRODUCT */
     qs("#btn-add-product").addEventListener("click", () => {
+      const branchOptions = branches
+        .map(b => `<option value="${b.id}">${b.name}</option>`)
+        .join("");
+
       openModal(`
         <div class="modal-title">Add Product</div>
 
@@ -1814,6 +1823,13 @@
         <div class="field">
           <div class="field-label">Price</div>
           <input id="p-price" class="field-input" type="number" placeholder="Base price"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Branch</div>
+          <select id="p-branch" class="field-select">
+            ${branchOptions}
+          </select>
         </div>
 
         <div class="field">
@@ -1866,6 +1882,7 @@
       const name = qs("#p-name").value.trim();
       const sku = qs("#p-sku").value.trim();
       const price = Number(qs("#p-price").value);
+      const branchIdForProd = qs("#p-branch").value;
       const stockMode = qs("#p-stock-mode").value;
       const stockQty = stockMode === "limited" ? Number(qs("#p-stock-qty").value || 0) : null;
       const imageFile = qs("#p-image").files[0];
@@ -1877,8 +1894,13 @@
         return;
       }
 
-      if (sku && products.some(p => p.code === sku)) {
-        alert("A product with this SKU already exists.");
+      if (!branchIdForProd) {
+        alert("Select a branch.");
+        return;
+      }
+
+      if (sku && products.some(p => p.code === sku && p.branchId === branchIdForProd)) {
+        alert("A product with this SKU already exists for this branch.");
         return;
       }
 
@@ -1887,28 +1909,30 @@
         ? await uploadImageToStorage(imageFile, `brands/${brandId}/products/${uidKey}`)
         : null;
 
-      for (const b of branches) {
-        await addDoc(collection(db, "brands", brandId, "branches", b.id, "products"), {
-          name,
-          code: sku || null,
-          price,
-          stockMode,
-          stockQty,
-          imageUrl,
-          variantGroup: variantGroup || null,
-          variants,
-          isActive: true,
-          createdAt: serverTimestamp()
-        });
-      }
+      const branchObj = branches.find(b => b.id === branchIdForProd);
+
+      await addDoc(collection(db, "brands", brandId, "products"), {
+        name,
+        code: sku || null,
+        price,
+        stockMode,
+        stockQty,
+        imageUrl,
+        variantGroup: variantGroup || null,
+        variants,
+        isActive: true,
+        branchId: branchIdForProd,
+        branchName: branchObj ? branchObj.name : "",
+        createdAt: serverTimestamp()
+      });
 
       closeModal();
       await loadProducts();
       renderProductsTable();
     }
 
-    function editProduct(branchId, productId) {
-      const p = products.find(x => x.id === productId && x.branchId === branchId);
+    function editProduct(productId) {
+      const p = products.find(x => x.id === productId);
       if (!p) return;
 
       const variants = Array.isArray(p.variants) ? p.variants : [];
@@ -1916,6 +1940,10 @@
       const currentImageHtml = p.imageUrl
         ? `<img src="${p.imageUrl}" style="max-width:100%;max-height:120px;border-radius:8px;margin-bottom:6px;"/>`
         : `<div class="field-hint">No image yet.</div>`;
+
+      const branchOptions = branches
+        .map(b => `<option value="${b.id}" ${b.id === p.branchId ? "selected" : ""}>${b.name}</option>`)
+        .join("");
 
       openModal(`
         <div class="modal-title">Edit Product</div>
@@ -1933,6 +1961,13 @@
         <div class="field">
           <div class="field-label">Price</div>
           <input id="ep-price" class="field-input" type="number" value="${p.price || 0}"/>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Branch</div>
+          <select id="ep-branch" class="field-select">
+            ${branchOptions}
+          </select>
         </div>
 
         <div class="field">
@@ -1979,14 +2014,15 @@
 
       initVariantRows(variants);
 
-      qs("#btn-update-product").addEventListener("click", () => updateProduct(branchId, productId));
-      qs("#btn-delete-product").addEventListener("click", () => deleteProduct(branchId, productId));
+      qs("#btn-update-product").addEventListener("click", () => updateProduct(productId));
+      qs("#btn-delete-product").addEventListener("click", () => deleteProduct(productId));
     }
 
-    async function updateProduct(branchId, productId) {
+    async function updateProduct(productId) {
       const name = qs("#ep-name").value.trim();
       const sku = qs("#ep-sku").value.trim();
       const price = Number(qs("#ep-price").value);
+      const branchIdForProd = qs("#ep-branch").value;
       const stockMode = qs("#ep-stock-mode").value;
       const stockQty = stockMode === "limited" ? Number(qs("#ep-stock-qty").value || 0) : null;
       const variantGroup = qs("#ep-variant-group").value.trim();
@@ -1998,15 +2034,20 @@
         return;
       }
 
-      const conflicts = products.some(
-        p => p.code === sku && !(p.id === productId && p.branchId === branchId)
-      );
-      if (sku && conflicts) {
-        alert("Another product already uses this SKU.");
+      if (!branchIdForProd) {
+        alert("Select a branch.");
         return;
       }
 
-      const pRef = doc(db, "brands", brandId, "branches", branchId, "products", productId);
+      const conflicts = products.some(
+        p => p.code === sku && p.branchId === branchIdForProd && p.id !== productId
+      );
+      if (sku && conflicts) {
+        alert("Another product already uses this SKU for this branch.");
+        return;
+      }
+
+      const pRef = doc(db, "brands", brandId, "products", productId);
       const snap = await getDoc(pRef);
       const old = snap.exists() ? snap.data() : {};
       let imageUrl = old.imageUrl || null;
@@ -2016,6 +2057,8 @@
         imageUrl = await uploadImageToStorage(imageFile, `brands/${brandId}/products/${key}`);
       }
 
+      const branchObj = branches.find(b => b.id === branchIdForProd);
+
       await updateDoc(pRef, {
         name,
         code: sku || null,
@@ -2024,7 +2067,9 @@
         stockQty,
         variants,
         variantGroup: variantGroup || null,
-        imageUrl
+        imageUrl,
+        branchId: branchIdForProd,
+        branchName: branchObj ? branchObj.name : ""
       });
 
       closeModal();
@@ -2032,9 +2077,9 @@
       renderProductsTable();
     }
 
-    async function deleteProduct(branchId, productId) {
-      if (!confirm("Delete this product from this branch?")) return;
-      await deleteDoc(doc(db, "brands", brandId, "branches", branchId, "products", productId));
+    async function deleteProduct(productId) {
+      if (!confirm("Delete this product?")) return;
+      await deleteDoc(doc(db, "brands", brandId, "products", productId));
       closeModal();
       await loadProducts();
       renderProductsTable();
@@ -2271,6 +2316,8 @@
       closeModal();
       await loadBranches();
       renderBranchesTable();
+      await loadProducts();
+      renderProductsTable();
     }
 
     /* SETTINGS SAVE (with brand logo upload) */
@@ -2319,6 +2366,70 @@
       await updateDoc(doc(db, "brands", brandId), { sendEmail });
       alert("Receipt settings saved.");
     });
+
+    /* DELETE BRAND */
+    qs("#btn-delete-brand").addEventListener("click", deleteBrand);
+
+    async function deleteBrand() {
+      if (!brandId || !currentUser) {
+        alert("No brand loaded.");
+        return;
+      }
+      const sure = confirm("Delete this brand and ALL its data (products, branches, POS users, orders, customers)? This cannot be undone.");
+      if (!sure) return;
+
+      try {
+        // Delete POS users of this brand
+        const posSnap = await getDocs(query(collection(db, "posUsers"), where("brandId", "==", brandId)));
+        await Promise.all(posSnap.docs.map(d => deleteDoc(d.ref)));
+
+        // Delete products
+        const prodSnap = await getDocs(collection(db, "brands", brandId, "products"));
+        await Promise.all(prodSnap.docs.map(d => deleteDoc(d.ref)));
+
+        // Delete customers
+        const custSnap = await getDocs(collection(db, "brands", brandId, "customers"));
+        await Promise.all(custSnap.docs.map(d => deleteDoc(d.ref)));
+
+        // Delete branches and their orders
+        const branchesSnap = await getDocs(collection(db, "brands", brandId, "branches"));
+        for (const bDoc of branchesSnap.docs) {
+          const ordersSnap = await getDocs(collection(db, "brands", brandId, "branches", bDoc.id, "orders"));
+          await Promise.all(ordersSnap.docs.map(d => deleteDoc(d.ref)));
+          await deleteDoc(bDoc.ref);
+        }
+
+        // Delete brand document
+        await deleteDoc(doc(db, "brands", brandId));
+
+        // Update or delete userBrands
+        const ubRef = doc(db, "userBrands", currentUser.uid);
+        const ubSnap = await getDoc(ubRef);
+        if (ubSnap.exists()) {
+          const data = ubSnap.data();
+          const brandIds = Array.isArray(data.brandIds)
+            ? data.brandIds.filter(id => id !== brandId)
+            : [];
+          if (brandIds.length === 0) {
+            await deleteDoc(ubRef);
+          } else {
+            const primaryBrandId = data.primaryBrandId === brandId ? brandIds[0] : data.primaryBrandId;
+            await updateDoc(ubRef, { brandIds, primaryBrandId });
+          }
+        }
+
+        alert("Brand deleted. You will be signed out.");
+        if (ordersUnsub) {
+          ordersUnsub();
+          ordersUnsub = null;
+        }
+        await signOut(auth);
+        showAuth();
+      } catch (err) {
+        console.error("Failed to delete brand", err);
+        alert("Failed to delete brand. Check console and Firestore rules.");
+      }
+    }
 
     /* EXPORT BUTTONS */
     qs("#btn-export-products").addEventListener("click", () => {
@@ -2412,4 +2523,4 @@
     });
   </script>
 </body>
-</html>     
+</html>

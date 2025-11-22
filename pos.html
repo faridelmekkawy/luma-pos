@@ -1,4 +1,4 @@
-v<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -1416,7 +1416,9 @@ v<!doctype html>
 
   async function loadProducts(){
     productsListEl.innerHTML = `<div class="empty">Loading products…</div>`;
-    const productsCol = collection(db,"brands",brandId,"branches",branchId,"products");
+    // PRODUCTS IN A FIXED PLACE SHARED WITH DASHBOARD:
+    // brands/{brandId}/products
+    const productsCol = collection(db,"brands",brandId,"products");
     const snap = await getDocs(productsCol);
     products = [];
     snap.forEach(d=>{
@@ -1509,7 +1511,8 @@ v<!doctype html>
     }
     let prod = findProductInMemoryByCode(code);
     if(!prod){
-      const productsCol = collection(db,"brands",brandId,"branches",branchId,"products");
+      // Same fixed products path as dashboard
+      const productsCol = collection(db,"brands",brandId,"products");
       const qCode = query(productsCol, where("code","==",code), limit(1));
       const snap = await getDocs(qCode);
       if(!snap.empty){
@@ -2117,7 +2120,7 @@ v<!doctype html>
     codeInputEl.focus();
   }
 
-  async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId, branchIdParam = branchId){
+  async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId){
     const sign = mode==="return" ? 1 : -1; // sale reduces stock, return adds back
     const deltas = {};
     cartItemsSource.forEach(i=>{
@@ -2128,7 +2131,9 @@ v<!doctype html>
     });
 
     for(const [pid,delta] of Object.entries(deltas)){
-      const productRef = doc(db,"brands",brandIdParam,"branches",branchIdParam,"products",pid);
+      // STOCK IS UPDATED IN THE SAME GLOBAL PRODUCTS COLLECTION:
+      // brands/{brandId}/products/{productId}
+      const productRef = doc(db,"brands",brandIdParam,"products",pid);
       try{
         await runTransaction(db, async (tx)=>{
           const snap = await tx.get(productRef);
@@ -2144,7 +2149,7 @@ v<!doctype html>
             quantity:newStock
           },{ merge:true });
         });
-        if(brandIdParam === brandId && branchIdParam === branchId){
+        if(brandIdParam === brandId){
           const idx = products.findIndex(p=>p.id===pid);
           if(idx>=0){
             const currentLocal = typeof products[idx].stock === "number" ? products[idx].stock : 0;
@@ -2223,7 +2228,7 @@ v<!doctype html>
         await setDoc(orderRef,orderData);
 
         try{
-          await adjustStockForOrder(o.cartItems, o.mode, o.brandId, o.branchId);
+          await adjustStockForOrder(o.cartItems, o.mode, o.brandId);
         }catch(e){
           console.warn("Stock adjust (sync) failed",e);
         }
@@ -2414,9 +2419,9 @@ v<!doctype html>
 
       await setDoc(orderRef,orderData);
 
-      // Update stock (online)
+      // Update stock (online) in global products collection
       try{
-        await adjustStockForOrder(cartItems, currentMode, brandId, branchId);
+        await adjustStockForOrder(cartItems, currentMode, brandId);
       }catch(e){
         console.warn("Stock adjust failed",e);
       }
@@ -2781,7 +2786,7 @@ v<!doctype html>
             if((i.baseId || i.id) === product.id && i.variantKey === variantKey){
               return sum + i.qty;
             }
-            return sum;
+            return 0;
           },0);
           availableQtyForVariant = selectedVariant.qty - usedInCartVariant;
         }

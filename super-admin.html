@@ -673,22 +673,22 @@
       <div class="overview-grid">
         <div class="kpi-card">
           <div class="kpi-label">Total sales (today)</div>
-          <div class="kpi-value" id="kpi-sales-today">—</div>
+          <div class="kpi-value" id="kpi-sales-today">0</div>
           <div class="kpi-sub">Across all brands & branches</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Orders (today)</div>
-          <div class="kpi-value" id="kpi-orders-today">—</div>
+          <div class="kpi-value" id="kpi-orders-today">0</div>
           <div class="kpi-sub">Completed orders only</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Active brands</div>
-          <div class="kpi-value" id="kpi-active-brands">—</div>
+          <div class="kpi-value" id="kpi-active-brands">0</div>
           <div class="kpi-sub">Brands with status = active</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Active POS users</div>
-          <div class="kpi-value" id="kpi-active-pos">—</div>
+          <div class="kpi-value" id="kpi-active-pos">0</div>
           <div class="kpi-sub">Role = cashier, status = active</div>
         </div>
       </div>
@@ -1032,6 +1032,15 @@
     const platformSettingsRef = doc(db,"platformSettings","globalConfig");
     const platformStatsRef = doc(db,"platformStats","global");
 
+    function initialsFromString(str){
+      if(!str) return "SA";
+      const parts = str.trim().split(/\s+/);
+      if(parts.length === 1){
+        return parts[0].slice(0,2).toUpperCase();
+      }
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
     function initialsFromEmail(email){
       if(!email) return "SA";
       const namePart = email.split("@")[0];
@@ -1131,6 +1140,10 @@
         if(b.status === "active"){ statusClass="status-active"; statusLabel="Active"; }
         else if(b.status === "suspended"){ statusClass="status-suspended"; statusLabel="Suspended"; }
 
+        const ownerHtml = b.ownerEmail
+          ? `<span style="font-size:12px;">${b.ownerEmail}</span>`
+          : `<span class="muted">No owner yet</span>`;
+
         const signupLinkHtml = b.signupLink
           ? `<div class="signup-link-box">
                <input class="signup-link-input" value="${b.signupLink}" readonly/>
@@ -1147,7 +1160,7 @@
           </td>
           <td>
             <div style="display:flex;flex-direction:column;gap:2px;">
-              <span style="font-size:12px;">${b.ownerEmail || "<span class='muted'>No owner yet</span>"}</span>
+              ${ownerHtml}
               <span class="muted">${b.country || ""}</span>
             </div>
           </td>
@@ -1186,6 +1199,7 @@
         btn.addEventListener("click", ()=>{
           const brandId = btn.dataset.id;
           if(!brandId) return;
+          // Super Admin impersonates brand dashboard
           window.location.href = `brand-dashboard.html?brand=${encodeURIComponent(brandId)}&impersonate=1`;
         });
       });
@@ -1557,6 +1571,7 @@
       }catch(e){
         console.error("Error during logout", e);
       }finally{
+        // Same login page used by the rest of Store OS
         window.location.href = "login.html";
       }
     });
@@ -1568,16 +1583,21 @@
       }
       currentUser = user;
       saEmailEl.textContent = user.email || "Unknown";
-      saInitialsEl.textContent = initialsFromEmail(user.email || "");
-      saNameEl.textContent = user.email || "Super Admin";
 
       try{
         const platformUserRef = doc(db,"platformUsers",user.uid);
         const snap = await getDoc(platformUserRef);
+
+        let displayName = user.email || "Super Admin";
+
         if(snap.exists()){
-          const data = snap.data();
+          const data = snap.data() || {};
+          // Role comes from platformUsers, same as the rest of the system
           if(data.role === "super_admin"){
             isSuperAdmin = true;
+          }
+          if(data.name){
+            displayName = data.name;
           }
         }
 
@@ -1586,6 +1606,9 @@
           window.location.href = "login.html";
           return;
         }
+
+        saNameEl.textContent = displayName;
+        saInitialsEl.textContent = initialsFromString(displayName) || initialsFromEmail(user.email || "");
 
         await Promise.all([
           loadBrands(),
@@ -1597,6 +1620,7 @@
       }catch(err){
         console.error("Error checking platform user role", err);
         alert("Error verifying permissions. Check console.");
+        window.location.href = "login.html";
       }
     });
   </script>

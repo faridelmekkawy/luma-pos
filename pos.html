@@ -1,130 +1,398 @@
-<!doctype html>
+v<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Luma Store OS — POS</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
   <style>
     :root{
-      --bg:#020617;
-      --panel:#020617;
-      --panel-soft:#0b1220;
-      --surface:#020617;
-      --border:rgba(148,163,184,.35);
-      --ink:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#38bdf8;
-      --accent-strong:#0ea5e9;
-      --danger:#ef4444;
+      --bg:#f3f4f6;
+      --panel:#ffffff;
+      --panel-soft:#f9fafb;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --accent-soft:#dbeafe;
+      --accent-strong:#1d4ed8;
       --radius:16px;
-      --shadow:0 30px 80px rgba(15,23,42,.8);
-      --success:#22c55e;
+      --shadow:0 18px 40px rgba(15,23,42,.12);
+      --danger:#ef4444;
+      --ok:#16a34a;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{
       height:100%;
       font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:radial-gradient(circle at top,#020617,#000 70%);
+      background:var(--bg);
       color:var(--ink);
     }
     body{
-      display:flex;
       min-height:100vh;
-      padding:12px;
+      padding:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-    .shell{
-      flex:1;
-      max-width:1280px;
-      margin:0 auto;
-      border-radius:24px;
-      background:radial-gradient(circle at top,#020617,#000 70%);
-      border:1px solid rgba(148,163,184,.4);
+
+    .hidden{display:none !important;}
+
+    /* LOGIN */
+    .auth-wrapper{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:radial-gradient(circle at top,#e5edff,#f3f4f6 46%,#e5e7eb 100%);
+      z-index:30;
+    }
+    .auth-shell{
+      width:100%;
+      max-width:380px;
+      background:var(--panel);
+      border-radius:var(--radius);
       box-shadow:var(--shadow);
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
+      border:1px solid rgba(148,163,184,.3);
+      padding:18px 18px 16px;
     }
-    .topbar{
-      padding:10px 14px;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      backdrop-filter:blur(18px);
-      background:linear-gradient(to right,rgba(15,23,42,.85),rgba(15,23,42,.9));
-    }
-    .topbar-left{
+    .auth-header{
       display:flex;
       align-items:center;
       gap:10px;
+      margin-bottom:10px;
     }
-    .luma-chip{
-      width:30px;height:30px;border-radius:999px;
-      background:linear-gradient(135deg,#38bdf8,#a855f7);
+    .auth-logo{
+      width:34px;height:34px;border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#a855f7);
       display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;font-size:18px;
+    }
+    .auth-title{
       font-size:16px;font-weight:700;
     }
-    .top-title{
-      font-size:14px;font-weight:600;
+    .auth-subtitle{
+      font-size:11px;color:var(--muted);margin-top:2px;
     }
-    .top-subtitle{
+    .auth-alert{
+      font-size:11px;
+      padding:6px 9px;
+      border-radius:9px;
+      margin-bottom:8px;
+    }
+    .auth-alert-error{
+      background:#fef2f2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+    .field{
+      margin-bottom:8px;
+    }
+    .field-label{
+      font-size:11px;margin-bottom:3px;color:#4b5563;
+    }
+    .field-input{
+      width:100%;
+      padding:8px 9px;
+      border-radius:9px;
+      border:1px solid var(--border);
+      background:#f9fafb;
+      font-size:12px;
+    }
+    .field-input:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px var(--accent-soft);
+    }
+    .btn-auth{
+      width:100%;
+      border:none;
+      border-radius:999px;
+      padding:9px 12px;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      background:var(--accent);
+      color:#fff;
+      box-shadow:0 12px 28px rgba(37,99,235,.3);
+    }
+    .btn-auth:hover{
+      background:var(--accent-strong);
+    }
+    .btn-auth:disabled{
+      opacity:.7;cursor:default;box-shadow:none;
+    }
+    .auth-footer{
+      text-align:center;
+      margin-top:8px;
+      font-size:10px;
+      color:var(--muted);
+    }
+
+    /* POS SHELL */
+    .shell{
+      width:100%;
+      max-width:1180px;
+      background:var(--panel);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      border:1px solid var(--border);
+      padding:12px 14px 14px;
+      display:none;
+      flex-direction:column;
+      gap:10px;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      border-bottom:1px solid var(--border);
+      padding-bottom:6px;
+    }
+    .top-left{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .title{
+      font-size:18px;font-weight:700;
+    }
+    .subtitle{
       font-size:11px;color:var(--muted);
     }
-    .topbar-right{
+    .brand-chip{
       display:flex;
       align-items:center;
       gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
+      font-size:11px;
+      margin-top:4px;
     }
-    .badge{
-      font-size:10px;
-      padding:2px 6px;
+    .brand-logo{
+      width:26px;height:26px;border-radius:999px;
+      background:linear-gradient(135deg,#2563eb,#a855f7);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;font-size:14px;
+      overflow:hidden;
+      flex-shrink:0;
+    }
+    .brand-logo img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,.6);
-      color:var(--muted);
-      display:inline-flex;
+      display:block;
+    }
+
+    .top-right{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:flex-end;
+    }
+    .top-actions{
+      display:flex;
       align-items:center;
-      gap:4px;
+      gap:8px;
     }
-    .badge-dot{
-      width:6px;height:6px;border-radius:999px;
-      background:var(--success);
+    .top-search-wrap{
+      position:relative;
     }
-    .user-chip{
+    .top-search-input{
+      width:210px;
+      max-width:50vw;
+      padding:7px 9px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12px;
+    }
+    .top-search-input:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px var(--accent-soft);
+    }
+    .cart-pill{
       display:flex;
       align-items:center;
       gap:6px;
-      padding:5px 8px;
+      padding:5px 9px;
       border-radius:999px;
       border:1px solid var(--border);
-      background:rgba(15,23,42,.7);
+      background:var(--panel-soft);
+      font-size:11px;
+    }
+    .cart-pill-count{
+      font-weight:600;
+    }
+    .cart-pill-total{
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .mode-toggle{
+      display:flex;
+      align-items:center;
+      gap:4px;
+      margin-top:2px;
+      justify-content:flex-end;
+    }
+    .mode-label{
+      font-size:10px;
+      color:var(--muted);
+    }
+    .mode-group{
+      display:inline-flex;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#f9fafb;
+      overflow:hidden;
+    }
+    .mode-pill{
+      font-size:10px;
+      padding:4px 10px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      color:#6b7280;
+    }
+    .mode-pill-active{
+      background:#2563eb;
+      color:#fff;
+    }
+
+    .user-chip{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      padding:6px 9px;
+      background:var(--panel-soft);
       font-size:11px;
     }
     .user-initials{
-      width:22px;height:22px;border-radius:999px;
-      background:rgba(56,189,248,.18);
+      width:24px;height:24px;border-radius:999px;
+      background:var(--accent-soft);
       display:flex;align-items:center;justify-content:center;
-      font-size:11px;font-weight:600;color:#e0f2fe;
+      font-size:11px;font-weight:600;color:var(--accent-strong);
     }
     .user-text{
       display:flex;flex-direction:column;
     }
     .user-name{
-      font-size:11px;font-weight:500;
+      font-size:11px;font-weight:600;
     }
     .user-role{
       font-size:10px;color:var(--muted);
     }
+
+    .main-row{
+      display:grid;
+      grid-template-columns:1.3fr 1fr; /* LEFT: products/returns, RIGHT: cart */
+      gap:10px;
+      margin-top:6px;
+    }
+    @media(max-width:900px){
+      body{padding:8px;}
+      .shell{padding:10px;}
+      .topbar{flex-direction:column;align-items:flex-start;}
+      .top-right{align-items:flex-start;}
+      .main-row{grid-template-columns:1fr;}
+    }
+    .card{
+      background:var(--panel-soft);
+      border-radius:12px;
+      border:1px solid var(--border);
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .card-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:6px;
+    }
+    .card-title{
+      font-size:13px;font-weight:600;
+    }
+    .card-subtitle{
+      font-size:11px;color:var(--muted);
+    }
+    .badge{
+      font-size:10px;
+      padding:2px 6px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#4f46e5;
+    }
+
+    .alert{
+      font-size:11px;
+      padding:6px 9px;
+      border-radius:9px;
+      margin-bottom:4px;
+    }
+    .alert-info{
+      background:#eff6ff;
+      color:#1d4ed8;
+      border:1px solid #bfdbfe;
+    }
+    .alert-error{
+      background:#fef2f2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+    .alert-ok{
+      background:#ecfdf5;
+      color:#15803d;
+      border:1px solid #bbf7d0;
+    }
+
+    .field-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .field-pos{
+      flex:1;
+      min-width:120px;
+    }
+    .field-label-pos{
+      font-size:11px;margin-bottom:3px;color:#4b5563;
+    }
+    .field-input-pos, .field-select-pos{
+      width:100%;
+      padding:7px 9px;
+      border-radius:9px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12px;
+    }
+    .field-input-pos:focus, .field-select-pos:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px var(--accent-soft);
+    }
+    .field-hint-pos{
+      font-size:10px;color:var(--muted);margin-top:2px;
+    }
+
     .btn{
       border:none;
       border-radius:999px;
-      padding:6px 10px;
-      font-size:11px;
+      padding:7px 12px;
+      font-size:12px;
       font-weight:600;
       cursor:pointer;
       display:inline-flex;
@@ -135,1420 +403,2435 @@
     }
     .btn-primary{
       background:var(--accent);
-      color:#0b1120;
+      color:#fff;
+      box-shadow:0 10px 24px rgba(37,99,235,.25);
     }
     .btn-primary:hover{
       background:var(--accent-strong);
     }
     .btn-ghost{
       background:transparent;
-      color:var(--muted);
-      border:1px solid rgba(148,163,184,.6);
+      color:var(--accent-strong);
+      border:1px solid var(--accent-soft);
     }
     .btn-ghost:hover{
-      background:rgba(15,23,42,.8);
+      background:var(--accent-soft);
     }
-    .btn-toggle{
-      background:rgba(15,23,42,.8);
-      color:var(--muted);
-      border:1px solid rgba(148,163,184,.6);
-      padding:4px 9px;
+    .btn-small{
+      padding:5px 9px;
+      font-size:11px;
+    }
+    .btn-danger{
+      background:#fee2e2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+
+    .cart-table-wrapper{
+      border-radius:10px;
+      border:1px solid var(--border);
+      overflow:hidden;
+      background:#fff;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+    }
+    th,td{
+      padding:7px 8px;
+      text-align:left;
+      border-bottom:1px solid var(--border);
+      vertical-align:middle;
+    }
+    thead{
+      background:#f3f4f6;
+    }
+    th{
       font-size:10px;
-    }
-    .btn-toggle.active{
-      background:var(--accent);
-      color:#0b1120;
-      border-color:var(--accent-strong);
-    }
-
-    .body{
-      flex:1;
-      min-height:0;
-      position:relative;
-    }
-
-    .layout-sale{
-      height:100%;
-      display:grid;
-      grid-template-columns:3fr 2fr;
-      gap:0;
-    }
-    .layout-return{
-      height:100%;
-      display:none;
-      flex-direction:column;
-      padding:10px 12px;
-      background:radial-gradient(circle at top,#020617,#000 70%);
-    }
-
-    @media(max-width:960px){
-      .layout-sale{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .left{
-      border-right:1px solid var(--border);
-      display:flex;
-      flex-direction:column;
-      min-width:0;
-      background:radial-gradient(circle at top left,#020617,#020617 55%,#000 100%);
-    }
-    .right{
-      display:flex;
-      flex-direction:column;
-      background:radial-gradient(circle at top right,#020617,#020617 55%,#000 100%);
-    }
-
-    .search-row{
-      padding:10px 12px 6px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .search-input{
-      flex:1;
-      min-width:160px;
-      padding:7px 9px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(15,23,42,.8);
-      color:var(--ink);
-      font-size:11px;
-    }
-    .search-input::placeholder{
+      text-transform:uppercase;
+      letter-spacing:.08em;
       color:var(--muted);
     }
-    .search-input:focus{
-      outline:none;
-      border-color:var(--accent);
-      box-shadow:0 0 0 1px rgba(56,189,248,.3);
+    tbody tr:hover{
+      background:#f9fafb;
     }
-    .code-input{
-      width:130px;
-      padding:7px 9px;
+    .empty{
+      text-align:center;
+      font-size:11px;
+      color:var(--muted);
+      padding:12px 4px;
+    }
+
+    .qty-control{
+      display:inline-flex;
+      align-items:center;
+      gap:3px;
       border-radius:999px;
       border:1px solid var(--border);
-      background:rgba(15,23,42,.8);
-      color:var(--ink);
-      font-size:11px;
+      padding:1px 4px;
+      background:#fff;
     }
-
-    .suggestions{
-      padding:0 12px 4px;
-      max-height:80px;
-      overflow:auto;
+    .qty-btn{
+      border:none;
+      background:transparent;
       font-size:11px;
-    }
-    .suggestion-item{
-      padding:3px 6px;
-      border-radius:8px;
       cursor:pointer;
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
+      width:16px;
+      text-align:center;
     }
-    .suggestion-item:hover{
-      background:rgba(15,23,42,.9);
+    .qty-val{
+      min-width:18px;
+      text-align:center;
+      font-size:11px;
     }
 
-    .products-grid{
-      flex:1;
-      padding:6px 10px 10px;
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-      gap:8px;
-      overflow:auto;
-    }
-    .product-card{
-      background:rgba(15,23,42,.9);
-      border-radius:14px;
-      border:1px solid rgba(30,64,175,.6);
-      padding:7px;
+    .summary{
       display:flex;
       flex-direction:column;
       gap:4px;
-      cursor:pointer;
-      transition:transform .05s ease,box-shadow .1s ease,border-color .1s ease;
+      font-size:12px;
+      margin-top:4px;
     }
-    .product-card:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 25px rgba(15,23,42,.9);
-      border-color:var(--accent);
+    .summary-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     }
-    .product-image-wrapper{
-      width:100%;
-      height:60px;
+    .summary-label{
+      color:var(--muted);
+    }
+    .summary-total{
+      font-size:15px;
+      font-weight:700;
+    }
+
+    .products-list{
       border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      padding:6px;
+      max-height:420px;
+      overflow:auto;
+    }
+    .product-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:6px 6px;
+      border-radius:8px;
+      font-size:12px;
+      gap:8px;
+    }
+    .product-item.disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+    .product-item:hover{
+      background:#e5e7eb;
+    }
+    .product-main{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .product-thumb{
+      width:32px;
+      height:32px;
+      border-radius:8px;
+      background:#e5e7eb;
       overflow:hidden;
-      background:radial-gradient(circle at top,#020617,#020617 60%,#000 100%);
       display:flex;
       align-items:center;
       justify-content:center;
-      margin-bottom:3px;
-    }
-    .product-image{
-      max-width:100%;
-      max-height:100%;
-      object-fit:contain;
-    }
-    .product-name{
-      font-size:11px;font-weight:500;
-    }
-    .product-price{
-      font-size:11px;color:#bae6fd;
-    }
-    .product-stock{
-      font-size:10px;color:var(--muted);
-    }
-    .product-variant{
-      font-size:10px;color:var(--muted);
-    }
-
-    .cart-header{
-      padding:8px 12px 4px;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .cart-title{
-      font-size:13px;font-weight:600;
-    }
-    .cart-sub{
-      font-size:10px;color:var(--muted);
-    }
-
-    .customer-row{
-      padding:6px 12px 6px;
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:6px;
       font-size:10px;
+      color:#6b7280;
+      flex-shrink:0;
     }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
+    .product-thumb img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
     }
-    .field-label{
-      font-size:10px;color:var(--muted);
-    }
-    .field-input,.field-select,.field-textarea{
-      padding:6px 8px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      background:rgba(15,23,42,.8);
-      color:var(--ink);
-      font-size:10px;
-    }
-    .field-textarea{
-      resize:vertical;
-      min-height:42px;
-    }
-    .field-input::placeholder,.field-textarea::placeholder{
-      color:var(--muted);
-    }
-    .field-input:focus,.field-select:focus,.field-textarea:focus{
-      outline:none;
-      border-color:var(--accent);
-      box-shadow:0 0 0 1px rgba(56,189,248,.3);
-    }
-
-    .meta-row{
-      padding:0 12px 6px;
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:6px;
-      font-size:10px;
-    }
-
-    .cart-body{
-      flex:1;
-      padding:6px 10px;
-      overflow:auto;
-    }
-    .cart-item{
-      display:grid;
-      grid-template-columns:1fr auto auto;
-      gap:6px;
-      align-items:center;
-      padding:6px 8px;
-      border-radius:10px;
-      background:rgba(15,23,42,.85);
-      border:1px solid rgba(30,64,175,.6);
-      font-size:11px;
-      margin-bottom:6px;
-    }
-    .cart-item-name{
+    .product-title{
       font-weight:500;
     }
-    .cart-item-meta{
-      font-size:10px;color:var(--muted);
-    }
-    .qty-controls{
-      display:flex;align-items:center;gap:4px;
-    }
-    .qty-btn{
-      width:20px;height:20px;border-radius:999px;
-      border:1px solid rgba(148,163,184,.6);
-      background:transparent;
-      color:var(--muted);
-      font-size:12px;
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer;
-    }
-    .qty-value{
-      font-size:11px;
-      min-width:16px;
-      text-align:center;
-    }
-    .cart-item-price{
-      text-align:right;
-      font-size:11px;
-    }
-    .cart-empty{
-      font-size:11px;color:var(--muted);
-      text-align:center;
-      margin-top:18px;
-    }
-
-    .totals{
-      padding:8px 12px 10px;
-      border-top:1px solid var(--border);
-      background:linear-gradient(to top,rgba(15,23,42,.95),rgba(15,23,42,.9));
-    }
-    .totals-row{
-      display:flex;
-      justify-content:space-between;
-      font-size:11px;
-      margin-bottom:3px;
-      color:var(--muted);
-    }
-    .totals-row strong{
-      color:var(--ink);
-    }
-    .totals-main{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-top:4px;
-      gap:8px;
-    }
-    .total-amount{
-      font-size:16px;font-weight:700;
-    }
-    .totals-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px;
-      justify-content:flex-end;
-    }
-    .toggle-pill{
-      display:flex;
-      align-items:center;
-      gap:4px;
+    .product-meta{
       font-size:10px;
-      color:var(--muted);
+      color:#6b7280;
     }
-    .toggle-pill input{
-      width:14px;height:14px;
-      accent-color:var(--accent);
-      cursor:pointer;
-    }
-
-    .alert{
-      font-size:11px;
-      padding:6px 8px;
-      border-radius:10px;
-      margin-top:6px;
-    }
-    .alert-info{
-      background:rgba(59,130,246,.1);
-      border:1px solid rgba(59,130,246,.5);
-      color:#bfdbfe;
-    }
-    .alert-error{
-      background:rgba(248,113,113,.1);
-      border:1px solid rgba(248,113,113,.7);
-      color:#fecaca;
-    }
-    .alert-success{
-      background:rgba(74,222,128,.1);
-      border:1px solid rgba(34,197,94,.7);
-      color:#bbf7d0;
+    .product-right{
+      display:flex;
+      align-items:center;
+      gap:6px;
     }
 
-    /* RETURN LAYOUT */
-    .return-header{
+    /* MODALS (checkout + product) */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.4);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:12px;
+      z-index:40;
+    }
+    .modal-panel{
+      width:100%;
+      max-width:420px;
+      background:var(--panel);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      border:1px solid var(--border);
+      padding:14px 16px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .modal-header{
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:8px;
-      padding-bottom:6px;
+    }
+    .modal-title{
+      font-size:14px;
+      font-weight:600;
+    }
+    .modal-subtitle{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .modal-alert{
+      font-size:11px;
+      padding:6px 9px;
+      border-radius:9px;
+      margin-top:4px;
+    }
+    .modal-alert-error{
+      background:#fef2f2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+    .modal-footer{
+      display:flex;
+      justify-content:flex-end;
+      gap:6px;
+      margin-top:4px;
+    }
+    .customer-suggestions{
+      margin-top:4px;
+      border-radius:9px;
+      border:1px solid var(--border);
+      background:#f9fafb;
+      max-height:120px;
+      overflow:auto;
+      font-size:11px;
+    }
+    .customer-suggestion-item{
+      padding:6px 8px;
+      cursor:pointer;
       border-bottom:1px solid var(--border);
     }
-    .return-title{
-      font-size:13px;font-weight:600;
+    .customer-suggestion-item:last-child{
+      border-bottom:none;
     }
-    .return-sub{
-      font-size:10px;color:var(--muted);
+    .customer-suggestion-item:hover{
+      background:#e5e7eb;
     }
-    .return-body{
+    .text-muted{
+      color:var(--muted);
+    }
+    .text-note{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:3px;
+    }
+
+    /* Product modal body */
+    .product-modal-body{
+      display:flex;
+      gap:10px;
+      margin-top:6px;
+      align-items:flex-start;
+    }
+    .product-modal-image{
+      width:72px;
+      height:72px;
+      border-radius:12px;
+      background:#e5e7eb;
+      overflow:hidden;
+      flex-shrink:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      color:#6b7280;
+    }
+    .product-modal-image img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .product-modal-details{
       flex:1;
       display:flex;
       flex-direction:column;
-      padding-top:8px;
-      gap:8px;
-      overflow:auto;
-    }
-    .return-search-row{
-      display:grid;
-      grid-template-columns:2fr 1fr auto;
-      gap:6px;
-      font-size:10px;
-    }
-    .return-order-summary{
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(15,23,42,.9);
-      padding:8px 9px;
+      gap:4px;
       font-size:11px;
+      color:var(--muted);
     }
-    .return-items{
-      margin-top:6px;
-      font-size:10px;
+    .product-modal-name{
+      font-size:13px;
+      font-weight:600;
+      color:var(--ink);
     }
-    .return-item{
-      display:flex;
-      justify-content:space-between;
-      margin-bottom:3px;
+    .product-modal-price{
+      font-size:12px;
+      font-weight:600;
+      color:var(--ink);
     }
-    .return-footer{
-      padding-top:4px;
-      border-top:1px solid var(--border);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-      font-size:10px;
+    .product-modal-stock{
+      font-size:11px;
+      color:var(--muted);
     }
   </style>
 </head>
 <body>
-<div class="shell">
-  <header class="topbar">
-    <div class="topbar-left">
-      <div class="luma-chip">L</div>
-      <div>
-        <div class="top-title">Luma Store OS — POS</div>
-        <div class="top-subtitle" id="top-subtitle">Loading brand & branch…</div>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="pos-auth-wrapper" class="auth-wrapper">
+    <div class="auth-shell">
+      <div class="auth-header">
+        <div class="auth-logo">P</div>
+        <div>
+          <div class="auth-title">Luma Store OS — POS</div>
+          <div class="auth-subtitle">
+            Log in with a POS user (username + PIN) created from the Brand Dashboard.
+          </div>
+        </div>
+      </div>
+
+      <div id="auth-alert"></div>
+
+      <form id="pos-login-form">
+        <div class="field">
+          <div class="field-label">Username</div>
+          <input id="pos-login-username" class="field-input" placeholder="POS username"/>
+        </div>
+        <div class="field">
+          <div class="field-label">PIN</div>
+          <input id="pos-login-pin" class="field-input" type="password" placeholder="PIN (e.g. 4–6 digits)"/>
+        </div>
+        <button type="submit" id="pos-login-btn" class="btn-auth">Log in</button>
+      </form>
+
+      <div class="auth-footer">
+        Admin: in the Brand Dashboard, create a POS user in <code>posUsers</code> with username, pin, brandId and branchId.
       </div>
     </div>
-    <div class="topbar-right">
-      <span class="badge" id="tax-service-pill">Tax 0% • Service 0%</span>
+  </div>
 
-      <div class="badge" id="mode-pill">
-        <button id="btn-mode-sale" class="btn-toggle active" type="button">Sale</button>
-        <button id="btn-mode-return" class="btn-toggle" type="button">Return</button>
-      </div>
-
-      <button id="btn-sync-queue" class="btn-ghost" style="font-size:10px;">
-        Offline queue <span id="queue-count-badge">(0)</span>
-      </button>
-
-      <div class="user-chip">
-        <div class="user-initials" id="user-initials">CA</div>
-        <div class="user-text">
-          <div class="user-name" id="user-name">Cashier</div>
-          <div class="user-role" id="user-role">POS</div>
+  <!-- POS SHELL -->
+  <div class="shell" id="pos-shell">
+    <header class="topbar">
+      <div class="top-left">
+        <div class="title">POS</div>
+        <div id="subtitle" class="subtitle">Loading brand and branch…</div>
+        <div class="brand-chip">
+          <div id="brand-logo" class="brand-logo">B</div>
+          <div id="brand-chip-text">—</div>
         </div>
       </div>
-      <button id="btn-logout" class="btn btn-ghost">Logout</button>
-    </div>
-  </header>
 
-  <div class="body">
-    <!-- SALE LAYOUT -->
-    <div id="layout-sale" class="layout-sale">
-      <section class="left">
-        <div class="search-row">
-          <input id="search-input" class="search-input" placeholder="Search products by name, SKU, or code…"/>
-          <input id="code-input" class="code-input" placeholder="Code / barcode…"/>
-          <button id="btn-clear-search" class="btn btn-ghost" style="font-size:10px;">Clear</button>
+      <div class="top-right">
+        <div class="top-actions">
+          <div class="top-search-wrap">
+            <input id="top-product-search" class="top-search-input" placeholder="Search products (name/code)"/>
+          </div>
+          <div class="cart-pill">
+            <span id="cart-summary-count" class="cart-pill-count">0 items</span>
+            <span id="cart-summary-total" class="cart-pill-total">0.00</span>
+          </div>
+          <button type="button" id="btn-open-checkout" class="btn btn-primary btn-small">
+            Proceed
+          </button>
         </div>
-        <div id="suggestions" class="suggestions"></div>
-        <div id="products-grid" class="products-grid">
-          <!-- products -->
+        <div class="mode-toggle">
+          <span class="mode-label">Mode:</span>
+          <div class="mode-group">
+            <button type="button" id="mode-sale" class="mode-pill mode-pill-active">Sale</button>
+            <button type="button" id="mode-return" class="mode-pill">Return</button>
+          </div>
         </div>
-      </section>
+        <div class="user-chip">
+          <div id="user-initials" class="user-initials">U</div>
+          <div class="user-text">
+            <div id="user-name" class="user-name">User</div>
+            <div id="user-role" class="user-role">Cashier</div>
+          </div>
+        </div>
+      </div>
+    </header>
 
-      <section class="right">
-        <div class="cart-header">
+    <div id="global-alert"></div>
+
+    <div class="main-row">
+      <!-- LEFT: PRODUCTS (sale) / ORDER SEARCH (return) -->
+      <div class="card">
+        <div class="card-header">
           <div>
-            <div class="cart-title">Cart</div>
-            <div class="cart-sub" id="cart-sub">No items yet</div>
+            <div class="card-title" id="left-card-title">Products</div>
+            <div class="card-subtitle" id="left-card-subtitle">
+              Scan barcode, type a code, or tap “Add” to send items to cart.
+            </div>
           </div>
-          <button id="btn-clear-cart" class="btn btn-ghost" style="font-size:10px;">Clear cart</button>
+          <span id="branch-badge" class="badge">Branch: —</span>
         </div>
 
-        <div class="customer-row">
-          <div class="field">
-            <label class="field-label">Customer phone</label>
-            <input id="customer-phone" class="field-input" placeholder="0100..." />
+        <!-- Code input -->
+        <div class="field-row" style="margin-top:4px;">
+          <div class="field-pos">
+            <div class="field-label-pos" id="code-input-label">Scan or type product code</div>
+            <input id="code-input" class="field-input-pos" placeholder="Focus here, then scan or type code"/>
+            <div class="field-hint-pos" id="code-input-hint">
+              Works with barcode scanners that behave like a keyboard and send Enter after scanning.
+            </div>
           </div>
-          <div class="field">
-            <label class="field-label">Customer name</label>
-            <input id="customer-name" class="field-input" placeholder="Optional" />
+          <div>
+            <div class="field-label-pos">&nbsp;</div>
+            <button type="button" id="btn-add-code" class="btn btn-primary btn-small">Add to cart</button>
           </div>
         </div>
 
-        <div class="meta-row">
-          <div class="field">
-            <label class="field-label">Payment method</label>
-            <select id="payment-method" class="field-select">
+        <!-- Product list (hidden in return mode) -->
+        <div id="products-list" class="products-list">
+          <div class="empty">Loading products…</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: CART + OFFLINE QUEUE -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title" id="cart-card-title">Cart</div>
+            <div class="card-subtitle" id="cart-card-subtitle">
+              Adjust quantities or remove items. Proceed to add customer & payment details.
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart table -->
+        <div class="cart-table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Code</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="cart-tbody">
+              <tr><td colspan="6" class="empty">No items yet. Scan or select a product.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary">
+          <div class="summary-row">
+            <span class="summary-label" id="summary-subtotal-label">Subtotal</span>
+            <span id="summary-subtotal">0.00</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label" id="summary-tax-label">Tax</span>
+            <span id="summary-tax">0.00</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label" id="summary-service-label">Service</span>
+            <span id="summary-service">0.00</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label" id="summary-total-label">Total</span>
+            <span id="summary-total" class="summary-total">0.00</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label" id="summary-payment-label">Payment method</span>
+            <select id="payment-method" class="field-select-pos" style="max-width:180px;">
               <option value="cash">Cash</option>
               <option value="card">Card</option>
               <option value="wallet">Wallet</option>
               <option value="other">Other</option>
             </select>
           </div>
-          <div class="field">
-            <label class="field-label">Discount</label>
-            <select id="discount-type" class="field-select">
-              <option value="none">None</option>
-              <option value="percent">Percent %</option>
-              <option value="fixed">Fixed</option>
-            </select>
-          </div>
-          <div class="field">
-            <label class="field-label">Discount value</label>
-            <input id="discount-value" class="field-input" type="number" placeholder="0"/>
-          </div>
         </div>
 
-        <div class="customer-row">
-          <div class="field" style="grid-column:1/-1;">
-            <label class="field-label">Order note</label>
-            <textarea id="order-note" class="field-textarea" placeholder="Optional note for kitchen / admin…"></textarea>
-          </div>
+        <div class="summary-row" style="margin-top:6px;">
+          <button type="button" id="btn-clear-cart" class="btn btn-ghost btn-small">Clear cart</button>
+          <button type="button" id="btn-open-checkout-secondary" class="btn btn-primary btn-small">Proceed</button>
         </div>
 
-        <div id="cart-body" class="cart-body">
-          <div class="cart-empty">Start by tapping a product on the left.</div>
+        <!-- Return full order action (only in return mode) -->
+        <div class="summary-row" id="return-full-row" style="margin-top:4px; display:none;">
+          <button type="button" id="btn-return-full" class="btn btn-ghost btn-small">Return full order</button>
         </div>
 
-        <div class="totals">
-          <div class="totals-row">
-            <span>Subtotal</span><span id="subtotal-amount">0</span>
-          </div>
-          <div class="totals-row">
-            <span>Discount</span><span id="discount-amount">0</span>
-          </div>
-          <div class="totals-row">
-            <span>Tax</span><span id="tax-amount">0</span>
-          </div>
-          <div class="totals-row">
-            <span>Service</span><span id="service-amount">0</span>
-          </div>
-          <div class="totals-main">
-            <div>
-              <div class="total-amount" id="total-amount">0</div>
-              <div class="top-subtitle" style="font-size:10px;">EGP (or brand default currency)</div>
-            </div>
-            <div class="totals-actions">
-              <label class="toggle-pill">
-                <input id="send-email-receipt" type="checkbox" checked/>
-                <span>Email receipt</span>
-              </label>
-              <label class="toggle-pill">
-                <input id="send-whatsapp-receipt" type="checkbox" checked/>
-                <span>WhatsApp receipt</span>
-              </label>
-              <button id="btn-complete" class="btn btn-primary">Complete order</button>
-            </div>
-          </div>
-          <div id="pos-alert"></div>
-        </div>
-      </section>
-    </div>
-
-    <!-- RETURN LAYOUT -->
-    <div id="layout-return" class="layout-return">
-      <div class="return-header">
-        <div>
-          <div class="return-title">Return / refund</div>
-          <div class="return-sub">Find an order by ID or customer phone, then choose full or partial refund.</div>
-        </div>
-        <button id="btn-cancel-return" class="btn btn-ghost" style="font-size:10px;">Back to sale</button>
-      </div>
-
-      <div class="return-body">
-        <div class="return-search-row">
-          <input id="return-order-id" class="field-input" placeholder="Order ID (document ID)"/>
-          <input id="return-phone" class="field-input" placeholder="or Customer phone"/>
-          <button id="btn-find-order" class="btn btn-primary">Find order</button>
+        <div class="text-note" id="return-note" style="display:none;">
+          Return mode: load an order by ID or phone, set the quantity to return, then refund. Amounts in the system are stored as negative.
         </div>
 
-        <div id="return-alert"></div>
-
-        <div id="return-summary" class="return-order-summary" style="display:none;">
-          <div id="return-summary-main"></div>
-          <div class="return-items" id="return-items"></div>
-          <div class="return-footer">
-            <div>
-              <div style="margin-bottom:4px;">Refund options:</div>
-              <button id="btn-full-refund" class="btn btn-primary" style="font-size:10px;">Full refund</button>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <div class="field" style="min-width:130px;">
-                <label class="field-label">Partial refund amount</label>
-                <input id="partial-refund-amount" class="field-input" type="number" placeholder="0"/>
-              </div>
-              <button id="btn-partial-refund" class="btn btn-ghost" style="font-size:10px;">Partial refund</button>
-            </div>
-          </div>
-        </div>
+        <!-- Offline status + queue -->
+        <div id="offline-status" class="alert alert-error" style="display:none;margin-top:6px;"></div>
+        <div id="offline-queue-list" class="field-hint-pos" style="margin-top:2px;"></div>
       </div>
     </div>
-
   </div>
-</div>
 
-<script type="module">
+  <!-- PRODUCT DETAIL / VARIANT MODAL -->
+  <div id="product-modal" class="modal-backdrop">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="product-modal-title">Add item</div>
+          <div class="modal-subtitle" id="product-modal-subtitle">Choose variants (if any) and quantity.</div>
+        </div>
+        <div class="product-modal-price" id="product-modal-price">0.00</div>
+      </div>
+
+      <div class="product-modal-body">
+        <div class="product-modal-image" id="product-modal-image">
+          No image
+        </div>
+        <div class="product-modal-details">
+          <div class="product-modal-name" id="product-modal-name">Item</div>
+          <div id="product-modal-code"></div>
+          <div class="product-modal-stock" id="product-modal-stock"></div>
+        </div>
+      </div>
+
+      <div class="field-row" id="product-modal-variants-row" style="margin-top:6px;">
+        <div id="product-modal-variants" class="field-row" style="width:100%;"></div>
+      </div>
+
+      <div class="field-row" style="margin-top:4px;">
+        <div class="field-pos" style="max-width:150px;">
+          <div class="field-label-pos">Quantity</div>
+          <input id="product-modal-qty" class="field-input-pos" type="number" min="1" value="1"/>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-product-modal-cancel" class="btn btn-ghost btn-small">Cancel</button>
+        <button type="button" id="btn-product-modal-add" class="btn btn-primary btn-small">Add to cart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKOUT MODAL -->
+  <div id="checkout-modal" class="modal-backdrop">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="checkout-title">Checkout — customer & payment</div>
+          <div class="modal-subtitle" id="checkout-subtitle">
+            Name and email are required. Suggestions appear as you type.
+          </div>
+          <div class="text-note" id="checkout-original-order-note" style="display:none;"></div>
+        </div>
+        <span id="checkout-total" class="summary-total">0.00</span>
+      </div>
+
+      <div id="checkout-alert" class="modal-alert hidden"></div>
+
+      <div class="field-row">
+        <div class="field-pos">
+          <div class="field-label-pos">Customer name <span class="text-muted">*</span></div>
+          <input id="checkout-customer-name" class="field-input-pos" placeholder="Customer full name"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-pos">
+          <div class="field-label-pos">Phone</div>
+          <input id="checkout-customer-phone" class="field-input-pos" placeholder="Optional, used to find customer"/>
+        </div>
+        <div class="field-pos">
+          <div class="field-label-pos">Email <span class="text-muted">*</span></div>
+          <input id="checkout-customer-email" class="field-input-pos" type="email" placeholder="Required"/>
+        </div>
+      </div>
+
+      <div id="checkout-customer-suggestions" class="customer-suggestions hidden"></div>
+
+      <div class="field-row">
+        <div class="field-pos">
+          <div class="field-label-pos">Payment method</div>
+          <div class="field-input-pos" style="background:#f9fafb;" id="checkout-payment-summary">
+            <!-- filled from main select -->
+          </div>
+          <div class="field-hint-pos">
+            Change payment method from the main POS screen if needed.
+          </div>
+        </div>
+      </div>
+
+      <div class="field-row" id="card-txn-row" style="display:none;">
+        <div class="field-pos">
+          <div class="field-label-pos">Card transaction number <span class="text-muted">*</span></div>
+          <input id="checkout-card-txn" class="field-input-pos" placeholder="Last 4 / transaction reference"/>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-checkout-cancel" class="btn btn-ghost btn-small">Cancel</button>
+        <button type="button" id="btn-checkout-confirm" class="btn btn-primary btn-small">Confirm &amp; place order</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import {
     getFirestore,
-    collection,
     doc,
     getDoc,
-    getDocs,
     setDoc,
-    serverTimestamp,
+    addDoc,
+    collection,
+    getDocs,
     query,
     where,
+    limit,
+    runTransaction,
+    serverTimestamp,
     updateDoc
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   import {
     getAuth,
-    onAuthStateChanged,
-    signOut
+    signInAnonymously
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
-    authDomain: "events-339ce.firebaseapp.com",
-    projectId: "events-339ce",
-    storageBucket: "events-339ce.firebasestorage.app",
-    messagingSenderId: "175601544315",
-    appId: "1:175601544315:web:00c94b4affa972b3a286de"
+    apiKey:"AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
+    authDomain:"events-339ce.firebaseapp.com",
+    databaseURL:"https://events-339ce-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"events-339ce",
+    storageBucket:"events-339ce.firebasestorage.app",
+    messagingSenderId:"175601544315",
+    appId:"1:175601544315:web:00c94b4affa972b3a286de"
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // DOM
-  const layoutSale = document.getElementById("layout-sale");
-  const layoutReturn = document.getElementById("layout-return");
-  const btnModeSale = document.getElementById("btn-mode-sale");
-  const btnModeReturn = document.getElementById("btn-mode-return");
+  // Try anonymous auth so Firestore rules with request.auth != null will work
+  signInAnonymously(auth).catch(err => {
+    console.error("Anonymous auth failed:", err);
+  });
 
-  const productsGrid = document.getElementById("products-grid");
-  const searchInput = document.getElementById("search-input");
-  const codeInput = document.getElementById("code-input");
-  const btnClearSearch = document.getElementById("btn-clear-search");
-  const suggestionsEl = document.getElementById("suggestions");
+  const qs = s => document.querySelector(s);
 
-  const cartBody = document.getElementById("cart-body");
-  const cartSub = document.getElementById("cart-sub");
-  const subtotalEl = document.getElementById("subtotal-amount");
-  const taxEl = document.getElementById("tax-amount");
-  const serviceEl = document.getElementById("service-amount");
-  const totalEl = document.getElementById("total-amount");
-  const discountAmountEl = document.getElementById("discount-amount");
-  const posAlert = document.getElementById("pos-alert");
-  const taxServicePill = document.getElementById("tax-service-pill");
-  const topSubtitleEl = document.getElementById("top-subtitle");
-  const userInitialsEl = document.getElementById("user-initials");
-  const userNameEl = document.getElementById("user-name");
-  const userRoleEl = document.getElementById("user-role");
-  const btnLogout = document.getElementById("btn-logout");
-  const btnClearCart = document.getElementById("btn-clear-cart");
-  const btnComplete = document.getElementById("btn-complete");
+  // LOGIN DOM
+  const authWrapper = qs("#pos-auth-wrapper");
+  const authAlertEl = qs("#auth-alert");
+  const loginForm = qs("#pos-login-form");
+  const loginUsernameEl = qs("#pos-login-username");
+  const loginPinEl = qs("#pos-login-pin");
+  const loginBtn = qs("#pos-login-btn");
 
-  const customerPhoneEl = document.getElementById("customer-phone");
-  const customerNameEl = document.getElementById("customer-name");
-  const paymentMethodEl = document.getElementById("payment-method");
-  const discountTypeEl = document.getElementById("discount-type");
-  const discountValueEl = document.getElementById("discount-value");
-  const orderNoteEl = document.getElementById("order-note");
-  const sendEmailReceiptEl = document.getElementById("send-email-receipt");
-  const sendWhatsappReceiptEl = document.getElementById("send-whatsapp-receipt");
+  // POS DOM
+  const shellEl = qs("#pos-shell");
+  const subtitleEl = qs("#subtitle");
+  const brandLogoEl = qs("#brand-logo");
+  const brandChipTextEl = qs("#brand-chip-text");
+  const userInitialsEl = qs("#user-initials");
+  const userNameEl = qs("#user-name");
+  const userRoleEl = qs("#user-role");
+  const branchBadgeEl = qs("#branch-badge");
+  const globalAlertEl = qs("#global-alert");
 
-  // Return DOM
-  const returnOrderIdEl = document.getElementById("return-order-id");
-  const returnPhoneEl = document.getElementById("return-phone");
-  const btnFindOrder = document.getElementById("btn-find-order");
-  const btnCancelReturn = document.getElementById("btn-cancel-return");
-  const returnAlertEl = document.getElementById("return-alert");
-  const returnSummaryEl = document.getElementById("return-summary");
-  const returnSummaryMainEl = document.getElementById("return-summary-main");
-  const returnItemsEl = document.getElementById("return-items");
-  const btnFullRefund = document.getElementById("btn-full-refund");
-  const btnPartialRefund = document.getElementById("btn-partial-refund");
-  const partialRefundAmountEl = document.getElementById("partial-refund-amount");
+  const leftCardTitleEl = qs("#left-card-title");
+  const leftCardSubtitleEl = qs("#left-card-subtitle");
+  const codeInputLabelEl = qs("#code-input-label");
+  const codeInputHintEl = qs("#code-input-hint");
+  const cartCardTitleEl = qs("#cart-card-title");
+  const cartCardSubtitleEl = qs("#cart-card-subtitle");
+  const summarySubtotalLabelEl = qs("#summary-subtotal-label");
+  const summaryTotalLabelEl = qs("#summary-total-label");
+  const summaryPaymentLabelEl = qs("#summary-payment-label");
+  const summaryTaxLabelEl = qs("#summary-tax-label");
+  const summaryServiceLabelEl = qs("#summary-service-label");
+  const returnNoteEl = qs("#return-note");
 
-  const btnSyncQueue = document.getElementById("btn-sync-queue");
-  const queueCountBadge = document.getElementById("queue-count-badge");
+  const codeInputEl = qs("#code-input");
+  const btnAddCode = qs("#btn-add-code");
 
-  let allProducts = [];
-  let filteredProducts = [];
-  let cart = [];
+  const cartTbody = qs("#cart-tbody");
+  const summarySubtotalEl = qs("#summary-subtotal");
+  const summaryTaxEl = qs("#summary-tax");
+  const summaryServiceEl = qs("#summary-service");
+  const summaryTotalEl = qs("#summary-total");
+  const paymentMethodEl = qs("#payment-method");
+  const btnClearCart = qs("#btn-clear-cart");
+
+  const productsListEl = qs("#products-list");
+  const topSearchEl = qs("#top-product-search");
+  const cartSummaryCountEl = qs("#cart-summary-count");
+  const cartSummaryTotalEl = qs("#cart-summary-total");
+  const btnOpenCheckoutTop = qs("#btn-open-checkout");
+  const btnOpenCheckoutSecondary = qs("#btn-open-checkout-secondary");
+
+  const modeSaleBtn = qs("#mode-sale");
+  const modeReturnBtn = qs("#mode-return");
+
+  const returnFullRowEl = qs("#return-full-row");
+  const btnReturnFull = qs("#btn-return-full");
+
+  // Offline DOM
+  const offlineStatusEl = qs("#offline-status");
+  const offlineQueueListEl = qs("#offline-queue-list");
+
+  // Checkout modal DOM
+  const checkoutModalEl = qs("#checkout-modal");
+  const checkoutAlertEl = qs("#checkout-alert");
+  const checkoutTotalEl = qs("#checkout-total");
+  const checkoutPaymentSummaryEl = qs("#checkout-payment-summary");
+  const checkoutNameEl = qs("#checkout-customer-name");
+  const checkoutPhoneEl = qs("#checkout-customer-phone");
+  const checkoutEmailEl = qs("#checkout-customer-email");
+  const checkoutCardTxnRowEl = qs("#card-txn-row");
+  const checkoutCardTxnEl = qs("#checkout-card-txn");
+  const checkoutSuggestionsEl = qs("#checkout-customer-suggestions");
+  const checkoutTitleEl = qs("#checkout-title");
+  const checkoutSubtitleEl = qs("#checkout-subtitle");
+  const checkoutOriginalOrderNoteEl = qs("#checkout-original-order-note");
+  const btnCheckoutCancel = qs("#btn-checkout-cancel");
+  const btnCheckoutConfirm = qs("#btn-checkout-confirm");
+  const checkoutModal = qs("#checkout-modal");
+
+  // Product modal DOM
+  const productModalEl = qs("#product-modal");
+  const productModalTitleEl = qs("#product-modal-title");
+  const productModalSubtitleEl = qs("#product-modal-subtitle");
+  const productModalPriceEl = qs("#product-modal-price");
+  const productModalImageEl = qs("#product-modal-image");
+  const productModalNameEl = qs("#product-modal-name");
+  const productModalCodeEl = qs("#product-modal-code");
+  const productModalStockEl = qs("#product-modal-stock");
+  const productModalVariantsRowEl = qs("#product-modal-variants-row");
+  const productModalVariantsEl = qs("#product-modal-variants");
+  const productModalQtyEl = qs("#product-modal-qty");
+  const btnProductModalCancel = qs("#btn-product-modal-cancel");
+  const btnProductModalAdd = qs("#btn-product-modal-add");
+
   let brandId = null;
   let branchId = null;
+  let brandData = null;
+  let branchData = null;
+  let posUser = null;
+
+  let products = [];
+  let cartItems = [];
+  let currentCustomerId = null;
+  let lastCustomerSearchTerm = "";
+  let currentMode = "sale"; // "sale" | "return"
+  let currentReturnOrderMeta = null; // {orderDocId, orderId, data}
+
   let taxPercent = 0;
   let servicePercent = 0;
-  let mode = "sale"; // sale | return
-  let currentReturnOrder = null;
 
-  const QUEUE_KEY = "luma_pos_offline_queue";
+  // Offline orders queue
+  let offlineOrders = [];
+  const OFFLINE_KEY_PREFIX = "luma_pos_offline_orders";
+  const CRED_KEY = "luma_pos_credentials";
 
-  function getQueue(){
-    try{
-      const raw = localStorage.getItem(QUEUE_KEY);
-      if(!raw) return [];
-      return JSON.parse(raw) || [];
-    }catch(e){
-      console.error(e);
-      return [];
-    }
-  }
-  function setQueue(q){
-    try{
-      localStorage.setItem(QUEUE_KEY, JSON.stringify(q || []));
-    }catch(e){
-      console.error(e);
-    }
-    updateQueueBadge();
-  }
-  function updateQueueBadge(){
-    const q = getQueue();
-    queueCountBadge.textContent = `(${q.length})`;
+  let currentProductForModal = null;
+  let currentFlatVariants = [];
+
+  const WEBHOOK_URL = "https://automation.evu.business/webhook/e220fde4-d2bd-46b3-b0d9-b8cfc15ca6f5";
+
+  function getOfflineKeyForBrandBranch(){
+    return `${OFFLINE_KEY_PREFIX}_${brandId || "noBrand"}_${branchId || "noBranch"}`;
   }
 
-  function showAlert(message,type="info",target=posAlert){
+  function showAuthAlert(msg){
+    authAlertEl.innerHTML = `<div class="auth-alert auth-alert-error">${msg}</div>`;
+  }
+  function clearAuthAlert(){
+    authAlertEl.innerHTML = "";
+  }
+  function showGlobalAlert(msg,type="info"){
     let cls = "alert-info";
-    if(type === "error") cls = "alert-error";
-    if(type === "success") cls = "alert-success";
-    target.innerHTML = `<div class="alert ${cls}">${message}</div>`;
-    if(type !== "error"){
-      setTimeout(()=>{ target.innerHTML = ""; },2500);
-    }
+    if(type==="error") cls = "alert-error";
+    if(type==="ok") cls = "alert-ok";
+    globalAlertEl.innerHTML = `<div class="alert ${cls}">${msg}</div>`;
+    setTimeout(()=>{ globalAlertEl.innerHTML = ""; }, 4000);
   }
 
-  function initialsFromNameOrEmail(name,email){
+  function initialsFromNameOrUsername(name,username){
     if(name){
-      const parts = name.split(" ").filter(Boolean);
-      if(parts.length >= 2) return (parts[0][0]+parts[1][0]).toUpperCase();
-      return name.slice(0,2).toUpperCase();
+      const p = name.trim().split(" ");
+      if(p.length === 1) return p[0].slice(0,2).toUpperCase();
+      return (p[0][0]+p[p.length-1][0]).toUpperCase();
     }
-    if(email){
-      const part = email.split("@")[0] || "";
-      return part.slice(0,2).toUpperCase();
+    if(username){
+      const s = username.toString();
+      if(s.length<=2) return s.toUpperCase();
+      const parts = s.split(/[._-]/).filter(Boolean);
+      if(parts.length===0) return s.slice(0,2).toUpperCase();
+      return (parts[0][0]+(parts[1]?.[0] || "")).toUpperCase();
     }
-    return "CA";
+    return "U";
   }
 
-  function formatAmount(n){
-    return (n || 0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
-  }
-
-  function setMode(newMode){
-    mode = newMode;
-    if(mode === "sale"){
-      layoutSale.style.display = "grid";
-      layoutReturn.style.display = "none";
-      btnModeSale.classList.add("active");
-      btnModeReturn.classList.remove("active");
-    }else{
-      layoutSale.style.display = "none";
-      layoutReturn.style.display = "flex";
-      btnModeSale.classList.remove("active");
-      btnModeReturn.classList.add("active");
-      // Reset return UI
-      currentReturnOrder = null;
-      returnOrderIdEl.value = "";
-      returnPhoneEl.value = "";
-      returnSummaryEl.style.display = "none";
-      returnAlertEl.innerHTML = "";
-    }
-  }
-
-  function renderProducts(){
-    productsGrid.innerHTML = "";
-    const list = filteredProducts.length ? filteredProducts : allProducts;
-    if(!list.length){
-      productsGrid.innerHTML = `<div style="grid-column:1/-1;font-size:11px;color:var(--muted);text-align:center;margin-top:20px;">No products found. Add products from the brand dashboard.</div>`;
-      return;
-    }
-    for(const p of list){
-      const card = document.createElement("div");
-      card.className = "product-card";
-      card.dataset.id = p.id;
-      card.innerHTML = `
-        <div class="product-image-wrapper">
-          ${
-            p.imageUrl
-              ? `<img src="${p.imageUrl}" class="product-image" alt="${p.name || "Product"}"/>`
-              : `<span style="font-size:10px;color:var(--muted);">No image</span>`
-          }
-        </div>
-        <div class="product-name">${p.name || "Unnamed"}</div>
-        <div class="product-price">${formatAmount(p.price || 0)}</div>
-        <div class="product-stock">Stock: ${p.stock ?? "—"}</div>
-        ${p.variantSummary ? `<div class="product-variant">${p.variantSummary}</div>` : ""}
-      `;
-      card.addEventListener("click",()=>addToCart(p));
-      productsGrid.appendChild(card);
-    }
-  }
-
-  function renderSuggestions(queryText){
-    suggestionsEl.innerHTML = "";
-    const q = queryText.trim().toLowerCase();
-    if(!q){
-      return;
-    }
-    const matches = allProducts
-      .filter(p=>{
-        const hay = `${p.name||""} ${p.sku||""} ${p.code||""}`.toLowerCase();
-        return hay.includes(q);
-      })
-      .slice(0,10);
-    if(!matches.length) return;
-    matches.forEach(p=>{
-      const div = document.createElement("div");
-      div.className = "suggestion-item";
-      div.innerHTML = `
-        <span>${p.name || "Product"}</span>
-        <span>${formatAmount(p.price || 0)}</span>
-      `;
-      div.addEventListener("click",()=>{
-        addToCart(p);
-        suggestionsEl.innerHTML = "";
-      });
-      suggestionsEl.appendChild(div);
+  function computeTotals(){
+    let subtotal = 0;
+    cartItems.forEach(item=>{
+      subtotal += item.price * item.qty;
     });
+    const taxAmount = subtotal * (taxPercent/100);
+    const serviceAmount = subtotal * (servicePercent/100);
+    const total = subtotal + taxAmount + serviceAmount;
+    return { subtotal, taxAmount, serviceAmount, total };
   }
 
-  function recomputeTotals(){
-    const subtotal = cart.reduce((sum,item)=>sum + (item.price || 0)*item.qty,0);
-    let discount = 0;
-    const discountType = discountTypeEl.value;
-    const dv = parseFloat(discountValueEl.value || "0");
-    if(discountType === "percent" && dv > 0){
-      discount = subtotal * (dv / 100);
-    }else if(discountType === "fixed" && dv > 0){
-      discount = dv;
-    }
-    if(discount > subtotal) discount = subtotal;
-
-    const taxableBase = subtotal - discount;
-    const tax = taxableBase * (taxPercent/100);
-    const service = taxableBase * (servicePercent/100);
-    const total = taxableBase + tax + service;
-
-    subtotalEl.textContent = formatAmount(subtotal);
-    discountAmountEl.textContent = formatAmount(discount);
-    taxEl.textContent = formatAmount(tax);
-    serviceEl.textContent = formatAmount(service);
-    totalEl.textContent = formatAmount(total);
-    cartSub.textContent = cart.length ? `${cart.length} item(s)` : "No items yet";
+  function updateCartSummary(totals){
+    const totalItems = cartItems.reduce((sum,i)=>sum + i.qty,0);
+    cartSummaryCountEl.textContent = totalItems === 1 ? "1 item" : `${totalItems} items`;
+    cartSummaryTotalEl.textContent = totals.total.toFixed(2);
   }
 
   function renderCart(){
-    if(!cart.length){
-      cartBody.innerHTML = `<div class="cart-empty">Start by tapping a product on the left.</div>`;
-      recomputeTotals();
+    if(cartItems.length === 0){
+      cartTbody.innerHTML = `<tr><td colspan="6" class="empty">No items yet. ${
+        currentMode==="sale"
+          ? "Scan or select a product."
+          : "Load an order in return mode."
+      }</td></tr>`;
+      summarySubtotalEl.textContent = "0.00";
+      summaryTaxEl.textContent = "0.00";
+      summaryServiceEl.textContent = "0.00";
+      summaryTotalEl.textContent = "0.00";
+      updateCartSummary({subtotal:0,taxAmount:0,serviceAmount:0,total:0});
       return;
     }
-    const rows = cart.map(item=>{
-      return `
-      <div class="cart-item" data-id="${item.id}">
-        <div>
-          <div class="cart-item-name">${item.name || "Item"}</div>
-          <div class="cart-item-meta">
-            ${item.variantLabel ? `${item.variantLabel} • ` : ""}Unit: ${formatAmount(item.price || 0)}
-          </div>
-        </div>
-        <div class="qty-controls">
-          <button class="qty-btn" data-action="dec">-</button>
-          <div class="qty-value">${item.qty}</div>
-          <button class="qty-btn" data-action="inc">+</button>
-        </div>
-        <div class="cart-item-price">${formatAmount((item.price || 0)*item.qty)}</div>
-      </div>`;
-    }).join("");
-    cartBody.innerHTML = rows;
+    let html = "";
+    cartItems.forEach((item,idx)=>{
+      const line = item.price * item.qty;
+      const qtyInfo = (currentMode==="return" && item.originalQty != null)
+        ? ` (${item.qty}/${item.originalQty})`
+        : "";
+      html += `
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.code || ""}</td>
+          <td>
+            <div class="qty-control">
+              <button class="qty-btn" data-idx="${idx}" data-action="dec">-</button>
+              <span class="qty-val">${item.qty}${qtyInfo}</span>
+              <button class="qty-btn" data-idx="${idx}" data-action="inc">+</button>
+            </div>
+          </td>
+          <td>${item.price.toFixed(2)}</td>
+          <td>${line.toFixed(2)}</td>
+          <td><button class="btn btn-small btn-danger" data-idx="${idx}" data-action="remove">✕</button></td>
+        </tr>`;
+    });
+    cartTbody.innerHTML = html;
 
-    Array.from(cartBody.querySelectorAll(".cart-item")).forEach(el=>{
-      const id = el.dataset.id;
-      el.querySelectorAll(".qty-btn").forEach(btn=>{
-        btn.addEventListener("click",()=>{
-          const action = btn.dataset.action;
-          const idx = cart.findIndex(i=>i.id === id);
-          if(idx === -1) return;
-          if(action === "inc") cart[idx].qty++;
-          else cart[idx].qty--;
-          if(cart[idx].qty <= 0){
-            cart.splice(idx,1);
+    const totals = computeTotals();
+    summarySubtotalEl.textContent = totals.subtotal.toFixed(2);
+    summaryTaxEl.textContent = totals.taxAmount.toFixed(2);
+    summaryServiceEl.textContent = totals.serviceAmount.toFixed(2);
+    summaryTotalEl.textContent = totals.total.toFixed(2);
+    updateCartSummary(totals);
+
+    cartTbody.querySelectorAll(".qty-btn").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const idx = parseInt(btn.dataset.idx,10);
+        const action = btn.dataset.action;
+        if(Number.isNaN(idx)) return;
+        if(action==="inc"){
+          if(currentMode==="return"){
+            const maxQty = cartItems[idx].originalQty ?? cartItems[idx].qty;
+            cartItems[idx].qty = Math.min(cartItems[idx].qty + 1, maxQty);
+          }else{
+            cartItems[idx].qty += 1;
           }
-          renderCart();
-        });
+        }else if(action==="dec"){
+          cartItems[idx].qty = Math.max(1, cartItems[idx].qty - 1);
+        }
+        renderCart();
       });
     });
-
-    recomputeTotals();
+    cartTbody.querySelectorAll(".btn-danger").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const idx = parseInt(btn.dataset.idx,10);
+        if(Number.isNaN(idx)) return;
+        cartItems.splice(idx,1);
+        renderCart();
+      });
+    });
   }
 
-  function addToCart(p){
-    // In future: show popup to choose variant (size/color) from p.variants
-    const existing = cart.find(i=>i.id === p.id);
-    if(existing){
-      existing.qty++;
+  function addProductToCart(prod, qty=1){
+    if(!prod) return;
+    const idForCart = prod.id;
+    const existingIdx = cartItems.findIndex(i=>i.id===idForCart);
+    if(existingIdx>=0){
+      if(currentMode==="return"){
+        const maxQty = cartItems[existingIdx].originalQty ?? cartItems[existingIdx].qty;
+        cartItems[existingIdx].qty = Math.min(cartItems[existingIdx].qty + qty, maxQty);
+      }else{
+        cartItems[existingIdx].qty += qty;
+      }
     }else{
-      cart.push({
-        id:p.id,
-        name:p.name,
-        price:p.price || 0,
-        qty:1,
-        variantLabel:null // reserved for per-size/color later
+      cartItems.push({
+        id:prod.id,
+        baseId: prod.baseId || prod.id,
+        name:prod.name || "Item",
+        code:prod.code || "",
+        price:typeof prod.price==="number" ? prod.price : 0,
+        qty,
+        originalQty: currentMode==="return" ? (prod.originalQty ?? qty) : null,
+        variantKey: prod.variantKey || null,
+        variantChoices: Array.isArray(prod.variantChoices) ? prod.variantChoices : null,
+        variantMeta: prod.variantMeta || null,
+        imageUrl: prod.imageUrl || null,
+        productUrl: prod.productUrl || prod.url || null
       });
     }
     renderCart();
   }
 
-  function clearCart(){
-    cart = [];
-    renderCart();
+  function computeProductStockLeft(product){
+    if(typeof product.stock !== "number") return null;
+    const baseId = product.id;
+    const usedInCart = cartItems.reduce((sum,item)=>{
+      const pid = item.baseId || item.id;
+      return pid === baseId ? sum + item.qty : sum;
+    },0);
+    const left = product.stock - usedInCart;
+    return left < 0 ? 0 : left;
   }
 
-  async function loadConfigAndProducts(){
-    if(!brandId) return;
+  function buildFlatVariantsForProduct(product){
+    const flat = [];
+    const variants = product.variants;
+    if(!Array.isArray(variants)) return flat;
+    variants.forEach((v,vIndex)=>{
+      const groupName = v.name || v.groupName || "";
+      const labelsArr = Array.isArray(v.labels) ? v.labels
+                       : (Array.isArray(v.options) ? v.options : null);
+      if(labelsArr){
+        labelsArr.forEach((lbl,lIndex)=>{
+          const labelName = typeof lbl === "string"
+            ? lbl
+            : (lbl.label || lbl.name || `Option ${lIndex+1}`);
+          const qty = typeof lbl.quantity === "number"
+            ? lbl.quantity
+            : (typeof lbl.qty === "number" ? lbl.qty
+            : (typeof lbl.stock === "number" ? lbl.stock : null));
+          flat.push({
+            groupName,
+            labelName,
+            qty,
+            groupIndex:vIndex,
+            labelIndex:lIndex
+          });
+        });
+      }else{
+        const labelName = v.label || v.name || `Variant ${vIndex+1}`;
+        const qty = typeof v.quantity === "number"
+          ? v.quantity
+          : (typeof v.qty === "number" ? v.qty
+          : (typeof v.stock === "number" ? v.stock : null));
+        flat.push({
+          groupName,
+          labelName,
+          qty,
+          groupIndex:vIndex,
+          labelIndex:null
+        });
+      }
+    });
+    return flat;
+  }
 
-    // platform settings (for defaults)
-    const platformRef = doc(db,"platformSettings","globalConfig");
-    const platformSnap = await getDoc(platformRef);
-    let globalTax = 0;
-    let globalService = 0;
-    if(platformSnap.exists()){
-      const d = platformSnap.data() || {};
-      globalTax = d.defaultTaxPercent ?? 0;
-      globalService = d.defaultServicePercent ?? 0;
-    }
-
-    // brand config overrides
-    const brandCfgRef = doc(db,"brandConfigs",brandId);
-    const brandCfgSnap = await getDoc(brandCfgRef);
-    if(brandCfgSnap.exists()){
-      const d = brandCfgSnap.data() || {};
-      taxPercent = d.taxPercent ?? globalTax;
-      servicePercent = d.servicePercent ?? globalService;
-    }else{
-      taxPercent = globalTax;
-      servicePercent = globalService;
-    }
-
-    taxServicePill.textContent = `Tax ${taxPercent}% • Service ${servicePercent}%`;
-
-    // brand + branch labels
+  async function loadBrandAndBranch(){
     const brandRef = doc(db,"brands",brandId);
     const brandSnap = await getDoc(brandRef);
-    let brandName = "Brand";
-    if(brandSnap.exists()){
-      const d = brandSnap.data() || {};
-      brandName = d.name || "Brand";
-    }
-    topSubtitleEl.textContent = `${brandName} • Branch ${branchId || ""}`;
+    if(!brandSnap.exists()) throw new Error("Brand not found");
+    brandData = brandSnap.data();
+    const brandName = brandData.name || "Brand";
+    const country = brandData.country || "";
 
-    const productsRef = collection(db,"brands",brandId,"products");
-    const snap = await getDocs(productsRef);
-    allProducts = [];
-    snap.forEach(docSnap=>{
-      const d = docSnap.data() || {};
-      let variantSummary = "";
-      if(d.variants && Array.isArray(d.variants) && d.variants.length){
-        // Example: "Size: S/M/L • Color: Black/White"
-        const labels = d.variants.map(v=>`${v.name}: ${(v.labels||[]).map(l=>l.name).join("/")}`);
-        variantSummary = labels.join(" • ");
-      }
-      allProducts.push({
-        id: docSnap.id,
-        name: d.name || "Product",
-        price: d.price || 0,
-        stock: d.stock ?? null,
-        sku: d.sku || "",
-        code: d.code || "",
-        imageUrl: d.imageUrl || "",
-        variants: d.variants || [],
-        variantSummary
+    if(brandData.logoUrl || brandData.logo){
+      const logoSrc = brandData.logoUrl || brandData.logo;
+      brandLogoEl.innerHTML = `<img src="${logoSrc}" alt="${brandName} logo"/>`;
+    }else{
+      brandLogoEl.textContent = brandName[0]?.toUpperCase() || "B";
+    }
+
+    brandChipTextEl.textContent = country ? `${brandName} • ${country}` : brandName;
+    subtitleEl.textContent = "POS for this branch. Sales and returns are stored in the system.";
+
+    const branchRef = doc(brandRef,"branches",branchId);
+    const branchSnap = await getDoc(branchRef);
+    if(!branchSnap.exists()) throw new Error("Branch not found");
+    branchData = branchSnap.data();
+    branchBadgeEl.textContent = `Branch: ${branchData.name || "Branch"}`;
+
+    const branchTax = typeof branchData.taxPercent === "number"
+      ? branchData.taxPercent
+      : (typeof branchData.tax === "number" ? branchData.tax
+      : (typeof branchData.vatPercent === "number" ? branchData.vatPercent : null));
+    const brandTax = typeof brandData.taxPercent === "number"
+      ? brandData.taxPercent
+      : (typeof brandData.tax === "number" ? brandData.tax
+      : (typeof brandData.vatPercent === "number" ? brandData.vatPercent : null));
+
+    taxPercent = branchTax != null ? branchTax : (brandTax != null ? brandTax : 0);
+
+    const branchService = typeof branchData.servicePercent === "number"
+      ? branchData.servicePercent
+      : (typeof branchData.service === "number" ? branchData.service
+      : (typeof branchData.serviceFeePercent === "number" ? branchData.serviceFeePercent : null));
+    const brandService = typeof brandData.servicePercent === "number"
+      ? brandData.servicePercent
+      : (typeof brandData.service === "number" ? brandData.service
+      : (typeof brandData.serviceFeePercent === "number" ? brandData.serviceFeePercent : null));
+
+    servicePercent = branchService != null ? branchService : (brandService != null ? brandService : 0);
+
+    summaryTaxLabelEl.textContent = `Tax (${taxPercent || 0}%)`;
+    summaryServiceLabelEl.textContent = `Service (${servicePercent || 0}%)`;
+  }
+
+  async function loadProducts(){
+    productsListEl.innerHTML = `<div class="empty">Loading products…</div>`;
+    const productsCol = collection(db,"brands",brandId,"branches",branchId,"products");
+    const snap = await getDocs(productsCol);
+    products = [];
+    snap.forEach(d=>{
+      const p = d.data() || {};
+      if(p.isActive === false) return;
+      const rawStock =
+        typeof p.stock === "number" ? p.stock :
+        (typeof p.quantity === "number" ? p.quantity :
+        (typeof p.qty === "number" ? p.qty :
+        (typeof p.currentStock === "number" ? p.currentStock : null)));
+      products.push({
+        id:d.id,
+        name:p.name || "Item",
+        code:p.code || "",
+        price:typeof p.price==="number" ? p.price : 0,
+        variants:Array.isArray(p.variants)? p.variants : null,
+        stock: rawStock,
+        imageUrl: p.imageUrl || p.photoUrl || p.image || null,
+        productUrl: p.productUrl || p.url || null
       });
     });
-    filteredProducts = [];
-    renderProducts();
-    updateQueueBadge();
+    renderProductsList();
   }
 
-  function buildOrderPayload(){
-    const subtotal = cart.reduce((sum,item)=>sum + (item.price || 0)*item.qty,0);
-    const discountType = discountTypeEl.value;
-    const dv = parseFloat(discountValueEl.value || "0");
-    let discount = 0;
-    if(discountType === "percent" && dv > 0){
-      discount = subtotal * (dv / 100);
-    }else if(discountType === "fixed" && dv > 0){
-      discount = dv;
-    }
-    if(discount > subtotal) discount = subtotal;
-    const taxableBase = subtotal - discount;
-    const tax = taxableBase * (taxPercent/100);
-    const service = taxableBase * (servicePercent/100);
-    const total = taxableBase + tax + service;
+  function renderProductsList(filterText=""){
+    const ft = filterText.trim().toLowerCase();
+    const list = ft
+      ? products.filter(p=>{
+          const s = `${p.name} ${p.code}`.toLowerCase();
+          return s.includes(ft);
+        })
+      : products;
 
-    return {
-      items: cart.map(i=>({
-        productId:i.id,
-        name:i.name,
-        price:i.price,
-        qty:i.qty,
-        variantLabel:i.variantLabel || null
-      })),
-      subtotal,
-      discount,
-      taxPercent,
-      servicePercent,
-      tax,
-      service,
-      total,
-      customerPhone: customerPhoneEl.value.trim() || null,
-      customerName: customerNameEl.value.trim() || null,
-      paymentMethod: paymentMethodEl.value,
-      orderNote: orderNoteEl.value.trim() || null,
-      sendEmailReceipt: !!sendEmailReceiptEl.checked,
-      sendWhatsappReceipt: !!sendWhatsappReceiptEl.checked,
-      status:"completed",
-      source:"pos",
-      cashierUserId: auth.currentUser?.uid || null,
-      createdAt: serverTimestamp()
-    };
-  }
-
-  async function saveOrderOnline(orderPayload){
-    if(!brandId || !branchId){
-      throw new Error("Missing brand/branch for POS user.");
-    }
-    const ordersColl = collection(db,"brands",brandId,"branches",branchId,"orders");
-    const orderRef = doc(ordersColl);
-    await setDoc(orderRef, orderPayload);
-    return orderRef.id;
-  }
-
-  async function completeOrder(){
-    if(!cart.length){
-      showAlert("Cart is empty.","error");
+    if(list.length===0){
+      productsListEl.innerHTML = `<div class="empty">No products found for this branch.</div>`;
       return;
     }
-    btnComplete.disabled = true;
-    btnComplete.textContent = "Saving…";
-    try{
-      const payload = buildOrderPayload();
-      const orderId = await saveOrderOnline(payload);
-      clearCart();
-      customerPhoneEl.value = "";
-      customerNameEl.value = "";
-      discountTypeEl.value = "none";
-      discountValueEl.value = "";
-      orderNoteEl.value = "";
-      recomputeTotals();
-      showAlert(`Order saved successfully. ID: ${orderId}`,"success");
-    }catch(e){
-      console.error(e);
-      // queue offline
-      const payload = buildOrderPayload();
-      const q = getQueue();
-      q.push({type:"sale", brandId, branchId, payload});
-      setQueue(q);
-      showAlert("Online save failed. Order added to offline queue.","error");
-    }finally{
-      btnComplete.disabled = false;
-      btnComplete.textContent = "Complete order";
-    }
-  }
+    productsListEl.innerHTML = "";
+    list.forEach(p=>{
+      const div = document.createElement("div");
+      div.className = "product-item" + (currentMode==="return" ? " disabled" : "");
+      const variantsInfo = p.variants && p.variants.length
+        ? ` • Variants: ${p.variants.map(v=>v.name || "").filter(Boolean).join(", ")}`
+        : "";
+      const stockInfo = typeof p.stock === "number"
+        ? ` • Stock: ${p.stock} left`
+        : "";
+      const thumbInner = p.imageUrl
+        ? `<img src="${p.imageUrl}" alt="${p.name}"/>`
+        : (p.name ? p.name[0].toUpperCase() : "P");
 
-  async function processQueue(){
-    const q = getQueue();
-    if(!q.length){
-      showAlert("No queued orders.","info");
-      return;
-    }
-    btnSyncQueue.disabled = true;
-    btnSyncQueue.textContent = "Syncing…";
-    let success = 0;
-    const remaining = [];
-    for(const item of q){
-      try{
-        if(item.type === "sale"){
-          const ordersColl = collection(db,"brands",item.brandId,"branches",item.branchId,"orders");
-          const ref = doc(ordersColl);
-          await setDoc(ref,item.payload);
-        }else if(item.type === "refund"){
-          const ordersColl = collection(db,"brands",item.brandId,"branches",item.branchId,"orders");
-          const ref = doc(ordersColl);
-          await setDoc(ref,item.payload);
-          if(item.updateRef){
-            const origRef = doc(db,"brands",item.brandId,"branches",item.branchId,"orders",item.updateRef);
-            await updateDoc(origRef,item.updateData || {});
-          }
-        }
-        success++;
-      }catch(e){
-        console.error("Failed to sync queue item",e);
-        remaining.push(item);
-      }
-    }
-    setQueue(remaining);
-    btnSyncQueue.disabled = false;
-    btnSyncQueue.textContent = "Offline queue";
-    if(success){
-      showAlert(`Synced ${success} item(s) from queue.`,"success");
-    }else{
-      showAlert("Failed to sync queued items. Still offline?","error");
-    }
-  }
-
-  function showReturnAlert(message,type="info"){
-    showAlert(message,type,returnAlertEl);
-  }
-
-  async function findOrderForReturn(){
-    if(!brandId || !branchId){
-      showReturnAlert("Missing brand/branch for this POS user.","error");
-      return;
-    }
-    const idInput = returnOrderIdEl.value.trim();
-    const phoneInput = returnPhoneEl.value.trim();
-    if(!idInput && !phoneInput){
-      showReturnAlert("Enter order ID or customer phone.","error");
-      return;
-    }
-
-    currentReturnOrder = null;
-    returnSummaryEl.style.display = "none";
-    returnItemsEl.innerHTML = "";
-    returnSummaryMainEl.innerHTML = "";
-    showReturnAlert("Searching…","info");
-
-    try{
-      let orderDocSnap = null;
-      const ordersColl = collection(db,"brands",brandId,"branches",branchId,"orders");
-
-      if(idInput){
-        const ref = doc(ordersColl,idInput);
-        const snap = await getDoc(ref);
-        if(snap.exists()){
-          orderDocSnap = snap;
-        }
-      }
-
-      if(!orderDocSnap && phoneInput){
-        const qRef = query(ordersColl, where("customerPhone","==",phoneInput));
-        const qsnap = await getDocs(qRef);
-        qsnap.forEach(s=>{
-          if(!orderDocSnap) orderDocSnap = s;
-        });
-      }
-
-      if(!orderDocSnap){
-        showReturnAlert("Order not found.","error");
-        return;
-      }
-
-      const data = orderDocSnap.data() || {};
-      if(data.status === "refunded"){
-        showReturnAlert("This order is already fully refunded.","error");
-      }else if(data.status === "partial_refund"){
-        showReturnAlert("This order already has a partial refund.","info");
-      }else{
-        showReturnAlert("Order found.","success");
-      }
-
-      const total = data.total ?? 0;
-      const subtotal = data.subtotal ?? 0;
-      const tax = data.tax ?? 0;
-      const service = data.service ?? 0;
-
-      returnSummaryMainEl.innerHTML = `
-        <div style="display:flex;justify-content:space-between;gap:8px;">
+      div.innerHTML = `
+        <div class="product-main">
+          <div class="product-thumb">${thumbInner}</div>
           <div>
-            <div>Order ID: <strong>${orderDocSnap.id}</strong></div>
-            <div style="font-size:10px;color:var(--muted);margin-top:2px;">
-              Customer: ${data.customerName || "—"} • ${data.customerPhone || "—"}
-            </div>
-          </div>
-          <div style="text-align:right;font-size:11px;">
-            <div>Total: <strong>${formatAmount(total)}</strong></div>
-            <div style="font-size:10px;color:var(--muted);">Subtotal: ${formatAmount(subtotal)} • Tax: ${formatAmount(tax)} • Service: ${formatAmount(service)}</div>
+            <div class="product-title">${p.name}</div>
+            <div class="product-meta">Code: ${p.code || "—"}${variantsInfo}${stockInfo}</div>
           </div>
         </div>
-      `;
+        <div class="product-right">
+          <div><strong>${p.price.toFixed(2)}</strong></div>
+          <button class="btn btn-small btn-primary product-add-btn" data-id="${p.id}" ${currentMode==="return" ? "disabled" : ""}>Add</button>
+        </div>`;
 
-      const items = data.items || [];
-      if(items.length){
-        returnItemsEl.innerHTML = items.map(i=>`
-          <div class="return-item">
-            <span>${i.name || "Item"}${i.variantLabel ? " • "+i.variantLabel : ""} × ${i.qty}</span>
-            <span>${formatAmount((i.price||0)*i.qty)}</span>
-          </div>
-        `).join("");
-      }else{
-        returnItemsEl.innerHTML = `<div style="font-size:10px;color:var(--muted);">No items on this order.</div>`;
-      }
-
-      currentReturnOrder = {
-        id: orderDocSnap.id,
-        data
-      };
-      returnSummaryEl.style.display = "block";
-    }catch(e){
-      console.error(e);
-      showReturnAlert("Error searching for order.","error");
-    }
-  }
-
-  async function processRefund(type){
-    if(!currentReturnOrder){
-      showReturnAlert("Find an order first.","error");
-      return;
-    }
-    const original = currentReturnOrder;
-    const data = original.data;
-
-    const ordersColl = collection(db,"brands",brandId,"branches",branchId,"orders");
-    const refundRef = doc(ordersColl);
-    const basePayload = {
-      createdAt: serverTimestamp(),
-      source:"pos_refund",
-      originalOrderId: original.id,
-      cashierUserId: auth.currentUser?.uid || null
-    };
-
-    let refundTotal = 0;
-    let refundItems = [];
-    if(type === "full"){
-      refundTotal = data.total ?? 0;
-      refundItems = (data.items || []).map(i=>({
-        productId:i.productId,
-        name:i.name,
-        price:i.price,
-        qty: -Math.abs(i.qty),
-        variantLabel:i.variantLabel || null
-      }));
-    }else{
-      const amount = parseFloat(partialRefundAmountEl.value || "0");
-      if(!(amount > 0)){
-        showReturnAlert("Enter a valid partial refund amount.","error");
-        return;
-      }
-      refundTotal = amount;
-      refundItems = [];
-    }
-
-    const refundPayload = {
-      ...basePayload,
-      items: refundItems,
-      total: -Math.abs(refundTotal),
-      status:"refund"
-    };
-
-    try{
-      // Try online first
-      await setDoc(refundRef,refundPayload);
-
-      // Update original order status
-      const origRef = doc(ordersColl, original.id);
-      await updateDoc(origRef,{
-        status: type === "full" ? "refunded" : "partial_refund",
-        updatedAt: serverTimestamp()
+      const btn = div.querySelector(".product-add-btn");
+      btn.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        if(currentMode==="return") return;
+        openProductModal(p);
       });
 
-      // For full refund: restock items
-      if(type === "full" && Array.isArray(data.items)){
-        for(const it of data.items){
-          if(!it.productId || !it.qty) continue;
-          const pRef = doc(db,"brands",brandId,"products",it.productId);
-          try{
-            const pSnap = await getDoc(pRef);
-            if(pSnap.exists()){
-              const pd = pSnap.data() || {};
-              const currentStock = pd.stock ?? 0;
-              await updateDoc(pRef,{ stock: currentStock + Math.abs(it.qty) });
-            }
-          }catch(e){
-            console.error("Error restocking product",e);
+      div.addEventListener("click",()=>{
+        if(currentMode==="return") return;
+        openProductModal(p);
+      });
+
+      productsListEl.appendChild(div);
+    });
+  }
+
+  function findProductInMemoryByCode(code){
+    return products.find(p=>p.code === code) || null;
+  }
+
+  async function handleAddByCodeSale(){
+    const code = codeInputEl.value.trim();
+    if(!code){
+      showGlobalAlert("Enter or scan a code first.","error");
+      return;
+    }
+    let prod = findProductInMemoryByCode(code);
+    if(!prod){
+      const productsCol = collection(db,"brands",brandId,"branches",branchId,"products");
+      const qCode = query(productsCol, where("code","==",code), limit(1));
+      const snap = await getDocs(qCode);
+      if(!snap.empty){
+        const d = snap.docs[0];
+        const p = d.data() || {};
+        const rawStock =
+          typeof p.stock === "number" ? p.stock :
+          (typeof p.quantity === "number" ? p.quantity :
+          (typeof p.qty === "number" ? p.qty :
+          (typeof p.currentStock === "number" ? p.currentStock : null)));
+        prod = {
+          id:d.id,
+          name:p.name || "Item",
+          code:p.code || "",
+          price:typeof p.price==="number" ? p.price : 0,
+          variants:Array.isArray(p.variants)? p.variants : null,
+          stock: rawStock,
+          imageUrl: p.imageUrl || p.photoUrl || p.image || null,
+          productUrl: p.productUrl || p.url || null
+        };
+        products.push(prod);
+      }
+    }
+    if(!prod){
+      showGlobalAlert(`No product found with code "${code}".`,"error");
+      return;
+    }
+    // If product has variants, open modal; otherwise quick add
+    if(prod.variants && prod.variants.length){
+      openProductModal(prod);
+    }else{
+      addProductToCart(prod,1);
+    }
+    codeInputEl.value = "";
+    codeInputEl.focus();
+  }
+
+  async function handleLoadOrderForReturn(){
+    const input = codeInputEl.value.trim();
+    if(!input){
+      showGlobalAlert("Enter or scan an order ID or customer phone first.","error");
+      return;
+    }
+    const ordersCol = collection(db,"brands",brandId,"branches",branchId,"orders");
+
+    // 1) Try by orderId
+    let foundOrderDoc = null;
+    try{
+      const qOrderId = query(ordersCol, where("orderId","==",input), limit(1));
+      const snapId = await getDocs(qOrderId);
+      if(!snapId.empty){
+        foundOrderDoc = snapId.docs[0];
+      }
+    }catch(e){
+      console.warn("OrderId search error",e);
+    }
+
+    // 2) If not found, try by customer phone (use latest)
+    if(!foundOrderDoc){
+      try{
+        const qPhone = query(ordersCol, where("customerPhone","==",input), limit(5));
+        const snapPhone = await getDocs(qPhone);
+        if(!snapPhone.empty){
+          let docs = snapPhone.docs.slice();
+          docs.sort((a,b)=>{
+            const da = (a.data().createdAtLocal || "");
+            const db = (b.data().createdAtLocal || "");
+            return db.localeCompare(da);
+          });
+          foundOrderDoc = docs[0];
+          if(snapPhone.size > 1){
+            showGlobalAlert(`Found multiple orders for this phone. Using the most recent one (${foundOrderDoc.data().orderId || "no ID"}).`,"info");
           }
         }
+      }catch(e){
+        console.warn("Phone search error",e);
       }
+    }
 
-      showReturnAlert("Refund saved successfully.","success");
-      currentReturnOrder = null;
-      returnSummaryEl.style.display = "none";
-      partialRefundAmountEl.value = "";
+    if(!foundOrderDoc){
+      showGlobalAlert(`No order found with ID or phone "${input}".`,"error");
+      return;
+    }
+
+    const data = foundOrderDoc.data() || {};
+    const originalOrderId = data.orderId || input;
+
+    // Build map of already returned quantities per product
+    const returnedMap = {};
+    try{
+      const qReturns = query(ordersCol, where("originalOrderId","==", originalOrderId));
+      const returnsSnap = await getDocs(qReturns);
+      returnsSnap.forEach(docR=>{
+        const dR = docR.data() || {};
+        if(!dR.isReturn) return;
+        const itemsR = Array.isArray(dR.items) ? dR.items : [];
+        itemsR.forEach(itR=>{
+          const pid = itR.productId || itR.id || "";
+          if(!pid) return;
+          const q = typeof itR.qty === "number" ? Math.abs(itR.qty) : 0;
+          if(q <= 0) return;
+          returnedMap[pid] = (returnedMap[pid] || 0) + q;
+        });
+      });
     }catch(e){
-      console.error(e);
-      // queue offline
-      const q = getQueue();
-      q.push({
-        type:"refund",
-        brandId,
-        branchId,
-        payload:refundPayload,
-        updateRef: original.id,
-        updateData:{
-          status: type === "full" ? "refunded" : "partial_refund"
+      console.warn("Error reading previous returns",e);
+    }
+
+    // Also include offline queued returns that haven't synced yet
+    offlineOrders
+      .filter(o => o.mode === "return" && o.originalOrderMeta && o.originalOrderMeta.orderId === originalOrderId)
+      .forEach(o=>{
+        (o.cartItems || []).forEach(i=>{
+          const pid = i.baseId || i.id;
+          if(!pid) return;
+          const q = typeof i.qty === "number" ? i.qty : 0;
+          if(q <= 0) return;
+          returnedMap[pid] = (returnedMap[pid] || 0) + q;
+        });
+      });
+
+    currentReturnOrderMeta = {
+      orderDocId:foundOrderDoc.id,
+      orderId:originalOrderId,
+      data
+    };
+
+    const items = Array.isArray(data.items) ? data.items : [];
+    cartItems = [];
+    let anyRemaining = false;
+
+    items.forEach(it=>{
+      const pid = it.productId || it.id || "";
+      if(!pid) return;
+      const originalQty = typeof it.qty === "number" ? Math.abs(it.qty) : 1;
+      const alreadyReturned = returnedMap[pid] || 0;
+      const remaining = originalQty - alreadyReturned;
+      if(remaining <= 0) return; // fully refunded
+      anyRemaining = true;
+      cartItems.push({
+        id:pid,
+        baseId:pid,
+        name:it.name || "Item",
+        code:it.code || "",
+        price:typeof it.price==="number" ? it.price : 0,
+        qty:remaining,
+        originalQty,
+        variantKey: it.variantKey || null,
+        variantChoices: Array.isArray(it.variantChoices) ? it.variantChoices : null,
+        imageUrl: it.productImageUrl || it.imageUrl || null,
+        productUrl: it.productUrl || it.url || null
+      });
+    });
+
+    if(!anyRemaining){
+      cartItems = [];
+      renderCart();
+      showGlobalAlert("This order is already fully refunded. No remaining quantity to return.","info");
+      codeInputEl.value = "";
+      codeInputEl.focus();
+      return;
+    }
+
+    renderCart();
+    showGlobalAlert(`Loaded order ${originalOrderId} for return.`,`ok`);
+    codeInputEl.value = "";
+    codeInputEl.focus();
+  }
+
+  async function findExistingCustomer(email,phone){
+    const customersCol = collection(db,"brands",brandId,"customers");
+    if(email){
+      const qEmail = query(customersCol, where("email","==",email), limit(1));
+      const snap = await getDocs(qEmail);
+      if(!snap.empty){
+        const d = snap.docs[0];
+        return { id:d.id, data:d.data() };
+      }
+    }
+    if(phone){
+      const qPhone = query(customersCol, where("phone","==",phone), limit(1));
+      const snap = await getDocs(qPhone);
+      if(!snap.empty){
+        const d = snap.docs[0];
+        return { id:d.id, data:d.data() };
+      }
+    }
+    return null;
+  }
+
+  async function searchCustomersForSuggestions(term){
+    const t = term.trim();
+    if(t.length < 1){
+      checkoutSuggestionsEl.classList.add("hidden");
+      checkoutSuggestionsEl.innerHTML = "";
+      lastCustomerSearchTerm = "";
+      return;
+    }
+    lastCustomerSearchTerm = t;
+
+    const customersCol = collection(db,"brands",brandId,"customers");
+    const candidates = [];
+
+    try{
+      const qPhone = query(
+        customersCol,
+        where("phone", ">=", t),
+        where("phone", "<=", t + "\uf8ff"),
+        limit(5)
+      );
+      const snapPhone = await getDocs(qPhone);
+      snapPhone.forEach(d=>{
+        candidates.push({ id:d.id, data:d.data() });
+      });
+    }catch(e){ console.warn("Phone prefix search error",e); }
+
+    try{
+      const qEmail = query(
+        customersCol,
+        where("email", ">=", t),
+        where("email", "<=", t + "\uf8ff"),
+        limit(5)
+      );
+      const snapEmail = await getDocs(qEmail);
+      snapEmail.forEach(d=>{
+        if(!candidates.find(c=>c.id===d.id)){
+          candidates.push({ id:d.id, data:d.data() });
         }
       });
-      setQueue(q);
-      showReturnAlert("Online refund failed. Added to offline queue.","error");
+    }catch(e){ console.warn("Email prefix search error",e); }
+
+    try{
+      const qName = query(
+        customersCol,
+        where("name", ">=", t),
+        where("name", "<=", t + "\uf8ff"),
+        limit(5)
+      );
+      const snapName = await getDocs(qName);
+      snapName.forEach(d=>{
+        if(!candidates.find(c=>c.id===d.id)){
+          candidates.push({ id:d.id, data:d.data() });
+        }
+      });
+    }catch(e){ console.warn("Name prefix search error",e); }
+
+    if(lastCustomerSearchTerm !== t) return;
+
+    if(candidates.length === 0){
+      checkoutSuggestionsEl.classList.add("hidden");
+      checkoutSuggestionsEl.innerHTML = "";
+      return;
+    }
+
+    checkoutSuggestionsEl.innerHTML = "";
+    candidates.forEach(c=>{
+      const data = c.data || {};
+      const name = data.name || "(No name)";
+      const phone = data.phone || "";
+      const email = data.email || "";
+      const div = document.createElement("div");
+      div.className = "customer-suggestion-item";
+      div.innerHTML = `
+        <div><strong>${name}</strong></div>
+        <div class="text-muted">${phone || "No phone"} • ${email || "No email"}</div>
+      `;
+      div.addEventListener("click",()=>{
+        currentCustomerId = c.id;
+        checkoutNameEl.value = name || "";
+        checkoutPhoneEl.value = phone || "";
+        checkoutEmailEl.value = email || "";
+        checkoutSuggestionsEl.classList.add("hidden");
+        checkoutSuggestionsEl.innerHTML = "";
+      });
+      checkoutSuggestionsEl.appendChild(div);
+    });
+    checkoutSuggestionsEl.classList.remove("hidden");
+  }
+
+  async function ensureCustomer(){
+    const name = checkoutNameEl.value.trim();
+    const phone = checkoutPhoneEl.value.trim();
+    const email = checkoutEmailEl.value.trim();
+    const customersCol = collection(db,"brands",brandId,"customers");
+
+    if(!name && !phone && !email){
+      return { id:null, data:null };
+    }
+
+    if(currentCustomerId){
+      const ref = doc(customersCol,currentCustomerId);
+      await setDoc(ref,{
+        name: name || null,
+        phone: phone || null,
+        email: email || null,
+        updatedAt:serverTimestamp()
+      },{ merge:true });
+      return { id:currentCustomerId, data:{ name, phone, email } };
+    }
+
+    const found = await findExistingCustomer(email,phone);
+    if(found){
+      const ref = doc(customersCol,found.id);
+      await setDoc(ref,{
+        name: name || found.data.name || null,
+        phone: phone || found.data.phone || null,
+        email: email || found.data.email || null,
+        updatedAt:serverTimestamp()
+      },{ merge:true });
+      currentCustomerId = found.id;
+      const data = {
+        name: name || found.data.name || null,
+        phone: phone || found.data.phone || null,
+        email: email || found.data.email || null
+      };
+      return { id:found.id, data };
+    }
+
+    const newRef = await addDoc(customersCol,{
+      name: name || null,
+      phone: phone || null,
+      email: email || null,
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    });
+    currentCustomerId = newRef.id;
+    return { id:newRef.id, data:{ name, phone, email } };
+  }
+
+  async function generateOrderId(){
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2,"0");
+    const mm = String(now.getMonth()+1).padStart(2,"0");
+    const humanDate = `${dd}${mm}`;
+    const dateKey = `${now.getFullYear()}-${mm}-${dd}`;
+    const countersRef = doc(db,"brands",brandId,"branches",branchId,"orderCounters",dateKey);
+
+    const orderNumber = await runTransaction(db, async (tx)=>{
+      const snap = await tx.get(countersRef);
+      let current = 0;
+      if(snap.exists()){
+        current = snap.data().value || 0;
+      }
+      const next = current + 1;
+      tx.set(countersRef,{ value:next },{ merge:true });
+      return next;
+    });
+
+    return `${humanDate}-${orderNumber}`;
+  }
+
+  function makeLocalOrderIdForOffline(){
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2,"0");
+    const mm = String(now.getMonth()+1).padStart(2,"0");
+    const hh = String(now.getHours()).padStart(2,"0");
+    const mi = String(now.getMinutes()).padStart(2,"0");
+    const ss = String(now.getSeconds()).padStart(2,"0");
+    return `${dd}${mm}-L${hh}${mi}${ss}`;
+  }
+
+  function showCheckoutAlert(msg){
+    checkoutAlertEl.textContent = msg;
+    checkoutAlertEl.classList.remove("hidden");
+    checkoutAlertEl.classList.add("modal-alert","modal-alert-error");
+  }
+  function clearCheckoutAlert(){
+    checkoutAlertEl.textContent = "";
+    checkoutAlertEl.classList.add("hidden");
+  }
+
+  function nameOrNull(v){
+    const t = v.trim();
+    return t ? t : null;
+  }
+  function phoneOrNull(v){
+    const t = v.trim();
+    return t ? t : null;
+  }
+  function emailOrNull(v){
+    const t = v.trim();
+    return t ? t : null;
+  }
+
+  function openCheckoutModal(){
+    if(cartItems.length === 0){
+      showGlobalAlert("Cart is empty.","error");
+      return;
+    }
+    clearCheckoutAlert();
+    const totals = computeTotals();
+    const total = totals.total;
+    checkoutTotalEl.textContent = total.toFixed(2);
+    const pm = paymentMethodEl.value;
+    const pmLabelMap = {
+      cash:"Cash",
+      card:"Card",
+      wallet:"Wallet",
+      other:"Other"
+    };
+    checkoutPaymentSummaryEl.textContent = pmLabelMap[pm] || pm;
+    checkoutCardTxnRowEl.style.display = pm === "card" ? "block" : "none";
+
+    currentCustomerId = null;
+    checkoutNameEl.value = "";
+    checkoutPhoneEl.value = "";
+    checkoutEmailEl.value = "";
+    checkoutCardTxnEl.value = "";
+    checkoutSuggestionsEl.classList.add("hidden");
+    checkoutSuggestionsEl.innerHTML = "";
+
+    if(currentMode==="return" && currentReturnOrderMeta && currentReturnOrderMeta.data){
+      const od = currentReturnOrderMeta.data;
+      const cn = od.customerName || "";
+      const cp = od.customerPhone || "";
+      const ce = od.customerEmail || "";
+      checkoutNameEl.value = cn;
+      checkoutPhoneEl.value = cp;
+      checkoutEmailEl.value = ce;
+      checkoutOriginalOrderNoteEl.style.display = "block";
+      checkoutOriginalOrderNoteEl.textContent = `Return for order ${od.orderId || currentReturnOrderMeta.orderId || ""}. Original total: ${
+        typeof od.total==="number" ? Math.abs(od.total).toFixed(2) : ""
+      }`;
+      checkoutTitleEl.textContent = "Return — customer & refund details";
+      checkoutSubtitleEl.textContent = "Confirm customer and refund info. This will create a return linked to the original order.";
+    }else{
+      checkoutOriginalOrderNoteEl.style.display = "none";
+      checkoutTitleEl.textContent = "Checkout — customer & payment";
+      checkoutSubtitleEl.textContent = "Name and email are required. Suggestions appear as you type.";
+    }
+
+    checkoutModalEl.style.display = "flex";
+    checkoutNameEl.focus();
+  }
+
+  function closeCheckoutModal(){
+    checkoutModalEl.style.display = "none";
+  }
+
+  function openProductModal(product){
+    currentProductForModal = product;
+    currentFlatVariants = buildFlatVariantsForProduct(product);
+
+    productModalTitleEl.textContent = "Add item";
+    productModalSubtitleEl.textContent = currentFlatVariants.length
+      ? "Choose one variant (e.g. size or color) and quantity."
+      : "Confirm quantity and add to cart.";
+    productModalNameEl.textContent = product.name || "Item";
+    productModalCodeEl.textContent = product.code ? `Code: ${product.code}` : "";
+    productModalPriceEl.textContent = (typeof product.price === "number" ? product.price : 0).toFixed(2);
+
+    if(product.imageUrl){
+      productModalImageEl.innerHTML = `<img src="${product.imageUrl}" alt="${product.name}"/>`;
+    }else{
+      productModalImageEl.textContent = product.name ? (product.name[0] || "I").toUpperCase() : "No image";
+    }
+
+    const left = computeProductStockLeft(product);
+    if(left != null){
+      productModalStockEl.textContent = `Available in this branch: ${left} unit(s).`;
+    }else{
+      productModalStockEl.textContent = "Stock not set for this item.";
+    }
+
+    productModalVariantsEl.innerHTML = "";
+    if(currentFlatVariants.length){
+      productModalVariantsRowEl.style.display = "flex";
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "field-pos";
+      const labelDiv = document.createElement("div");
+      labelDiv.className = "field-label-pos";
+      labelDiv.textContent = "Variant";
+      const selectEl = document.createElement("select");
+      selectEl.className = "field-select-pos";
+      selectEl.id = "product-variant-select";
+
+      currentFlatVariants.forEach((fv, idx)=>{
+        const optionEl = document.createElement("option");
+        optionEl.value = String(idx);
+        const baseLabel = fv.groupName ? `${fv.groupName} — ${fv.labelName}` : fv.labelName;
+        const qtySuffix = typeof fv.qty === "number" ? ` (${fv.qty} left)` : "";
+        optionEl.textContent = baseLabel + qtySuffix;
+        selectEl.appendChild(optionEl);
+      });
+
+      groupDiv.appendChild(labelDiv);
+      groupDiv.appendChild(selectEl);
+      productModalVariantsEl.appendChild(groupDiv);
+    }else{
+      productModalVariantsRowEl.style.display = "none";
+    }
+
+    productModalQtyEl.value = "1";
+    productModalEl.style.display = "flex";
+    productModalQtyEl.focus();
+  }
+
+  function closeProductModal(){
+    productModalEl.style.display = "none";
+    currentProductForModal = null;
+    currentFlatVariants = [];
+  }
+
+  function loadOfflineOrders(){
+    try{
+      const key = getOfflineKeyForBrandBranch();
+      const raw = localStorage.getItem(key);
+      if(!raw){
+        offlineOrders = [];
+      }else{
+        const parsed = JSON.parse(raw);
+        offlineOrders = Array.isArray(parsed) ? parsed : [];
+      }
+    }catch(e){
+      console.warn("Failed to load offline orders",e);
+      offlineOrders = [];
+    }
+    renderOfflineOrders();
+  }
+
+  function saveOfflineOrders(){
+    try{
+      const key = getOfflineKeyForBrandBranch();
+      localStorage.setItem(key, JSON.stringify(offlineOrders));
+    }catch(e){
+      console.warn("Failed to save offline orders",e);
+    }
+    renderOfflineOrders();
+  }
+
+  function renderOfflineOrders(){
+    if(!offlineOrders.length){
+      offlineStatusEl.style.display = "none";
+      offlineQueueListEl.textContent = "";
+      return;
+    }
+    const isOffline = !navigator.onLine;
+    const msg = `${isOffline ? "Offline" : "Online"} — queued orders: ${offlineOrders.length}. <button id="btn-sync-offline" class="btn btn-small btn-ghost" style="margin-left:8px;">Sync now</button>`;
+    offlineStatusEl.style.display = "block";
+    offlineStatusEl.innerHTML = msg;
+
+    offlineQueueListEl.textContent = offlineOrders
+      .map(o=>`${o.mode==="return"?"Return":"Sale"} ${o.orderId} • ${o.totalPositive.toFixed(2)}`)
+      .join(" | ");
+
+    const btnSync = document.querySelector("#btn-sync-offline");
+    if(btnSync){
+      btnSync.onclick = ()=>{ syncQueuedOrders(); };
     }
   }
 
-  // EVENTS
-  searchInput.addEventListener("input",()=>{
-    const q = searchInput.value.trim().toLowerCase();
-    if(!q){
-      filteredProducts = [];
-      renderProducts();
-      suggestionsEl.innerHTML = "";
-      return;
-    }
-    filteredProducts = allProducts.filter(p=>{
-      const hay = `${p.name||""} ${p.sku||""} ${p.code||""}`.toLowerCase();
-      return hay.includes(q);
-    });
-    renderProducts();
-    renderSuggestions(q);
-  });
+  function queueOfflineOrder({mode,totalPositive,subtotalPositive,taxPercentValue,servicePercentValue,taxAmountValue,serviceAmountValue,paymentMethod,cardTxn,name,phone,email,cartItemsSnapshot,originalOrderMeta}){
+    const orderId = makeLocalOrderIdForOffline();
+    const localId = Date.now() + "-" + Math.random().toString(36).slice(2,8);
+    const offlineOrder = {
+      localId,
+      mode,
+      orderId,
+      totalPositive,
+      subtotalPositive,
+      taxPercent: taxPercentValue,
+      servicePercent: servicePercentValue,
+      taxAmount: taxAmountValue,
+      serviceAmount: serviceAmountValue,
+      paymentMethod,
+      cardTxn,
+      name,
+      phone,
+      email,
+      cartItems: cartItemsSnapshot.map(i=>({
+        id:i.id,
+        baseId:i.baseId || i.id,
+        name:i.name,
+        code:i.code || "",
+        price:i.price,
+        qty:i.qty,
+        originalQty:i.originalQty ?? null,
+        variantKey:i.variantKey || null,
+        variantChoices:Array.isArray(i.variantChoices) ? i.variantChoices : null,
+        variantMeta:i.variantMeta || null,
+        productImageUrl:i.imageUrl || null,
+        productUrl:i.productUrl || null
+      })),
+      brandId,
+      branchId,
+      brandName: brandData?.name || null,
+      branchName: branchData?.name || null,
+      brandLogoUrl: brandData?.logoUrl || brandData?.logo || null,
+      posUser:{
+        username:posUser?.username || null,
+        displayName:posUser?.displayName || null,
+        role:posUser?.role || null
+      },
+      originalOrderMeta: originalOrderMeta || null,
+      createdAtLocal:(new Date()).toISOString()
+    };
+    offlineOrders.push(offlineOrder);
+    saveOfflineOrders();
+    showGlobalAlert(`Offline — ${mode==="return"?"return":"order"} queued as ${orderId}. It will sync when internet is back.`,"info");
 
-  codeInput.addEventListener("input",()=>{
-    const code = codeInput.value.trim().toLowerCase();
-    if(!code) return;
-    // suggestions based on code/barcode
-    const matches = allProducts.filter(p=>{
-      const hay = `${p.code||""} ${p.sku||""}`.toLowerCase();
-      return hay.includes(code);
-    });
-    suggestionsEl.innerHTML = "";
-    matches.slice(0,10).forEach(p=>{
-      const div = document.createElement("div");
-      div.className = "suggestion-item";
-      div.innerHTML = `
-        <span>${p.name || "Product"}</span>
-        <span>${formatAmount(p.price || 0)}</span>
-      `;
-      div.addEventListener("click",()=>{
-        addToCart(p);
-        codeInput.value = "";
-        suggestionsEl.innerHTML = "";
-      });
-      suggestionsEl.appendChild(div);
-    });
-  });
+    cartItems = [];
+    renderCart();
+    currentReturnOrderMeta = null;
+    closeCheckoutModal();
+    codeInputEl.focus();
+  }
 
-  codeInput.addEventListener("keydown",(e)=>{
-    if(e.key === "Enter"){
-      const code = codeInput.value.trim().toLowerCase();
-      if(!code) return;
-      const found = allProducts.find(p=>{
-        const hay = `${p.code||""} ${p.sku||""}`.toLowerCase();
-        return hay === code;
-      });
-      if(found){
-        addToCart(found);
-        codeInput.value = "";
-        suggestionsEl.innerHTML = "";
+  async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId, branchIdParam = branchId){
+    const sign = mode==="return" ? 1 : -1; // sale reduces stock, return adds back
+    const deltas = {};
+    cartItemsSource.forEach(i=>{
+      const pid = i.baseId || i.id;
+      if(!pid) return;
+      const delta = sign * i.qty;
+      deltas[pid] = (deltas[pid] || 0) + delta;
+    });
+
+    for(const [pid,delta] of Object.entries(deltas)){
+      const productRef = doc(db,"brands",brandIdParam,"branches",branchIdParam,"products",pid);
+      try{
+        await runTransaction(db, async (tx)=>{
+          const snap = await tx.get(productRef);
+          if(!snap.exists()) return;
+          const data = snap.data() || {};
+          const baseStock =
+            typeof data.stock === "number" ? data.stock :
+            (typeof data.quantity === "number" ? data.quantity :
+            (typeof data.qty === "number" ? data.qty : 0));
+          const newStock = Math.max(0, baseStock + delta);
+          tx.set(productRef,{
+            stock:newStock,
+            quantity:newStock
+          },{ merge:true });
+        });
+        if(brandIdParam === brandId && branchIdParam === branchId){
+          const idx = products.findIndex(p=>p.id===pid);
+          if(idx>=0){
+            const currentLocal = typeof products[idx].stock === "number" ? products[idx].stock : 0;
+            const newLocal = Math.max(0, currentLocal + delta);
+            products[idx].stock = newLocal;
+          }
+        }
+      }catch(e){
+        console.warn("Failed to adjust stock for product",pid,e);
       }
     }
-  });
+    renderProductsList(topSearchEl.value);
+  }
 
-  btnClearSearch.addEventListener("click",()=>{
-    searchInput.value = "";
-    codeInput.value = "";
-    filteredProducts = [];
-    suggestionsEl.innerHTML = "";
-    renderProducts();
-  });
+  async function syncQueuedOrders(){
+    if(!offlineOrders.length){
+      showGlobalAlert("No queued orders to sync.","info");
+      return;
+    }
+    if(!navigator.onLine){
+      showGlobalAlert("Still offline. Cannot sync queued orders.","error");
+      return;
+    }
+    const syncedIds = [];
+    for(const o of offlineOrders){
+      try{
+        const ordersCol = collection(db,"brands",o.brandId,"branches",o.branchId,"orders");
+        const orderRef = doc(ordersCol);
 
-  btnClearCart.addEventListener("click",()=>{
-    clearCart();
-  });
+        const itemsForDb = o.cartItems.map(i=>{
+          const qtySign = (o.mode==="return" ? -1 : 1);
+          const qtyVal = i.qty * qtySign;
+          const lineTotalVal = i.price * i.qty * qtySign;
+          return {
+            productId:i.baseId || i.id,
+            name:i.name,
+            code:i.code || null,
+            qty:qtyVal,
+            price:i.price,
+            lineTotal:lineTotalVal,
+            variantKey:i.variantKey || null,
+            variantChoices:i.variantChoices || null,
+            productImageUrl:i.productImageUrl || i.imageUrl || null,
+            productUrl:i.productUrl || null
+          };
+        });
 
-  discountTypeEl.addEventListener("change",recomputeTotals);
-  discountValueEl.addEventListener("input",recomputeTotals);
+        const sign = o.mode==="return" ? -1 : 1;
+        const orderData = {
+          orderId:o.orderId,
+          createdAt:serverTimestamp(),
+          createdAtLocal:o.createdAtLocal || (new Date()).toISOString(),
+          paymentMethod:o.paymentMethod,
+          subtotal: sign * (o.subtotalPositive || o.totalPositive),
+          taxPercent: o.taxPercent ?? 0,
+          servicePercent: o.servicePercent ?? 0,
+          taxAmount: sign * (o.taxAmount ?? 0),
+          serviceAmount: sign * (o.serviceAmount ?? 0),
+          total: sign * o.totalPositive,
+          items:itemsForDb,
+          customerId:null,
+          customerName:o.name || null,
+          customerPhone:o.phone || null,
+          customerEmail:o.email || null,
+          cardTransaction: o.paymentMethod==="card" ? (o.cardTxn || null) : null,
+          brandId:o.brandId,
+          branchId:o.branchId,
+          status: o.mode==="return" ? "return" : "normal",
+          type: o.mode==="return" ? "return" : "sale",
+          isReturn: o.mode==="return",
+          originalOrderId: o.originalOrderMeta?.orderId || null,
+          originalOrderDocId: o.originalOrderMeta?.orderDocId || null,
+          originalPaymentMethod: o.originalOrderMeta?.data?.paymentMethod || null
+        };
 
-  btnComplete.addEventListener("click",completeOrder);
+        await setDoc(orderRef,orderData);
 
-  btnSyncQueue.addEventListener("click",processQueue);
+        try{
+          await adjustStockForOrder(o.cartItems, o.mode, o.brandId, o.branchId);
+        }catch(e){
+          console.warn("Stock adjust (sync) failed",e);
+        }
 
-  btnModeSale.addEventListener("click",()=>setMode("sale"));
-  btnModeReturn.addEventListener("click",()=>setMode("return"));
-  btnCancelReturn.addEventListener("click",()=>setMode("sale"));
-  btnFindOrder.addEventListener("click",findOrderForReturn);
-  btnFullRefund.addEventListener("click",()=>processRefund("full"));
-  btnPartialRefund.addEventListener("click",()=>processRefund("partial"));
+        const payload = {
+          orderId:o.orderId,
+          orderDocId:orderRef.id,
+          createdAt:orderData.createdAtLocal,
+          brandId:o.brandId,
+          brandName:o.brandName || null,
+          brandLogoUrl:o.brandLogoUrl || null,
+          branchId:o.branchId,
+          branchName:o.branchName || null,
+          posUser:o.posUser,
+          customer:{
+            id:null,
+            name:orderData.customerName,
+            phone:orderData.customerPhone,
+            email:orderData.customerEmail
+          },
+          total:orderData.total,
+          subtotal:orderData.subtotal,
+          taxPercent:orderData.taxPercent,
+          servicePercent:orderData.servicePercent,
+          taxAmount:orderData.taxAmount,
+          serviceAmount:orderData.serviceAmount,
+          items:itemsForDb,
+          paymentMethod:o.paymentMethod,
+          cardTransaction:orderData.cardTransaction,
+          isReturn:o.mode==="return",
+          originalOrderId:orderData.originalOrderId || null
+        };
 
-  btnLogout.addEventListener("click",async()=>{
+        fetch(WEBHOOK_URL,{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify(payload)
+        }).catch(err=>console.error("Webhook error (sync)",err));
+
+        syncedIds.push(o.localId);
+      }catch(err){
+        console.error("Failed to sync offline order",o.orderId,err);
+      }
+    }
+    if(syncedIds.length){
+      offlineOrders = offlineOrders.filter(o=>!syncedIds.includes(o.localId));
+      saveOfflineOrders();
+      showGlobalAlert(`Synced ${syncedIds.length} queued order(s) successfully.`,"ok");
+    }else{
+      showGlobalAlert("Could not sync queued orders. Check console.","error");
+    }
+  }
+
+  async function recomputeOriginalRefundStatus(originalOrderId, originalOrderDocId){
+    if(!originalOrderId || !originalOrderDocId) return;
     try{
-      await signOut(auth);
+      const ordersCol = collection(db,"brands",brandId,"branches",branchId,"orders");
+      const qAllReturns = query(ordersCol, where("originalOrderId","==", originalOrderId));
+      const snap = await getDocs(qAllReturns);
+      let refundedTotal = 0;
+      snap.forEach(d=>{
+        const data = d.data() || {};
+        if(!data.isReturn) return;
+        const t = typeof data.total === "number" ? data.total : 0;
+        refundedTotal += Math.abs(t);
+      });
+
+      const originalTotal = Math.abs(currentReturnOrderMeta?.data?.total || 0);
+      let refundStatus = "none";
+      const eps = 0.01;
+      if(refundedTotal > eps && refundedTotal < originalTotal - eps){
+        refundStatus = "partial";
+      }else if(refundedTotal >= originalTotal - eps){
+        refundStatus = "full";
+      }
+
+      const origRef = doc(db,"brands",brandId,"branches",branchId,"orders", originalOrderDocId);
+      await updateDoc(origRef,{
+        refundStatus,
+        refundedTotal
+      });
     }catch(e){
-      console.error(e);
+      console.warn("Failed to recompute refund status",e);
+    }
+  }
+
+  async function handlePlaceOrder(){
+    if(cartItems.length === 0){
+      showCheckoutAlert("Cart is empty.");
+      return;
+    }
+    const name = checkoutNameEl.value.trim();
+    const email = checkoutEmailEl.value.trim();
+    const phone = checkoutPhoneEl.value.trim();
+    const pm = paymentMethodEl.value;
+    const cardTxn = checkoutCardTxnEl.value.trim();
+
+    if(!name){
+      showCheckoutAlert("Customer name is required.");
+      return;
+    }
+    if(!email){
+      showCheckoutAlert("Customer email is required.");
+      return;
+    }
+    if(pm === "card" && !cardTxn){
+      showCheckoutAlert("Card transaction number is required for card payments.");
+      return;
+    }
+
+    const totals = computeTotals();
+    const totalPositive = totals.total;
+    const subtotalPositive = totals.subtotal;
+    const taxAmount = totals.taxAmount;
+    const serviceAmount = totals.serviceAmount;
+    const paymentMethod = pm;
+
+    btnCheckoutConfirm.disabled = true;
+    btnCheckoutConfirm.textContent = "Placing…";
+    try{
+      const customerResult = await ensureCustomer();
+      const customerId = customerResult.id;
+      const customer = customerResult.data;
+
+      const orderId = await generateOrderId();
+      const now = new Date();
+
+      const itemsForDb = cartItems.map(i=>{
+        const qtySign = (currentMode==="return" ? -1 : 1);
+        const qtyVal = i.qty * qtySign;
+        const lineTotalVal = i.price * i.qty * qtySign;
+        return {
+          productId:i.baseId || i.id,
+          name:i.name,
+          code:i.code || null,
+          qty:qtyVal,
+          price:i.price,
+          lineTotal:lineTotalVal,
+          variantKey:i.variantKey || null,
+          variantChoices:i.variantChoices || null,
+          productImageUrl:i.imageUrl || null,
+          productUrl:i.productUrl || null
+        };
+      });
+
+      const ordersCol = collection(db,"brands",brandId,"branches",branchId,"orders");
+      const orderRef = doc(ordersCol);
+
+      const sign = currentMode==="return" ? -1 : 1;
+
+      const baseOrderData = {
+        orderId,
+        createdAt:serverTimestamp(),
+        createdAtLocal:now.toISOString(),
+        paymentMethod,
+        subtotal: sign * subtotalPositive,
+        taxPercent,
+        servicePercent,
+        taxAmount: sign * taxAmount,
+        serviceAmount: sign * serviceAmount,
+        total: sign * totalPositive,
+        items:itemsForDb,
+        customerId:customerId || null,
+        customerName:customer?.name || nameOrNull(checkoutNameEl.value),
+        customerPhone:customer?.phone || phoneOrNull(checkoutPhoneEl.value),
+        customerEmail:customer?.email || emailOrNull(checkoutEmailEl.value),
+        cardTransaction: paymentMethod === "card" ? cardTxn : null,
+        brandId,
+        branchId
+      };
+
+      const orderData = currentMode==="return"
+        ? {
+            ...baseOrderData,
+            status:"return",
+            type:"return",
+            isReturn:true,
+            originalOrderId: currentReturnOrderMeta?.orderId || null,
+            originalOrderDocId: currentReturnOrderMeta?.orderDocId || null,
+            originalPaymentMethod: currentReturnOrderMeta?.data?.paymentMethod || null
+          }
+        : {
+            ...baseOrderData,
+            status:"normal",
+            type:"sale",
+            isReturn:false
+          };
+
+      await setDoc(orderRef,orderData);
+
+      // Update stock (online)
+      try{
+        await adjustStockForOrder(cartItems, currentMode, brandId, branchId);
+      }catch(e){
+        console.warn("Stock adjust failed",e);
+      }
+
+      // Update original order refund status if online and this is a return
+      if(currentMode==="return" && currentReturnOrderMeta?.orderDocId && navigator.onLine){
+        await recomputeOriginalRefundStatus(
+          currentReturnOrderMeta.orderId,
+          currentReturnOrderMeta.orderDocId
+        );
+      }
+
+      const payload = {
+        orderId,
+        orderDocId:orderRef.id,
+        createdAt:now.toISOString(),
+        brandId,
+        brandName:brandData?.name || null,
+        brandLogoUrl:brandData?.logoUrl || brandData?.logo || null,
+        branchId,
+        branchName:branchData?.name || null,
+        posUser:{
+          username:posUser?.username || null,
+          displayName:posUser?.displayName || null,
+          role:posUser?.role || null
+        },
+        customer:{
+          id:customerId || null,
+          name:orderData.customerName,
+          phone:orderData.customerPhone,
+          email:orderData.customerEmail
+        },
+        total:orderData.total,
+        subtotal:orderData.subtotal,
+        taxPercent:orderData.taxPercent,
+        servicePercent:orderData.servicePercent,
+        taxAmount:orderData.taxAmount,
+        serviceAmount:orderData.serviceAmount,
+        items:itemsForDb,
+        paymentMethod,
+        cardTransaction: paymentMethod === "card" ? cardTxn : null,
+        isReturn: currentMode==="return",
+        originalOrderId: orderData.originalOrderId || null
+      };
+
+      fetch(WEBHOOK_URL,{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(payload)
+      }).catch(err=>console.error("Webhook error",err));
+
+      showGlobalAlert(`${currentMode==="return" ? "Return" : "Order"} ${orderId} created successfully.`,"ok");
+      cartItems = [];
+      renderCart();
+      currentCustomerId = null;
+      currentReturnOrderMeta = null;
+      closeCheckoutModal();
+      codeInputEl.focus();
+    }catch(err){
+      console.error(err);
+      const networkCodes = ["unavailable","failed-precondition","network-request-failed"];
+      if(!navigator.onLine || networkCodes.includes(err.code)){
+        const snapshot = cartItems.map(i=>({...i}));
+        queueOfflineOrder({
+          mode:currentMode,
+          totalPositive,
+          subtotalPositive,
+          taxPercentValue:taxPercent,
+          servicePercentValue:servicePercent,
+          taxAmountValue:taxAmount,
+          serviceAmountValue:serviceAmount,
+          paymentMethod,
+          cardTxn,
+          name,
+          phone,
+          email,
+          cartItemsSnapshot:snapshot,
+          originalOrderMeta:currentReturnOrderMeta
+        });
+      }else{
+        showCheckoutAlert("Error placing order. Check console.");
+      }
     }finally{
-      window.location.href = "login.html";
+      btnCheckoutConfirm.disabled = false;
+      btnCheckoutConfirm.textContent = "Confirm & place order";
     }
-  });
+  }
 
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){
-      window.location.href = "login.html";
+  function updateModeUI(){
+    if(currentMode==="sale"){
+      modeSaleBtn.classList.add("mode-pill-active");
+      modeReturnBtn.classList.remove("mode-pill-active");
+      leftCardTitleEl.textContent = "Products";
+      leftCardSubtitleEl.textContent = "Scan barcode, type a code, or tap “Add” to send items to cart.";
+      codeInputLabelEl.textContent = "Scan or type product code";
+      codeInputHintEl.textContent = "Works with barcode scanners that behave like a keyboard and send Enter after scanning.";
+      cartCardTitleEl.textContent = "Cart";
+      cartCardSubtitleEl.textContent = "Adjust quantities or remove items. Proceed to add customer & payment details.";
+      summarySubtotalLabelEl.textContent = "Subtotal";
+      summaryTotalLabelEl.textContent = "Total";
+      summaryPaymentLabelEl.textContent = "Payment method";
+      returnNoteEl.style.display = "none";
+      subtitleEl.textContent = "POS — Sale mode. Every sale is stored in the system.";
+      productsListEl.style.display = "block";
+      topSearchEl.disabled = false;
+      topSearchEl.placeholder = "Search products (name/code)";
+      btnOpenCheckoutTop.textContent = "Proceed";
+      btnOpenCheckoutSecondary.textContent = "Proceed";
+      returnFullRowEl.style.display = "none";
+    }else{
+      modeSaleBtn.classList.remove("mode-pill-active");
+      modeReturnBtn.classList.add("mode-pill-active");
+      leftCardTitleEl.textContent = "Returns";
+      leftCardSubtitleEl.textContent = "Enter or scan the original order ID or customer phone, then choose full or partial refund.";
+      codeInputLabelEl.textContent = "Order ID or customer phone";
+      codeInputHintEl.textContent = "Use the printed order ID (e.g. 1507-3) or the customer's phone.";
+      cartCardTitleEl.textContent = "Return cart";
+      cartCardSubtitleEl.textContent = "Set the quantity to return for each item, then refund.";
+      summarySubtotalLabelEl.textContent = "Refund subtotal";
+      summaryTotalLabelEl.textContent = "Refund total";
+      summaryPaymentLabelEl.textContent = "Refund method";
+      returnNoteEl.style.display = "block";
+      subtitleEl.textContent = "POS — Return mode. Refunds are stored as negative totals linked to the original order.";
+      productsListEl.style.display = "none";
+      topSearchEl.disabled = true;
+      topSearchEl.placeholder = "Products hidden in return mode";
+      btnOpenCheckoutTop.textContent = "Refund selected items";
+      btnOpenCheckoutSecondary.textContent = "Refund selected items";
+      returnFullRowEl.style.display = "flex";
+    }
+    renderProductsList(topSearchEl.value);
+    cartItems = [];
+    currentReturnOrderMeta = null;
+    renderCart();
+    codeInputEl.value = "";
+    codeInputEl.focus();
+  }
+
+  function prefillLoginFromStorage(){
+    try{
+      const raw = localStorage.getItem(CRED_KEY);
+      if(!raw) return;
+      const obj = JSON.parse(raw);
+      if(obj && typeof obj === "object"){
+        if(obj.username) loginUsernameEl.value = obj.username;
+        if(obj.pin) loginPinEl.value = obj.pin;
+      }
+    }catch(e){
+      console.warn("Failed to prefill login from storage",e);
+    }
+  }
+
+  async function handleLogin(evt){
+    evt.preventDefault();
+    clearAuthAlert();
+    const username = loginUsernameEl.value.trim();
+    const pin = loginPinEl.value.trim();
+    if(!username || !pin){
+      showAuthAlert("Enter username and PIN.");
       return;
     }
-    const platformRef = doc(db,"platformUsers",user.uid);
-    const snap = await getDoc(platformRef);
-    if(!snap.exists()){
-      alert("Your POS account is not configured.");
-      window.location.href = "login.html";
-      return;
-    }
-    const data = snap.data() || {};
-    if(data.role !== "cashier"){
-      alert("You are not a POS user.");
-      window.location.href = "login.html";
-      return;
-    }
-    brandId = data.brandId || data.brand || null;
-    branchId = data.branchId || data.branch || null;
+    try{
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Logging in…";
 
-    userNameEl.textContent = data.name || user.email || "Cashier";
-    userRoleEl.textContent = "POS";
-    userInitialsEl.textContent = initialsFromNameOrEmail(data.name,user.email);
+      const posUsersCol = collection(db,"posUsers");
+      const qUser = query(
+        posUsersCol,
+        where("username","==",username),
+        where("pin","==",pin),
+        limit(1)
+      );
+      const snap = await getDocs(qUser);
+      if(snap.empty){
+        showAuthAlert("No POS user found with this username/PIN combination.");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Log in";
+        return;
+      }
+      const d = snap.docs[0];
+      const u = d.data() || {};
+      if(u.isActive === false){
+        showAuthAlert("This POS user is disabled.");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Log in";
+        return;
+      }
+      if(!u.brandId || !u.branchId){
+        showAuthAlert("POS user is missing brand or branch assignment (brandId/branchId).");
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Log in";
+        return;
+      }
 
-    await loadConfigAndProducts();
-    setMode("sale");
-  });
-</script>
+      try{
+        localStorage.setItem(CRED_KEY, JSON.stringify({username, pin}));
+      }catch(e){
+        console.warn("Failed to store credentials",e);
+      }
+
+      posUser = {
+        id:d.id,
+        username:u.username,
+        displayName:u.displayName || u.username,
+        role:u.role || "cashier"
+      };
+      brandId = u.brandId;
+      branchId = u.branchId;
+
+      authWrapper.style.display = "none";
+      shellEl.style.display = "flex";
+      document.body.style.alignItems = "flex-start";
+
+      userNameEl.textContent = posUser.displayName;
+      userRoleEl.textContent = posUser.role;
+      userInitialsEl.textContent = initialsFromNameOrUsername(posUser.displayName,posUser.username);
+
+      await loadBrandAndBranch();
+      await loadProducts();
+      loadOfflineOrders();
+
+      codeInputEl.focus();
+    }catch(err){
+      console.error("POS login error:", err);
+      let msg = "Login error.";
+      if(err.code === "permission-denied"){
+        msg = "Firestore rules are blocking access to posUsers. Allow read on posUsers for authenticated POS clients (anonymous auth is used).";
+      }
+      showAuthAlert(msg + (err.code ? ` (${err.code})` : ""));
+    }finally{
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Log in";
+    }
+  }
+
+  function initEvents(){
+    loginForm.addEventListener("submit",handleLogin);
+
+    btnAddCode.addEventListener("click",()=>{
+      if(currentMode==="sale"){
+        handleAddByCodeSale();
+      }else{
+        handleLoadOrderForReturn();
+      }
+    });
+    codeInputEl.addEventListener("keydown",(e)=>{
+      if(e.key==="Enter"){
+        e.preventDefault();
+        if(currentMode==="sale"){
+          handleAddByCodeSale();
+        }else{
+          handleLoadOrderForReturn();
+        }
+      }
+    });
+
+    btnClearCart.addEventListener("click",()=>{
+      cartItems = [];
+      currentReturnOrderMeta = null;
+      renderCart();
+      codeInputEl.focus();
+    });
+
+    topSearchEl.addEventListener("input",()=>{
+      renderProductsList(topSearchEl.value);
+    });
+
+    const openCheckout = ()=>openCheckoutModal();
+    btnOpenCheckoutTop.addEventListener("click",openCheckout);
+    btnOpenCheckoutSecondary.addEventListener("click",openCheckout);
+
+    btnCheckoutCancel.addEventListener("click",()=>{
+      closeCheckoutModal();
+      codeInputEl.focus();
+    });
+
+    btnCheckoutConfirm.addEventListener("click",handlePlaceOrder);
+
+    checkoutNameEl.addEventListener("input",()=>searchCustomersForSuggestions(checkoutNameEl.value));
+    checkoutPhoneEl.addEventListener("input",()=>searchCustomersForSuggestions(checkoutPhoneEl.value));
+    checkoutEmailEl.addEventListener("input",()=>searchCustomersForSuggestions(checkoutEmailEl.value));
+
+    checkoutModal.addEventListener("click",(e)=>{
+      if(e.target === checkoutModal){
+        closeCheckoutModal();
+        codeInputEl.focus();
+      }
+    });
+
+    modeSaleBtn.addEventListener("click",()=>{
+      if(currentMode!=="sale"){
+        currentMode = "sale";
+        updateModeUI();
+      }
+    });
+    modeReturnBtn.addEventListener("click",()=>{
+      if(currentMode!=="return"){
+        currentMode = "return";
+        updateModeUI();
+      }
+    });
+
+    btnReturnFull.addEventListener("click",()=>{
+      if(currentMode!=="return"){
+        showGlobalAlert("Full refund is only available in return mode.","error");
+        return;
+      }
+      if(!currentReturnOrderMeta){
+        showGlobalAlert("Load an order first before returning full order.","error");
+        return;
+      }
+      if(cartItems.length===0){
+        showGlobalAlert("No items loaded from this order.","error");
+        return;
+      }
+      cartItems.forEach(i=>{
+        if(i.originalQty != null){
+          i.qty = i.originalQty;
+        }
+      });
+      renderCart();
+      openCheckoutModal();
+    });
+
+    // Product modal events
+    btnProductModalCancel.addEventListener("click",()=>{
+      closeProductModal();
+    });
+    productModalEl.addEventListener("click",(e)=>{
+      if(e.target === productModalEl){
+        closeProductModal();
+      }
+    });
+    btnProductModalAdd.addEventListener("click",()=>{
+      if(!currentProductForModal) return;
+      const product = currentProductForModal;
+      let qty = parseInt(productModalQtyEl.value,10);
+      if(!qty || qty < 1) qty = 1;
+
+      const variantSelectEl = productModalVariantsEl.querySelector("#product-variant-select");
+      let selectedVariant = null;
+      if(variantSelectEl && currentFlatVariants && currentFlatVariants.length){
+        const idx = parseInt(variantSelectEl.value,10);
+        if(!Number.isNaN(idx) && currentFlatVariants[idx]){
+          selectedVariant = currentFlatVariants[idx];
+        }
+      }
+
+      const variantsInfo = [];
+      let variantKey = null;
+      let displayName = product.name;
+      let availableQtyForVariant = null;
+
+      if(selectedVariant){
+        const groupName = selectedVariant.groupName || "Variant";
+        const choiceName = selectedVariant.labelName;
+        variantsInfo.push({ group:groupName, choice:choiceName });
+        variantKey = `${groupName}:${choiceName}`;
+        displayName = `${product.name} (${groupName}: ${choiceName})`;
+        if(typeof selectedVariant.qty === "number"){
+          const usedInCartVariant = cartItems.reduce((sum,i)=>{
+            if((i.baseId || i.id) === product.id && i.variantKey === variantKey){
+              return sum + i.qty;
+            }
+            return sum;
+          },0);
+          availableQtyForVariant = selectedVariant.qty - usedInCartVariant;
+        }
+      }
+
+      if(availableQtyForVariant != null && qty > availableQtyForVariant){
+        showGlobalAlert(`Only ${availableQtyForVariant} unit(s) left for this variant in this branch.`,"error");
+        return;
+      }else{
+        const left = computeProductStockLeft(product);
+        if(left != null && qty > left){
+          showGlobalAlert(`Only ${left} unit(s) left of ${product.name} in this branch.`,"error");
+          return;
+        }
+      }
+
+      addProductToCart({
+        ...product,
+        baseId: product.id,
+        id: variantKey ? `${product.id}::${variantKey}` : product.id,
+        name: displayName,
+        variantKey,
+        variantChoices: variantsInfo,
+        variantMeta: selectedVariant ? {
+          groupIndex: selectedVariant.groupIndex,
+          labelIndex: selectedVariant.labelIndex
+        } : null
+      }, qty);
+
+      closeProductModal();
+    });
+
+    window.addEventListener("online",()=>{
+      renderOfflineOrders();
+      showGlobalAlert("Back online. You can sync queued orders from the offline banner.","info");
+    });
+    window.addEventListener("offline",()=>{
+      renderOfflineOrders();
+      showGlobalAlert("You are offline. New orders will be queued locally.","error");
+    });
+  }
+
+  function init(){
+    prefillLoginFromStorage();
+    initEvents();
+    updateModeUI();
+  }
+
+  init();
+  </script>
 </body>
 </html>
+

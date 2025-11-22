@@ -412,7 +412,7 @@
             </div>
             <div class="page-actions">
               <button id="btn-add-product" class="btn btn-primary">Add Product</button>
-              <button id="btn-import-excel" class="btn btn-ghost">Import (Excel/CSV)</button>
+              <button id="btn-import-excel" class="btn btn-ghost">Import (CSV)</button>
               <button id="btn-download-sample" class="btn btn-ghost">Sample CSV</button>
               <button id="btn-export-products" class="btn btn-ghost">Export CSV</button>
             </div>
@@ -577,7 +577,6 @@
               <div class="field">
                 <label><input type="checkbox" id="set-send-email"/> Always send email receipts</label>
               </div>
-              <!-- WhatsApp option removed as requested -->
               <button id="btn-save-receipt-settings" class="btn btn-primary">Save</button>
             </div>
           </div>
@@ -602,7 +601,6 @@
     import {
       getStorage, ref, uploadBytes, getDownloadURL
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-    import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
 
     /* FIREBASE CONFIG */
     const firebaseConfig = {
@@ -635,7 +633,7 @@
     const appView = qs("#app-view");
     const sidebarBrandLogo = qs("#sidebar-brand-logo");
     const sidebarBrandName = qs("#sidebar-brand-name");
-    const topbarBrandTitle = qs("#topbar-brand-title");
+    the topbarBrandTitle = qs("#topbar-brand-title");
     const globalBranchSelect = qs("#global-branch-select");
 
     /* TABLE CONTAINERS */
@@ -793,7 +791,7 @@
       }
     });
 
-    /* CREATE BRAND */
+    /* CREATE BRAND + OWNER USER IN `users` */
     createForm.addEventListener("submit", async e => {
       e.preventDefault();
       clearAuthAlert();
@@ -818,58 +816,47 @@
         const user = cred.user;
         await updateProfile(user, { displayName: ownerName });
 
-        // Create brand document in same shape Super Admin expects
         const brandRef = await addDoc(collection(db, "brands"), {
           name: brandName,
           country: brandCountry || null,
           ownerUserId: user.uid,
           ownerEmail: email,
           status: "active",
-          isActive: true,
           vat: 0,
           serviceFee: 0,
           sendEmail: false,
-          sendWhatsApp: false,
-          branchCount: 1,
-          defaultCurrency: null,
-          defaultTaxPercent: null,
           createdAt: serverTimestamp()
         });
 
-        // Link user -> brand
+        /* MAIN USER DOCUMENT (not platformUsers) */
+        await setDoc(doc(db, "users", user.uid), {
+          userId: user.uid,
+          email,
+          name: ownerName,
+          role: "brand_owner",
+          brandId: brandRef.id,
+          createdAt: serverTimestamp(),
+          isActive: true
+        });
+
         await setDoc(doc(db, "userBrands", user.uid), {
           primaryBrandId: brandRef.id,
           brandIds: [brandRef.id]
         });
 
-        // Create default branch
-        const branchRef = await addDoc(collection(brandRef, "branches"), {
+        await addDoc(collection(brandRef, "branches"), {
           name: "Main Branch",
           code: "MAIN",
           isActive: true,
           createdAt: serverTimestamp()
         });
 
-        // Staff document for owner inside brand
         await setDoc(doc(brandRef, "staff", user.uid), {
           userId: user.uid,
           name: ownerName,
           email,
           role: "brand_owner",
           isActive: true,
-          createdAt: serverTimestamp()
-        });
-
-        // PLATFORM USERS entry so Super Admin can see brand owner
-        await setDoc(doc(db, "platformUsers", user.uid), {
-          name: ownerName,
-          email,
-          role: "brand_owner",
-          brandId: brandRef.id,
-          brandName,
-          branchId: branchRef.id,
-          branchName: "Main Branch",
-          status: "active",
           createdAt: serverTimestamp()
         });
 
@@ -1014,10 +1001,10 @@
       }
     }
 
-    /* LOAD STAFF */
+    /* LOAD STAFF FROM `users` */
     async function loadStaff() {
       staffUsers = [];
-      const qUsers = query(collection(db, "posUsers"), where("brandId", "==", brandId));
+      const qUsers = query(collection(db, "users"), where("brandId", "==", brandId));
       const snap = await getDocs(qUsers);
       snap.forEach(d => staffUsers.push({ id: d.id, ...d.data() }));
     }
@@ -1725,16 +1712,17 @@
       downloadCsv("sample_products.csv", rows);
     });
 
-    /* IMPORT (EXCEL/CSV) */
+    /* IMPORT (CSV ONLY) */
     qs("#btn-import-excel").addEventListener("click", () => {
       openModal(`
-        <div class="modal-title">Import Products</div>
+        <div class="modal-title">Import Products (CSV)</div>
         <div class="field">
           <div class="field-label">File</div>
-          <input id="import-file" type="file" accept=".xlsx,.xls,.csv"/>
+          <input id="import-file" type="file" accept=".csv"/>
           <div class="field-hint">
             Columns: name, code (SKU), price, stockMode, stockQty,
-            variantGroup, variants (like S|10;M|5).
+            variantGroup, variants (like S|10;M|5).<br/>
+            Export from Excel as CSV before uploading.
           </div>
         </div>
         <div class="modal-actions">
@@ -1751,26 +1739,28 @@
       const file = fileInput.files[0];
       if (!file) return;
 
-      const data = await file.arrayBuffer();
-      let rows;
-
-      if (file.name.toLowerCase().endsWith(".csv")) {
-        const text = new TextDecoder("utf-8").decode(data);
-        const lines = text.split(/\r?\n/).filter(Boolean);
-        const headers = lines[0].split(",");
-        rows = lines.slice(1).map(line => {
-          const parts = line.split(",");
-          const obj = {};
-          headers.forEach((h, i) => {
-            obj[h.trim()] = parts[i];
-          });
-          return obj;
-        });
-      } else {
-        const wb = XLSX.read(data, { type: "array" });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      const nameLower = file.name.toLowerCase();
+      if (!nameLower.endsWith(".csv")) {
+        alert("Please upload a CSV file (you can export from Excel as CSV).");
+        return;
       }
+
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+      if (lines.length < 2) {
+        alert("File is empty.");
+        return;
+      }
+
+      const headers = lines[0].split(",").map(h => h.trim());
+      const rows = lines.slice(1).map(line => {
+        const parts = line.split(",");
+        const obj = {};
+        headers.forEach((h, i) => {
+          obj[h] = parts[i] ?? "";
+        });
+        return obj;
+      });
 
       let count = 0;
       for (const row of rows) {
@@ -2062,7 +2052,7 @@
       renderProductsTable();
     }
 
-    /* ADD STAFF */
+    /* ADD STAFF → `users` collection */
     qs("#btn-add-staff").addEventListener("click", () => {
       const branchOptions = branches
         .map(b => `<option value="${b.id}">${b.name}</option>`)
@@ -2113,7 +2103,7 @@
         return;
       }
 
-      const docRef = await addDoc(collection(db, "posUsers"), {
+      await addDoc(collection(db, "users"), {
         username,
         pin,
         displayName: display || username,
@@ -2121,21 +2111,6 @@
         brandId,
         role: "cashier",
         isActive: true,
-        createdAt: serverTimestamp()
-      });
-
-      const branchObj = branches.find(x => x.id === branch);
-
-      // Sync into platformUsers so Super Admin can see this cashier
-      await setDoc(doc(db, "platformUsers", docRef.id), {
-        name: display || username,
-        email: null,
-        role: "cashier",
-        brandId,
-        brandName: brandData.name || "",
-        branchId: branch,
-        branchName: branchObj ? branchObj.name : "",
-        status: "active",
         createdAt: serverTimestamp()
       });
 
@@ -2197,20 +2172,11 @@
       const display = qs("#es-display").value.trim();
       const branch = qs("#es-branch").value;
 
-      await updateDoc(doc(db, "posUsers", id), {
+      await updateDoc(doc(db, "users", id), {
         username,
         pin,
         displayName: display,
         branchId: branch
-      });
-
-      const branchObj = branches.find(x => x.id === branch);
-
-      // Mirror update into platformUsers
-      await updateDoc(doc(db, "platformUsers", id), {
-        name: display || username,
-        branchId: branch,
-        branchName: branchObj ? branchObj.name : ""
       });
 
       closeModal();
@@ -2220,11 +2186,7 @@
 
     async function deleteStaff(id) {
       if (!confirm("Delete staff user?")) return;
-      await deleteDoc(doc(db, "posUsers", id));
-      // Clean up platformUsers entry if it exists
-      try {
-        await deleteDoc(doc(db, "platformUsers", id));
-      } catch (_) {}
+      await deleteDoc(doc(db, "users", id));
       closeModal();
       await loadStaff();
       renderStaffTable();
@@ -2374,3 +2336,94 @@
     qs("#btn-export-products").addEventListener("click", () => {
       const rows = [["branch","name","code","price","stockMode","stockQty","variantGroup","variants","imageUrl"]];
 
+      products.forEach(p => {
+        const variantsStr = Array.isArray(p.variants)
+          ? p.variants.map(v => `${v.label || ""} (${v.stockQty ?? ""})`).join(";")
+          : "";
+        rows.push([
+          p.branchName || "",
+          p.name || "",
+          p.code || "",
+          p.price ?? "",
+          p.stockMode || "",
+          p.stockQty ?? "",
+          p.variantGroup || "",
+          variantsStr,
+          p.imageUrl || ""
+        ]);
+      });
+
+      downloadCsv("products.csv", rows);
+    });
+
+    qs("#btn-export-branches").addEventListener("click", () => {
+      const rows = [["name","code","isActive"]];
+      branches.forEach(b => {
+        rows.push([b.name || "", b.code || "", b.isActive !== false ? "yes" : "no"]);
+      });
+      downloadCsv("branches.csv", rows);
+    });
+
+    qs("#btn-export-staff").addEventListener("click", () => {
+      const rows = [["username","displayName","branch","role","isActive"]];
+      staffUsers.forEach(s => {
+        const b = branches.find(x => x.id === s.branchId);
+        rows.push([
+          s.username || "",
+          s.displayName || "",
+          b ? b.name : "",
+          s.role || "",
+          s.isActive !== false ? "yes" : "no"
+        ]);
+      });
+      downloadCsv("staff.csv", rows);
+    });
+
+    qs("#btn-export-customers").addEventListener("click", () => {
+      const stats = buildCustomerStats();
+      const rows = [["name","phone","email","orders","totalSpent"]];
+
+      customersList.forEach(c => {
+        const key = c.id || c.email || c.phone || c.name;
+        const st = key ? stats[key] : null;
+        rows.push([
+          c.name || "",
+          c.phone || "",
+          c.email || "",
+          st ? st.orders : 0,
+          st ? st.total : 0
+        ]);
+      });
+
+      downloadCsv("customers.csv", rows);
+    });
+
+    qs("#btn-export-orders").addEventListener("click", () => {
+      const rows = [["orderId","date","branch","customer","total","paymentMethod","type","status"]];
+      ordersList.forEach(o => {
+        rows.push([
+          o.orderId || o.id,
+          orderDate(o) || "",
+          o.branchName || "",
+          o.customerName || "",
+          o.total ?? "",
+          o.paymentMethod || "",
+          o.type || "sale",
+          o.status || "normal"
+        ]);
+      });
+      downloadCsv("orders.csv", rows);
+    });
+
+    /* LOGOUT */
+    qs("#btn-logout").addEventListener("click", async () => {
+      if (ordersUnsub) {
+        ordersUnsub();
+        ordersUnsub = null;
+      }
+      await signOut(auth);
+      showAuth();
+    });
+  </script>
+</body>
+</html>

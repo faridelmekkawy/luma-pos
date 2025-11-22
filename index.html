@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html><!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -412,7 +412,7 @@
             </div>
             <div class="page-actions">
               <button id="btn-add-product" class="btn btn-primary">Add Product</button>
-              <button id="btn-import-excel" class="btn btn-ghost">Import (CSV)</button>
+              <button id="btn-import-excel" class="btn btn-ghost">Import (Excel/CSV)</button>
               <button id="btn-download-sample" class="btn btn-ghost">Sample CSV</button>
               <button id="btn-export-products" class="btn btn-ghost">Export CSV</button>
             </div>
@@ -577,6 +577,7 @@
               <div class="field">
                 <label><input type="checkbox" id="set-send-email"/> Always send email receipts</label>
               </div>
+              <!-- WhatsApp option removed as requested -->
               <button id="btn-save-receipt-settings" class="btn btn-primary">Save</button>
             </div>
           </div>
@@ -601,6 +602,7 @@
     import {
       getStorage, ref, uploadBytes, getDownloadURL
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+    import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
 
     /* FIREBASE CONFIG */
     const firebaseConfig = {
@@ -791,7 +793,7 @@
       }
     });
 
-    /* CREATE BRAND + OWNER USER IN `users` */
+    /* CREATE BRAND */
     createForm.addEventListener("submit", async e => {
       e.preventDefault();
       clearAuthAlert();
@@ -826,17 +828,6 @@
           serviceFee: 0,
           sendEmail: false,
           createdAt: serverTimestamp()
-        });
-
-        /* MAIN USER DOCUMENT (not platformUsers) */
-        await setDoc(doc(db, "users", user.uid), {
-          userId: user.uid,
-          email,
-          name: ownerName,
-          role: "brand_owner",
-          brandId: brandRef.id,
-          createdAt: serverTimestamp(),
-          isActive: true
         });
 
         await setDoc(doc(db, "userBrands", user.uid), {
@@ -1001,10 +992,10 @@
       }
     }
 
-    /* LOAD STAFF FROM `users` */
+    /* LOAD STAFF */
     async function loadStaff() {
       staffUsers = [];
-      const qUsers = query(collection(db, "users"), where("brandId", "==", brandId));
+      const qUsers = query(collection(db, "posUsers"), where("brandId", "==", brandId));
       const snap = await getDocs(qUsers);
       snap.forEach(d => staffUsers.push({ id: d.id, ...d.data() }));
     }
@@ -1712,17 +1703,16 @@
       downloadCsv("sample_products.csv", rows);
     });
 
-    /* IMPORT (CSV ONLY) */
+    /* IMPORT (EXCEL/CSV) */
     qs("#btn-import-excel").addEventListener("click", () => {
       openModal(`
-        <div class="modal-title">Import Products (CSV)</div>
+        <div class="modal-title">Import Products</div>
         <div class="field">
           <div class="field-label">File</div>
-          <input id="import-file" type="file" accept=".csv"/>
+          <input id="import-file" type="file" accept=".xlsx,.xls,.csv"/>
           <div class="field-hint">
             Columns: name, code (SKU), price, stockMode, stockQty,
-            variantGroup, variants (like S|10;M|5).<br/>
-            Export from Excel as CSV before uploading.
+            variantGroup, variants (like S|10;M|5).
           </div>
         </div>
         <div class="modal-actions">
@@ -1739,28 +1729,26 @@
       const file = fileInput.files[0];
       if (!file) return;
 
-      const nameLower = file.name.toLowerCase();
-      if (!nameLower.endsWith(".csv")) {
-        alert("Please upload a CSV file (you can export from Excel as CSV).");
-        return;
-      }
+      const data = await file.arrayBuffer();
+      let rows;
 
-      const text = await file.text();
-      const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-      if (lines.length < 2) {
-        alert("File is empty.");
-        return;
-      }
-
-      const headers = lines[0].split(",").map(h => h.trim());
-      const rows = lines.slice(1).map(line => {
-        const parts = line.split(",");
-        const obj = {};
-        headers.forEach((h, i) => {
-          obj[h] = parts[i] ?? "";
+      if (file.name.toLowerCase().endsWith(".csv")) {
+        const text = new TextDecoder("utf-8").decode(data);
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        const headers = lines[0].split(",");
+        rows = lines.slice(1).map(line => {
+          const parts = line.split(",");
+          const obj = {};
+          headers.forEach((h, i) => {
+            obj[h.trim()] = parts[i];
+          });
+          return obj;
         });
-        return obj;
-      });
+      } else {
+        const wb = XLSX.read(data, { type: "array" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      }
 
       let count = 0;
       for (const row of rows) {
@@ -2052,7 +2040,7 @@
       renderProductsTable();
     }
 
-    /* ADD STAFF → `users` collection */
+    /* ADD STAFF */
     qs("#btn-add-staff").addEventListener("click", () => {
       const branchOptions = branches
         .map(b => `<option value="${b.id}">${b.name}</option>`)
@@ -2103,7 +2091,7 @@
         return;
       }
 
-      await addDoc(collection(db, "users"), {
+      await addDoc(collection(db, "posUsers"), {
         username,
         pin,
         displayName: display || username,
@@ -2172,7 +2160,7 @@
       const display = qs("#es-display").value.trim();
       const branch = qs("#es-branch").value;
 
-      await updateDoc(doc(db, "users", id), {
+      await updateDoc(doc(db, "posUsers", id), {
         username,
         pin,
         displayName: display,
@@ -2186,7 +2174,7 @@
 
     async function deleteStaff(id) {
       if (!confirm("Delete staff user?")) return;
-      await deleteDoc(doc(db, "users", id));
+      await deleteDoc(doc(db, "posUsers", id));
       closeModal();
       await loadStaff();
       renderStaffTable();
@@ -2335,7 +2323,6 @@
     /* EXPORT BUTTONS */
     qs("#btn-export-products").addEventListener("click", () => {
       const rows = [["branch","name","code","price","stockMode","stockQty","variantGroup","variants","imageUrl"]];
-
       products.forEach(p => {
         const variantsStr = Array.isArray(p.variants)
           ? p.variants.map(v => `${v.label || ""} (${v.stockQty ?? ""})`).join(";")
@@ -2352,7 +2339,6 @@
           p.imageUrl || ""
         ]);
       });
-
       downloadCsv("products.csv", rows);
     });
 
@@ -2427,3 +2413,4 @@
   </script>
 </body>
 </html>
+

@@ -3,1774 +3,1164 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Luma Store OS — Brand Dashboard</title>
+  <title>Luma Store OS — Brand Portal</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
   <style>
     :root{
-      --bg:#f3f4f6;
-      --panel:#ffffff;
-      --panel-soft:#f9fafb;
-      --ink:#111827;
-      --muted:#6b7280;
-      --border:#e5e7eb;
-      --accent:#2563eb;
-      --accent-soft:#dbeafe;
-      --accent-strong:#1d4ed8;
-      --radius:16px;
-      --shadow:0 18px 40px rgba(15,23,42,.1);
+      --bg:#020617;
+      --panel:#020617;
+      --panel-soft:#020617;
+      --ink:#e5e7eb;
+      --ink-strong:#f9fafb;
+      --line:rgba(148,163,184,.32);
+      --muted:#9ca3af;
+      --accent:#38bdf8;
+      --accent-strong:#0ea5e9;
       --danger:#ef4444;
-      --ok:#16a34a;
+      --ok:#22c55e;
+      --radius:18px;
+      --shadow:0 22px 55px rgba(0,0,0,.65);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{
       height:100%;
       font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:var(--bg);
+      background:radial-gradient(circle at top,#020617,#000 70%);
       color:var(--ink);
     }
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
 
-    /* AUTH SCREENS */
-    .auth-wrapper{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-    }
-    .auth-card{
+    .shell{
       width:100%;
-      max-width:380px;
-      background:var(--panel);
-      border-radius:20px;
-      border:1px solid var(--border);
-      box-shadow:0 18px 40px rgba(15,23,42,.12);
-      padding:20px 18px 16px;
-    }
-    .auth-header{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .auth-logo{
-      width:32px;height:32px;border-radius:999px;
-      background:linear-gradient(135deg,#2563eb,#a855f7);
-      display:flex;align-items:center;justify-content:center;
-      color:#fff;font-weight:700;font-size:16px;
-    }
-    .auth-title-block{
-      display:flex;flex-direction:column;gap:2px;
-    }
-    .auth-title{font-size:16px;font-weight:700;}
-    .auth-subtitle{font-size:11px;color:var(--muted);}
-    .auth-label{
-      font-size:11px;margin-bottom:4px;color:#4b5563;
-    }
-    .auth-input{
-      width:100%;padding:8px 10px;border-radius:10px;
-      border:1px solid var(--border);background:var(--panel-soft);
-      font-size:12px;margin-bottom:8px;
-    }
-    .auth-input:focus{
-      outline:none;border-color:var(--accent);
-      box-shadow:0 0 0 1px var(--accent-soft);
-    }
-    .auth-btn{
-      width:100%;border:none;border-radius:999px;
-      padding:8px 10px;background:var(--accent);color:#fff;
-      font-size:13px;font-weight:600;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;gap:6px;
-      margin-top:4px;
-      box-shadow:0 10px 25px rgba(37,99,235,.25);
-      transition:background .15s,transform .05s,box-shadow .15s;
-    }
-    .auth-btn:hover{
-      background:var(--accent-strong);
-      transform:translateY(-1px);
-      box-shadow:0 14px 30px rgba(37,99,235,.25);
-    }
-    .auth-btn-secondary{
-      width:100%;
-      border-radius:999px;
-      padding:8px 10px;
-      background:#111827;
-      color:#fff;
-      font-size:13px;
-      font-weight:600;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      margin-top:8px;
-      border:none;
-    }
-    .auth-btn-secondary:hover{
-      filter:brightness(1.05);
-    }
-    .auth-helper{
-      margin-top:10px;font-size:11px;color:var(--muted);
-    }
-    .auth-error{
-      font-size:11px;margin-top:6px;padding:6px 8px;border-radius:9px;
-      background:#fef2f2;color:#b91c1c;border:1px solid:#fecaca;display:none;
-    }
-
-    /* APP LAYOUT */
-    #app-shell{min-height:100vh;display:none;}
-    .sidebar{
-      width:250px;background:#ffffff;border-right:1px solid var(--border);
-      display:flex;flex-direction:column;padding:18px 16px;
-    }
-    .brand-mark{
-      display:flex;align-items:center;gap:10px;margin-bottom:18px;
-    }
-    .brand-mark-logo{
-      width:32px;height:32px;border-radius:999px;
-      background:#eef2ff;
-      display:flex;align-items:center;justify-content:center;
+      max-width:1100px;
+      min-height:520px;
+      background:radial-gradient(circle at top,#020617,#020617 55%,#000 100%);
+      border-radius:26px;
+      border:1px solid rgba(148,163,184,.4);
+      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(0,1.6fr);
       overflow:hidden;
     }
-    .brand-mark-logo img{max-width:32px;max-height:32px;object-fit:contain;}
-    .brand-mark-logo span{font-size:15px;font-weight:700;color:#4f46e5;}
-    .brand-mark-text-title{font-size:15px;font-weight:700;}
-    .brand-mark-text-sub{font-size:11px;color:var(--muted);}
-    .nav-section-title{
-      font-size:11px;text-transform:uppercase;letter-spacing:.12em;
-      color:var(--muted);margin:6px 0 4px;
+    .side{
+      padding:24px 22px;
+      border-right:1px solid rgba(148,163,184,.28);
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      background:radial-gradient(circle at top,#020617,#020617 60%,#020617 100%);
     }
-    .nav-list{list-style:none;margin:0;padding:0;}
-    .nav-item{
-      border-radius:999px;padding:8px 11px;display:flex;align-items:center;
-      gap:7px;font-size:13px;color:var(--muted);cursor:pointer;
-      margin-bottom:4px;transition:background .15s,color .15s;
+    .side-top{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
     }
-    .nav-item span.icon{width:18px;text-align:center;font-size:14px;}
-    .nav-item.active{
-      background:var(--accent-soft);color:var(--accent-strong);font-weight:600;
-    }
-    .nav-item:hover:not(.active){
-      background:#f3f4ff;color:var(--accent-strong);
-    }
-    .sidebar-footer{
-      margin-top:auto;font-size:11px;color:var(--muted);
-      border-top:1px solid var(--border);padding-top:8px;
-    }
-
-    .main{
-      flex:1;display:flex;flex-direction:column;padding:18px 20px;gap:12px;
-    }
-    .topbar{
-      display:flex;align-items:center;justify-content:space-between;
-      gap:10px;flex-wrap:wrap;
-    }
-    .page-title{font-size:18px;font-weight:700;}
-    .page-subtitle{font-size:12px;color:var(--muted);margin-top:2px;}
-    .user-chip{
-      display:flex;align-items:center;gap:7px;background:var(--panel);
-      border-radius:999px;padding:6px 9px;border:1px solid var(--border);
-    }
-    .user-chip-avatar{
-      width:26px;height:26px;border-radius:999px;
-      background:var(--accent-soft);display:flex;align-items:center;
-      justify-content:center;font-size:12px;font-weight:600;
-      color:var(--accent-strong);
-    }
-    .user-chip-text{display:flex;flex-direction:column;}
-    .user-chip-name{font-size:12px;font-weight:600;}
-    .user-chip-role{font-size:10px;color:var(--muted);}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:6px;
-      border-radius:999px;border:none;padding:6px 10px;
-      font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
-      transition:background .15s,box-shadow .15s,transform .05s;
-    }
-    .btn-primary{
-      background:var(--accent);color:#fff;
-      box-shadow:0 10px 25px rgba(37,99,235,.25);
-    }
-    .btn-primary:hover{
-      background:var(--accent-strong);transform:translateY(-1px);
-      box-shadow:0 14px 30px rgba(37,99,235,.25);
-    }
-    .btn-ghost{
-      background:transparent;color:var(--accent-strong);
-      border:1px solid var(--accent-soft);
-    }
-    .btn-ghost:hover{background:var(--accent-soft);}
-    .btn-icon{
-      padding:4px 7px;border-radius:999px;border:1px solid var(--border);
-      background:var(--panel);cursor:pointer;font-size:13px;
-    }
-    .btn-icon:hover{background:var(--panel-soft);}
-    .btn-danger{
-      background:var(--danger);color:#fff;border:none;
-    }
-    .btn-danger:hover{filter:brightness(.95);}
-    .btn-mini{
-      font-size:11px;padding:3px 7px;border-radius:999px;
-      border:1px solid var(--border);background:var(--panel-soft);
-      cursor:pointer;
-    }
-    .btn-mini:hover{background:#e5e7eb;}
-
-    .card{
-      background:var(--panel);border-radius:var(--radius);
-      border:1px solid var(--border);box-shadow:var(--shadow);
-      padding:12px 14px;
-    }
-    .card-header{
-      display:flex;align-items:center;justify-content:space-between;
-      flex-wrap:wrap;gap:8px;margin-bottom:8px;
-    }
-    .card-title{font-size:14px;font-weight:600;}
-    .card-subtitle{font-size:11px;color:var(--muted);margin-top:2px;}
-
-    .overview-grid{
-      display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    .brand-mark{
+      display:flex;
+      align-items:center;
       gap:10px;
     }
-    .kpi-card{
-      background:var(--panel);border-radius:14px;border:1px solid var(--border);
-      padding:9px 11px;box-shadow:0 14px 30px rgba(15,23,42,.08);
+    .brand-logo{
+      width:34px;height:34px;border-radius:999px;
+      background:conic-gradient(from 220deg,#38bdf8,#0ea5e9,#6366f1,#38bdf8);
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;font-size:16px;color:#0b1220;
+      box-shadow:0 0 0 1px rgba(15,23,42,.8);
     }
-    .kpi-label{font-size:11px;color:var(--muted);}
-    .kpi-value{margin-top:4px;font-size:17px;font-weight:700;}
-    .kpi-sub{margin-top:3px;font-size:10px;color:var(--muted);}
-
-    .content-area{display:flex;flex-direction:column;gap:10px;}
-    .toolbar{
-      display:flex;align-items:center;justify-content:space-between;
-      flex-wrap:wrap;gap:8px;
+    .brand-text-title{
+      font-size:16px;font-weight:700;color:var(--ink-strong);
     }
-    .toolbar-left,.toolbar-right{
-      display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-    }
-    .pill{
-      font-size:11px;padding:3px 8px;border-radius:999px;
-      background:var(--panel-soft);color:var(--muted);
-      border:1px solid var(--border);
-    }
-    .search-input{
-      border-radius:999px;border:1px solid var(--border);
-      background:var(--panel);padding:6px 9px;font-size:12px;min-width:190px;
-    }
-    .search-input:focus{
-      outline:none;border-color:var(--accent);
-      box-shadow:0 0 0 1px var(--accent-soft);
-    }
-
-    .table-wrapper{
-      border-radius:calc(var(--radius) - 4px);border:1px solid var(--border);
-      overflow:hidden;background:var(--panel-soft);
-    }
-    table{width:100%;border-collapse:collapse;font-size:12px;}
-    thead{background:#f3f4f6;}
-    th,td{
-      padding:7px 9px;text-align:left;border-bottom:1px solid var(--border);
-      vertical-align:middle;
-    }
-    th{
-      font-size:11px;text-transform:uppercase;letter-spacing:.08em;
-      color:var(--muted);
-    }
-    tbody tr:hover{background:#f9fafb;}
-    .muted{font-size:11px;color:var(--muted);}
-    .badge{
-      font-size:10px;padding:2px 6px;border-radius:999px;
-      background:#e5e7eb;color:#374151;
-    }
-
-    .status-pill{
-      font-size:11px;padding:3px 8px;border-radius:999px;
-      display:inline-flex;align-items:center;gap:4px;
-    }
-    .status-ok{background:#dcfce7;color:#16a34a;}
-    .status-warn{background:#fef9c3;color:#ca8a04;}
-    .status-bad{background:#fee2e2;color:#b91c1c;}
-
-    .empty-state{
-      text-align:center;padding:20px 10px;font-size:12px;color:var(--muted);
-    }
-
-    .alert{
-      font-size:11px;padding:6px 8px;border-radius:9px;margin-bottom:7px;
-    }
-    .alert-info{
-      background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;
-    }
-    .alert-error{
-      background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;
-    }
-    .alert-success{
-      background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0;
-    }
-
-    .field{margin-bottom:8px;}
-    .field-label{
-      font-size:11px;margin-bottom:3px;color:#4b5563;
-    }
-    .field-input,.field-textarea{
-      width:100%;padding:7px 9px;border-radius:9px;
-      border:1px solid var(--border);background:var(--panel-soft);
-      font-size:12px;
-    }
-    .field-textarea{resize:vertical;min-height:70px;}
-    .field-input:focus,.field-textarea:focus{
-      outline:none;border-color:var(--accent);
-      box-shadow:0 0 0 1px var(--accent-soft);
-    }
-    .field-hint{font-size:10px;color:var(--muted);margin-top:2px;}
-
-    .variant-group-header{
-      display:flex;align-items:center;justify-content:space-between;
-      gap:8px;margin-bottom:4px;
-    }
-    .variant-label-row{
-      display:grid;grid-template-columns:1.3fr 0.7fr 0.7fr 0.9fr auto;
-      gap:6px;margin-bottom:4px;
-    }
-    .variant-small-input{
-      width:100%;padding:5px 7px;border-radius:8px;
-      border:1px solid var(--border);background:var(--panel);font-size:11px;
-    }
-    .variant-small-input:focus{
-      outline:none;border-color:var(--accent);
-      box-shadow:0 0 0 1px var(--accent-soft);
-    }
-
-    .logo-preview-box{
-      display:flex;align-items:center;gap:10px;
-      padding:8px;border-radius:10px;border:1px dashed var(--border);
-      background:var(--panel-soft);min-height:52px;
-    }
-    .logo-preview-img{
-      max-height:40px;max-width:140px;object-fit:contain;
-    }
-    .logo-preview-placeholder{
+    .brand-text-sub{
       font-size:11px;color:var(--muted);
     }
 
-    /* MODAL */
-    .modal-backdrop{
-      position:fixed;inset:0;background:rgba(15,23,42,.4);
-      display:none;align-items:center;justify-content:center;z-index:50;
+    .side-heading{
+      font-size:20px;
+      font-weight:700;
+      color:var(--ink-strong);
     }
-    .modal-backdrop.show{display:flex;}
-    .modal{
-      width:100%;max-width:480px;background:var(--panel);
-      border-radius:18px;border:1px solid var(--border);
-      box-shadow:0 22px 55px rgba(15,23,42,.4);
-      padding:14px 15px 12px;
+    .side-desc{
+      font-size:12px;
+      color:var(--muted);
+      max-width:270px;
+      line-height:1.5;
     }
-    .modal-header{
-      display:flex;align-items:flex-start;justify-content:space-between;
-      gap:8px;margin-bottom:8px;
+    .side-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:4px;
     }
-    .modal-title{font-size:15px;font-weight:600;}
-    .modal-subtitle{font-size:11px;color:var(--muted);margin-top:2px;}
-    .modal-close{
-      border:none;background:transparent;cursor:pointer;
-      font-size:16px;color:var(--muted);
+    .tag{
+      font-size:10px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.45);
+      background:rgba(15,23,42,.6);
     }
-    .modal-footer{
-      display:flex;justify-content:flex-end;gap:6px;margin-top:8px;
+    .side-footer{
+      font-size:10px;
+      color:var(--muted);
+      opacity:.9;
+    }
+
+    .main{
+      padding:20px 20px 18px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .pill-tab-row{
+      display:flex;
+      gap:6px;
+      background:rgba(15,23,42,.7);
+      padding:3px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.4);
+      width:max-content;
+    }
+    .pill-tab{
+      font-size:11px;
+      padding:5px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      color:var(--muted);
+    }
+    .pill-tab.active{
+      background:#020617;
+      color:var(--ink-strong);
+      font-weight:600;
+      box-shadow:0 0 0 1px rgba(56,189,248,.4);
+    }
+
+    .view{
+      display:none;
+    }
+    .view.active{
+      display:block;
+    }
+
+    .section-title{
+      font-size:16px;
+      font-weight:600;
+      margin-bottom:4px;
+    }
+    .section-sub{
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:12px;
+    }
+
+    .field{
+      margin-bottom:10px;
+    }
+    .field-label{
+      font-size:11px;
+      margin-bottom:3px;
+      color:var(--muted);
+    }
+    .field-input, .field-select{
+      width:100%;
+      padding:8px 10px;
+      border-radius:11px;
+      border:1px solid rgba(148,163,184,.5);
+      background:rgba(15,23,42,.7);
+      color:var(--ink-strong);
+      font-size:12px;
+    }
+    .field-input::placeholder{
+      color:#64748b;
+    }
+    .field-input:focus, .field-select:focus{
+      outline:none;
+      border-color:#38bdf8;
+      box-shadow:0 0 0 1px rgba(56,189,248,.35);
+    }
+    .field-hint{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      font-weight:600;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      white-space:nowrap;
+      transition:background .15s ease,transform .05s ease,box-shadow .15s ease,opacity .1s ease;
+    }
+    .btn-primary{
+      background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+      color:#0b1220;
+      box-shadow:0 15px 40px rgba(8,47,73,.55);
+    }
+    .btn-primary:hover{transform:translateY(-1px);}
+    .btn-ghost{
+      background:transparent;
+      color:#e5e7eb;
+      border:1px solid rgba(148,163,184,.4);
+    }
+    .btn-ghost:hover{background:rgba(15,23,42,.8);}
+    .btn-danger{
+      background:#b91c1c;
+      color:#fee2e2;
+      border:none;
+    }
+    .btn-danger:hover{filter:brightness(.97);}
+
+    .alert{
+      font-size:11px;
+      padding:7px 9px;
+      border-radius:10px;
+      margin-bottom:8px;
+    }
+    .alert-info{
+      background:rgba(37,99,235,.15);
+      border:1px solid rgba(59,130,246,.6);
+      color:#bfdbfe;
+    }
+    .alert-error{
+      background:rgba(239,68,68,.12);
+      border:1px solid rgba(248,113,113,.75);
+      color:#fecaca;
+    }
+    .alert-success{
+      background:rgba(22,163,74,.14);
+      border:1px solid rgba(34,197,94,.7);
+      color:#bbf7d0;
+    }
+
+    .login-footer{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+
+    .dash-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .dash-title-block{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+    .dash-brand-name{
+      font-size:16px;
+      font-weight:600;
+      color:var(--ink-strong);
+    }
+    .dash-brand-sub{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .dash-chip-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:4px;
+    }
+    .chip{
+      font-size:10px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.4);
+      background:rgba(15,23,42,.8);
+    }
+    .chip-ok{
+      border-color:rgba(34,197,94,.7);
+      color:#bbf7d0;
+    }
+    .chip-warn{
+      border-color:rgba(234,179,8,.7);
+      color:#fef9c3;
+    }
+
+    .dash-card-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:8px;
+    }
+    .kpi-card{
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.4);
+      background:radial-gradient(circle at top left,#020617,#020617 60%,#020617 100%);
+      padding:8px 10px;
+    }
+    .kpi-label{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .kpi-value{
+      font-size:17px;
+      font-weight:700;
+      margin-top:4px;
+      color:var(--ink-strong);
+    }
+    .kpi-sub{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    .divider{
+      margin:10px 0;
+      border-top:1px dashed rgba(148,163,184,.45);
+    }
+
+    .row-between{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .small-note{
+      font-size:10px;
+      color:var(--muted);
     }
 
     @media(max-width:900px){
-      .sidebar{display:none;}
-      .main{padding:14px 12px;}
-      .topbar{flex-direction:column;align-items:flex-start;}
-      .toolbar{flex-direction:column;align-items:flex-start;}
+      body{padding:10px;}
+      .shell{
+        grid-template-columns:1fr;
+        min-height:auto;
+      }
+      .side{
+        border-right:none;
+        border-bottom:1px solid rgba(148,163,184,.28);
+      }
     }
   </style>
 </head>
 <body>
+<div class="shell">
 
-  <!-- LOGIN -->
-  <div id="login-screen" class="auth-wrapper">
-    <div class="auth-card">
-      <div class="auth-header">
-        <div class="auth-logo">L</div>
-        <div class="auth-title-block">
-          <div class="auth-title">Luma Store OS</div>
-          <div class="auth-subtitle">Brand login</div>
-        </div>
-      </div>
-      <div>
-        <label for="login-email" class="auth-label">Email</label>
-        <input id="login-email" type="email" class="auth-input" placeholder="you@brand.com"/>
-        <label for="login-password" class="auth-label">Password</label>
-        <input id="login-password" type="password" class="auth-input" placeholder="••••••••"/>
-        <button id="login-btn" class="auth-btn">Login</button>
-
-        <!-- NEW: Create brand button -->
-        <button id="go-create-brand" class="auth-btn-secondary">
-          Create a brand on Luma Store OS
-        </button>
-
-        <div id="login-error" class="auth-error"></div>
-        <div class="auth-helper">
-          Use the email & password of your brand owner / manager account.  
-          Or press <strong>Create a brand</strong> to set up a new brand.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- OWNER SIGNUP / CREATE BRAND -->
-  <div id="signup-screen" class="auth-wrapper" style="display:none;">
-    <div class="auth-card">
-      <div class="auth-header">
-        <div class="auth-logo">L</div>
-        <div class="auth-title-block">
-          <div class="auth-title">Brand owner setup</div>
-          <div class="auth-subtitle" id="signup-brand-label">Connecting brand…</div>
-        </div>
-      </div>
-      <div id="signup-alert" class="auth-error" style="display:none;"></div>
-
-      <!-- Brand fields (used for self-create, readonly for link signup) -->
-      <div>
-        <label class="auth-label" for="signup-brand-name">Brand name</label>
-        <input id="signup-brand-name" class="auth-input" placeholder="Brand name"/>
-
-        <label class="auth-label" for="signup-country">Country (optional)</label>
-        <input id="signup-country" class="auth-input" placeholder="Country"/>
-      </div>
-
-      <div style="margin-top:6px;">
-        <label class="auth-label" for="signup-name">Your name</label>
-        <input id="signup-name" class="auth-input" placeholder="Full name"/>
-
-        <label class="auth-label" for="signup-email">Email</label>
-        <input id="signup-email" type="email" class="auth-input" placeholder="you@brand.com"/>
-
-        <label class="auth-label" for="signup-password">Password</label>
-        <input id="signup-password" type="password" class="auth-input" placeholder="Choose a strong password"/>
-
-        <button id="signup-btn" class="auth-btn">Continue</button>
-        <div class="auth-helper" id="signup-helper-text">
-          This will create your brand owner account and connect it to this brand.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- APP SHELL -->
-  <div id="app-shell" style="display:none;">
-    <aside class="sidebar">
+  <!-- LEFT SIDE -->
+  <div class="side">
+    <div class="side-top">
       <div class="brand-mark">
-        <div class="brand-mark-logo" id="brand-logo-badge">
-          <span id="brand-logo-initials">B</span>
-        </div>
+        <div class="brand-logo">L</div>
         <div>
-          <div class="brand-mark-text-title" id="brand-name-sidebar">Brand</div>
-          <div class="brand-mark-text-sub" id="brand-subtitle-sidebar">Luma brand dashboard</div>
+          <div class="brand-text-title">Luma Store OS</div>
+          <div class="brand-text-sub">Brand portal</div>
         </div>
       </div>
-
       <div>
-        <div class="nav-section-title">Dashboard</div>
-        <ul class="nav-list">
-          <li class="nav-item active" data-view="overview"><span class="icon">📊</span><span>Overview</span></li>
-          <li class="nav-item" data-view="products"><span class="icon">📦</span><span>Products & stock</span></li>
-          <li class="nav-item" data-view="customers"><span class="icon">👥</span><span>Customers</span></li>
-          <li class="nav-item" data-view="settings"><span class="icon">⚙️</span><span>Brand settings</span></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-footer">
-        <div>Signed in as:</div>
-        <div id="sidebar-user-email" style="font-size:11px;font-weight:600;">—</div>
-        <div style="margin-top:3px;">Role: <span class="badge" id="sidebar-user-role">—</span></div>
-      </div>
-    </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <div class="page-title" id="page-title">Overview</div>
-          <div class="page-subtitle" id="page-subtitle">
-            Sales, orders and stock summary for this brand.
-          </div>
+        <div class="side-heading" id="side-heading">
+          Welcome to your brand cockpit
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <div class="user-chip">
-            <div class="user-chip-avatar" id="user-avatar">BO</div>
-            <div class="user-chip-text">
-              <div class="user-chip-name" id="user-name">Brand Owner</div>
-              <div class="user-chip-role" id="user-role-label">Brand owner</div>
-            </div>
-          </div>
-          <button id="logout-btn" class="btn btn-ghost">Logout</button>
+        <div class="side-desc" id="side-desc">
+          Create your brand once, add branches and POS users, and manage stock, orders, and receipts from one clean dashboard.
         </div>
-      </header>
-
-      <!-- OVERVIEW -->
-      <section id="view-overview" class="content-area">
-        <div class="overview-grid">
-          <div class="kpi-card">
-            <div class="kpi-label">Sales today</div>
-            <div class="kpi-value" id="kpi-sales-today">0</div>
-            <div class="kpi-sub">Completed orders (net of returns)</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Orders today</div>
-            <div class="kpi-value" id="kpi-orders-today">0</div>
-            <div class="kpi-sub">All orders created today</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Total products</div>
-            <div class="kpi-value" id="kpi-products">0</div>
-            <div class="kpi-sub">Active products in this brand</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Total stock units</div>
-            <div class="kpi-value" id="kpi-stock-units">0</div>
-            <div class="kpi-sub">Sum of all variant quantities</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- PRODUCTS -->
-      <section id="view-products" class="content-area" style="display:none;">
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <span class="pill">Products & stock</span>
-            <span class="muted">Manage items visible in POS.</span>
-          </div>
-          <div class="toolbar-right">
-            <input id="products-search" class="search-input" placeholder="Search product name or SKU…"/>
-            <button id="products-refresh" class="btn-icon" title="Refresh">⟳</button>
-            <button id="btn-add-product" class="btn btn-primary">+ New product</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Products list</div>
-              <div class="card-subtitle">Stock here will match the POS stock exactly.</div>
-            </div>
-          </div>
-          <div id="products-table-wrapper" class="table-wrapper">
-            <table>
-              <thead>
-              <tr>
-                <th>Product</th>
-                <th>Variants</th>
-                <th>Stock total</th>
-                <th>Price range</th>
-                <th style="text-align:right;">Actions</th>
-              </tr>
-              </thead>
-              <tbody id="products-tbody">
-              <tr><td colspan="5"><div class="empty-state">Loading products…</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- CUSTOMERS -->
-      <section id="view-customers" class="content-area" style="display:none;">
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <span class="pill">Customers</span>
-          </div>
-          <div class="toolbar-right">
-            <input id="customers-search" class="search-input" placeholder="Search name, email or phone…"/>
-            <button id="customers-refresh" class="btn-icon" title="Refresh">⟳</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Saved customers</div>
-              <div class="card-subtitle">Customers created from POS with phone or email.</div>
-            </div>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-              <tr>
-                <th>Name</th>
-                <th>Contact</th>
-                <th>Last updated</th>
-              </tr>
-              </thead>
-              <tbody id="customers-tbody">
-              <tr><td colspan="3"><div class="empty-state">Loading customers…</div></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- SETTINGS -->
-      <section id="view-settings" class="content-area" style="display:none;">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Brand settings</div>
-              <div class="card-subtitle">Logo, contact info and dangerous actions.</div>
-            </div>
-          </div>
-
-          <div id="settings-alert-container"></div>
-
-          <div class="field">
-            <div class="field-label">Brand name</div>
-            <input id="setting-brand-name" class="field-input" placeholder="Brand name"/>
-          </div>
-
-          <div class="field">
-            <div class="field-label">Country</div>
-            <input id="setting-country" class="field-input" placeholder="Country"/>
-          </div>
-
-          <div class="field">
-            <div class="field-label">Owner email</div>
-            <input id="setting-owner-email" class="field-input" placeholder="Owner email"/>
-          </div>
-
-          <div class="field">
-            <div class="field-label">Brand logo (for POS & dashboard)</div>
-            <input id="setting-logo-file" type="file" class="field-input" accept="image/*"/>
-            <div class="field-hint">Upload a PNG or JPG. This logo will appear on POS and receipts.</div>
-          </div>
-
-          <div class="field">
-            <div class="field-label">Current logo</div>
-            <div class="logo-preview-box">
-              <img id="brand-logo-preview" class="logo-preview-img" style="display:none;" alt="Brand logo preview"/>
-              <span id="brand-logo-placeholder" class="logo-preview-placeholder">No logo uploaded.</span>
-            </div>
-          </div>
-
-          <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-            <button id="btn-save-settings" class="btn btn-primary">Save brand settings</button>
-            <span class="muted" id="settings-status">Not saved yet.</span>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:10px;border-color:#fecaca;">
-          <div class="card-header">
-            <div>
-              <div class="card-title" style="color:#b91c1c;">Danger zone</div>
-              <div class="card-subtitle">
-                Delete this brand from Luma Store OS. This is a soft delete: POS users and orders keep their data, but the brand is hidden.
-              </div>
-            </div>
-          </div>
-          <div class="alert alert-info">
-            Deleting a brand sets its status to <strong>deleted</strong> and <strong>isActive = false</strong>.  
-            It will disappear from normal lists in Super Admin and Brand portals.
-          </div>
-          <button id="btn-delete-brand" class="btn btn-danger">Delete brand</button>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- PRODUCT MODAL -->
-  <div id="product-modal-backdrop" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <div>
-          <div class="modal-title" id="product-modal-title">New product</div>
-          <div class="modal-subtitle">This product will appear in POS after you save.</div>
-        </div>
-        <button id="product-modal-close" class="modal-close">&times;</button>
-      </div>
-
-      <div id="product-modal-alert"></div>
-
-      <div class="field">
-        <div class="field-label">Product name</div>
-        <input id="prod-name" class="field-input" placeholder="Example: Hoodie"/>
-      </div>
-
-      <div class="field">
-        <div class="field-label">SKU / code (optional)</div>
-        <input id="prod-sku" class="field-input" placeholder="Internal reference code"/>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Base price</div>
-        <input id="prod-base-price" type="number" step="0.01" min="0" class="field-input" placeholder="Base price in EGP"/>
-        <div class="field-hint">Variants can override this price individually.</div>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Product image</div>
-        <input id="prod-image-file" type="file" class="field-input" accept="image/*"/>
-        <div class="field-hint">Shown in POS. Optional but recommended.</div>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Variant group name</div>
-        <div class="variant-group-header">
-          <input id="variant-group-name" class="field-input" placeholder="Example: Size"/>
-        </div>
-        <div class="field-hint">Old style: one group (e.g., Size) and multiple labels below (S, M, L…)</div>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Variant labels</div>
-        <div id="variant-labels-container"></div>
-        <button id="btn-add-variant-label" type="button" class="btn-mini">+ Add label</button>
-        <div class="field-hint">
-          Each label is what appears in POS selector (for example: “Small”, “Medium”, “Large”).
+        <div class="side-tags">
+          <span class="tag">Multi-branch</span>
+          <span class="tag">POS users</span>
+          <span class="tag">Stock & orders</span>
+          <span class="tag">Email / WhatsApp receipts</span>
         </div>
       </div>
-
-      <div class="modal-footer">
-        <button id="product-modal-cancel" type="button" class="btn btn-ghost">Cancel</button>
-        <button id="product-modal-save" type="button" class="btn btn-primary">Save product</button>
-      </div>
+    </div>
+    <div class="side-footer">
+      Tip: Super Admin can also pre-create a brand shell and send you a secure signup link.  
+      This page works for both **login** and **brand creation**.
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
-      updateDoc,
-      deleteDoc,
-      query,
-      orderBy,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import {
-      getStorage,
-      ref as storageRef,
-      uploadBytes,
-      getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+  <!-- RIGHT SIDE -->
+  <div class="main">
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
-      authDomain: "events-339ce.firebaseapp.com",
-      projectId: "events-339ce",
-      storageBucket: "events-339ce.firebasestorage.app",
-      messagingSenderId: "175601544315",
-      appId: "1:175601544315:web:00c94b4affa972b3a286de"
-    };
+    <!-- Tabs (only on auth screens) -->
+    <div id="auth-tabs" class="pill-tab-row" style="display:none;">
+      <div class="pill-tab active" data-auth-view="login">Login</div>
+      <div class="pill-tab" data-auth-view="create">Create a brand</div>
+    </div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const storage = getStorage(app);
+    <!-- LOGIN / CREATE / SIGNUP VIEWS -->
 
-    const qs = (sel)=>document.querySelector(sel);
-    const qsa = (sel)=>Array.from(document.querySelectorAll(sel));
+    <!-- Login existing brand user -->
+    <div id="view-login" class="view active">
+      <div class="section-title">Login</div>
+      <div class="section-sub">
+        Sign in with your brand owner or branch manager email.
+      </div>
 
-    // Screens
-    const loginScreen = qs("#login-screen");
-    const signupScreen = qs("#signup-screen");
-    const appShell = qs("#app-shell");
+      <div id="login-alert" class="alert alert-error" style="display:none;"></div>
 
-    // Login elements
-    const loginEmail = qs("#login-email");
-    const loginPassword = qs("#login-password");
-    const loginBtn = qs("#login-btn");
-    const loginError = qs("#login-error");
-    const goCreateBrandBtn = qs("#go-create-brand");
+      <div class="field">
+        <div class="field-label">Email</div>
+        <input id="login-email" type="email" class="field-input" placeholder="you@brand.com"/>
+      </div>
 
-    // Signup elements
-    const signupBrandLabel = qs("#signup-brand-label");
-    const signupBrandNameInput = qs("#signup-brand-name");
-    const signupCountryInput = qs("#signup-country");
-    const signupName = qs("#signup-name");
-    const signupEmail = qs("#signup-email");
-    const signupPassword = qs("#signup-password");
-    const signupBtn = qs("#signup-btn");
-    const signupAlert = qs("#signup-alert");
-    const signupHelperText = qs("#signup-helper-text");
+      <div class="field">
+        <div class="field-label">Password</div>
+        <input id="login-password" type="password" class="field-input" placeholder="••••••••"/>
+      </div>
 
-    // App shell elements
-    const pageTitleEl = qs("#page-title");
-    const pageSubtitleEl = qs("#page-subtitle");
-    const userAvatarEl = qs("#user-avatar");
-    const userNameEl = qs("#user-name");
-    const userRoleLabelEl = qs("#user-role-label");
-    const logoutBtn = qs("#logout-btn");
+      <button id="btn-login" class="btn btn-primary" style="margin-top:4px;">Login</button>
 
-    const brandNameSidebar = qs("#brand-name-sidebar");
-    const brandLogoBadge = qs("#brand-logo-badge");
-    const brandLogoInitials = qs("#brand-logo-initials");
-    const brandSubtitleSidebar = qs("#brand-subtitle-sidebar");
-    const sidebarUserEmail = qs("#sidebar-user-email");
-    const sidebarUserRole = qs("#sidebar-user-role");
+      <div class="login-footer">
+        Need a brand? Click <strong>Create a brand</strong> above.  
+        Got a signup link from Luma Super Admin? Open it directly — it will show a dedicated signup form.
+      </div>
+    </div>
 
-    // Overview KPIs
-    const kpiSalesTodayEl = qs("#kpi-sales-today");
-    const kpiOrdersTodayEl = qs("#kpi-orders-today");
-    const kpiProductsEl = qs("#kpi-products");
-    const kpiStockUnitsEl = qs("#kpi-stock-units");
+    <!-- Create brand directly (self-serve) -->
+    <div id="view-create" class="view">
+      <div class="section-title">Create a new brand</div>
+      <div class="section-sub">
+        This will create a brand, a default branch, and a brand-owner user in one step.
+      </div>
 
-    // Navigation
-    const navItems = qsa(".nav-item");
-    const viewOverview = qs("#view-overview");
-    const viewProducts = qs("#view-products");
-    const viewCustomers = qs("#view-customers");
-    const viewSettings = qs("#view-settings");
+      <div id="create-alert" class="alert" style="display:none;"></div>
 
-    // Products DOM
-    const productsTbody = qs("#products-tbody");
-    const productsSearchInput = qs("#products-search");
-    const productsRefreshBtn = qs("#products-refresh");
-    const addProductBtn = qs("#btn-add-product");
+      <div class="field">
+        <div class="field-label">Brand name</div>
+        <input id="create-brand-name" class="field-input" placeholder="Example: Oudies"/>
+      </div>
 
-    // Customers DOM
-    const customersTbody = qs("#customers-tbody");
-    const customersSearchInput = qs("#customers-search");
-    const customersRefreshBtn = qs("#customers-refresh");
+      <div class="field">
+        <div class="field-label">Country</div>
+        <input id="create-country" class="field-input" placeholder="Example: Egypt"/>
+      </div>
 
-    // Settings DOM
-    const settingsAlertContainer = qs("#settings-alert-container");
-    const settingsStatus = qs("#settings-status");
-    const settingBrandName = qs("#setting-brand-name");
-    const settingCountry = qs("#setting-country");
-    const settingOwnerEmail = qs("#setting-owner-email");
-    const settingLogoFile = qs("#setting-logo-file");
-    const brandLogoPreview = qs("#brand-logo-preview");
-    const brandLogoPlaceholder = qs("#brand-logo-placeholder");
-    const saveSettingsBtn = qs("#btn-save-settings");
-    const deleteBrandBtn = qs("#btn-delete-brand");
+      <div class="field">
+        <div class="field-label">Default branch name</div>
+        <input id="create-branch-name" class="field-input" placeholder="Example: District 5" />
+        <div class="field-hint">You can add more branches later.</div>
+      </div>
 
-    // Product modal
-    const productModalBackdrop = qs("#product-modal-backdrop");
-    const productModalClose = qs("#product-modal-close");
-    const productModalCancel = qs("#product-modal-cancel");
-    const productModalSave = qs("#product-modal-save");
-    const productModalTitle = qs("#product-modal-title");
-    const productModalAlert = qs("#product-modal-alert");
-    const prodNameInput = qs("#prod-name");
-    const prodSkuInput = qs("#prod-sku");
-    const prodBasePriceInput = qs("#prod-base-price");
-    const prodImageFileInput = qs("#prod-image-file");
-    const variantGroupNameInput = qs("#variant-group-name");
-    const variantLabelsContainer = qs("#variant-labels-container");
-    const btnAddVariantLabel = qs("#btn-add-variant-label");
+      <div class="field">
+        <div class="field-label">Owner full name</div>
+        <input id="create-owner-name" class="field-input" placeholder="Example: Farid Elmekkawy"/>
+      </div>
 
-    let currentUser = null;
-    let currentUserDoc = null;
-    let currentBrandId = null;
-    let currentBrandDoc = null;
-    let allProducts = [];
-    let allCustomers = [];
+      <div class="field">
+        <div class="field-label">Owner email</div>
+        <input id="create-owner-email" type="email" class="field-input" placeholder="owner@brand.com"/>
+      </div>
 
-    let editingProductId = null;
-    let editingProductExistingImageUrl = null;
+      <div class="field">
+        <div class="field-label">Owner password</div>
+        <input id="create-owner-password" type="password" class="field-input" placeholder="Min 6 characters"/>
+      </div>
 
-    // Signup modes
-    let signupMode = null;        // "link" or "self"
-    let signupBrandId = null;
-    let signupToken = null;
-    let signupBrandData = null;
+      <button id="btn-create-brand" class="btn btn-primary" style="margin-top:4px;">Create brand</button>
+    </div>
 
-    function parseQuery(){
-      const params = new URLSearchParams(window.location.search);
-      return {
-        brand: params.get("brand"),
-        token: params.get("token")
-      };
-    }
+    <!-- Signup from Super Admin link -->
+    <div id="view-signup-link" class="view">
+      <div class="section-title">Complete your brand signup</div>
+      <div class="section-sub" id="signup-brand-sub">
+        We found your brand shell. Create your brand-owner login to continue.
+      </div>
 
-    function showView(view){
-      navItems.forEach(item=>{
-        const v = item.getAttribute("data-view");
-        if(v === view) item.classList.add("active");
-        else item.classList.remove("active");
+      <div id="signup-alert" class="alert" style="display:none;"></div>
+
+      <div class="field">
+        <div class="field-label">Brand</div>
+        <input id="signup-brand-name" class="field-input" disabled/>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Your full name</div>
+        <input id="signup-owner-name" class="field-input" placeholder="Example: Farid Elmekkawy"/>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Email</div>
+        <input id="signup-owner-email" type="email" class="field-input" placeholder="owner@brand.com"/>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Password</div>
+        <input id="signup-owner-password" type="password" class="field-input" placeholder="Min 6 characters"/>
+      </div>
+
+      <button id="btn-complete-signup" class="btn btn-primary" style="margin-top:4px;">Create account</button>
+
+      <div class="login-footer" style="margin-top:10px;">
+        This link was generated by Luma Super Admin and is tied to this specific brand.
+      </div>
+    </div>
+
+    <!-- DASHBOARD (visible after auth) -->
+    <div id="view-dashboard" class="view">
+      <div class="dash-header">
+        <div class="dash-title-block">
+          <div class="dash-brand-name" id="dash-brand-name">Brand name</div>
+          <div class="dash-brand-sub" id="dash-brand-sub">—</div>
+          <div class="dash-chip-row">
+            <div class="chip" id="chip-owner"></div>
+            <div class="chip chip-ok" id="chip-status">Status: active</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <div class="row-between" style="gap:6px;">
+            <button id="btn-open-pos" class="btn btn-primary">Open POS</button>
+            <button id="btn-logout" class="btn btn-ghost">Logout</button>
+          </div>
+          <button id="btn-delete-brand" class="btn btn-danger" style="margin-top:2px;font-size:11px;padding:5px 10px;">
+            Delete brand (soft delete)
+          </button>
+          <div class="small-note">
+            Deleting marks the brand as deleted / inactive. Live POS will stop working for this brand.
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-card-grid" style="margin-bottom:10px;">
+        <div class="kpi-card">
+          <div class="kpi-label">Today's sales</div>
+          <div class="kpi-value" id="kpi-sales-today">0</div>
+          <div class="kpi-sub">From all branches</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Today's orders</div>
+          <div class="kpi-value" id="kpi-orders-today">0</div>
+          <div class="kpi-sub">Completed only</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active branches</div>
+          <div class="kpi-value" id="kpi-branches">0</div>
+          <div class="kpi-sub">Used in POS</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active POS users</div>
+          <div class="kpi-value" id="kpi-pos-users">0</div>
+          <div class="kpi-sub">Cashiers with access</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row-between">
+        <div>
+          <div class="section-title" style="font-size:14px;">Brand quick info</div>
+          <div class="small-note" id="brand-info-text"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;">
+        <div class="small-note">
+          Full branches, POS users, and stock management screens can be added here later.  
+          For now, this dashboard makes sure:
+          <ul style="margin-top:4px;margin-left:16px;line-height:1.5;">
+            <li>Brand ↔ user mapping is correct in <code>brands</code> and <code>users</code> collections.</li>
+            <li>Super Admin can see this brand owner in the Platform Users table.</li>
+            <li>Soft delete is possible from both Brand and Super Admin sides.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- /main -->
+
+</div> <!-- /shell -->
+
+<!-- Firebase + Logic -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    setDoc,
+    updateDoc,
+    serverTimestamp,
+    query,
+    where
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
+    authDomain: "events-339ce.firebaseapp.com",
+    projectId: "events-339ce",
+    storageBucket: "events-339ce.firebasestorage.app",
+    messagingSenderId: "175601544315",
+    appId: "1:175601544315:web:00c94b4affa972b3a286de"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const qs = (s)=>document.querySelector(s);
+  const qsa = (s)=>Array.from(document.querySelectorAll(s));
+
+  const authTabs = qs("#auth-tabs");
+  const viewLogin = qs("#view-login");
+  const viewCreate = qs("#view-create");
+  const viewSignup = qs("#view-signup-link");
+  const viewDashboard = qs("#view-dashboard");
+
+  const sideHeading = qs("#side-heading");
+  const sideDesc = qs("#side-desc");
+
+  const loginAlert = qs("#login-alert");
+  const loginEmail = qs("#login-email");
+  const loginPassword = qs("#login-password");
+  const btnLogin = qs("#btn-login");
+
+  const createAlert = qs("#create-alert");
+  const createBrandName = qs("#create-brand-name");
+  const createCountry = qs("#create-country");
+  const createBranchName = qs("#create-branch-name");
+  const createOwnerName = qs("#create-owner-name");
+  const createOwnerEmail = qs("#create-owner-email");
+  const createOwnerPassword = qs("#create-owner-password");
+  const btnCreateBrand = qs("#btn-create-brand");
+
+  const signupAlert = qs("#signup-alert");
+  const signupBrandName = qs("#signup-brand-name");
+  const signupBrandSub = qs("#signup-brand-sub");
+  const signupOwnerName = qs("#signup-owner-name");
+  const signupOwnerEmail = qs("#signup-owner-email");
+  const signupOwnerPassword = qs("#signup-owner-password");
+  const btnCompleteSignup = qs("#btn-complete-signup");
+
+  const dashBrandName = qs("#dash-brand-name");
+  const dashBrandSub = qs("#dash-brand-sub");
+  const chipOwner = qs("#chip-owner");
+  const chipStatus = qs("#chip-status");
+  const btnLogout = qs("#btn-logout");
+  const btnOpenPos = qs("#btn-open-pos");
+  const btnDeleteBrand = qs("#btn-delete-brand");
+
+  const kpiSalesTodayEl = qs("#kpi-sales-today");
+  const kpiOrdersTodayEl = qs("#kpi-orders-today");
+  const kpiBranchesEl = qs("#kpi-branches");
+  const kpiPosUsersEl = qs("#kpi-pos-users");
+  const brandInfoText = qs("#brand-info-text");
+
+  let currentUser = null;
+  let currentBrandId = null;
+  let currentBrandData = null;
+  let signupBrandIdFromUrl = null;
+  let signupTokenFromUrl = null;
+
+  function setAuthView(mode){
+    // hide dash
+    viewDashboard.classList.remove("active");
+
+    if(mode === "login"){
+      viewLogin.classList.add("active");
+      viewCreate.classList.remove("active");
+      viewSignup.classList.remove("active");
+      authTabs.style.display = "inline-flex";
+      qsa(".pill-tab").forEach(tab=>{
+        tab.classList.toggle("active",tab.dataset.authView==="login");
       });
-
-      viewOverview.style.display = (view==="overview")?"flex":"none";
-      viewProducts.style.display = (view==="products")?"flex":"none";
-      viewCustomers.style.display = (view==="customers")?"flex":"none";
-      viewSettings.style.display = (view==="settings")?"flex":"none";
-
-      if(view === "overview"){
-        pageTitleEl.textContent = "Overview";
-        pageSubtitleEl.textContent = "Sales, orders and stock summary for this brand.";
-      }else if(view === "products"){
-        pageTitleEl.textContent = "Products & stock";
-        pageSubtitleEl.textContent = "Manage products and keep stock in sync with POS.";
-      }else if(view === "customers"){
-        pageTitleEl.textContent = "Customers";
-        pageSubtitleEl.textContent = "Customers captured from POS.";
-      }else if(view === "settings"){
-        pageTitleEl.textContent = "Brand settings";
-        pageSubtitleEl.textContent = "Logo, contact and dangerous actions.";
-      }
-    }
-
-    navItems.forEach(item=>{
-      item.addEventListener("click",()=>{
-        const v = item.getAttribute("data-view");
-        showView(v);
+      sideHeading.textContent = "Welcome back";
+      sideDesc.textContent = "Sign in to manage your brand, branches, POS users, and stock.";
+    }else if(mode === "create"){
+      viewLogin.classList.remove("active");
+      viewCreate.classList.add("active");
+      viewSignup.classList.remove("active");
+      authTabs.style.display = "inline-flex";
+      qsa(".pill-tab").forEach(tab=>{
+        tab.classList.toggle("active",tab.dataset.authView==="create");
       });
+      sideHeading.textContent = "Create your brand";
+      sideDesc.textContent = "We will create the brand doc, default branch, and a brand-owner login in one step.";
+    }else if(mode === "signup-link"){
+      viewLogin.classList.remove("active");
+      viewCreate.classList.remove("active");
+      viewSignup.classList.add("active");
+      authTabs.style.display = "none";
+      sideHeading.textContent = "Complete your signup";
+      sideDesc.textContent = "This secure link was generated by Luma Super Admin for your brand.";
+    }
+  }
+
+  qsa(".pill-tab").forEach(tab=>{
+    tab.addEventListener("click",()=>{
+      const v = tab.dataset.authView;
+      setAuthView(v);
     });
+  });
 
-    function initialsFromString(str){
-      if(!str) return "B";
-      const parts = str.trim().split(/\s+/);
-      if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+  function showAlert(el, msg, type="error"){
+    if(!el) return;
+    el.style.display = "block";
+    el.textContent = msg;
+    el.classList.remove("alert-error","alert-info","alert-success");
+    if(type==="success") el.classList.add("alert-success");
+    else if(type==="info") el.classList.add("alert-info");
+    else el.classList.add("alert-error");
+  }
+  function hideAlert(el){
+    if(!el) return;
+    el.style.display = "none";
+    el.textContent = "";
+  }
+
+  function parseQuery(){
+    const p = new URLSearchParams(window.location.search);
+    signupBrandIdFromUrl = p.get("brand") || null;
+    signupTokenFromUrl = p.get("token") || null;
+  }
+
+  async function loadBrandById(brandId){
+    if(!brandId) return null;
+    const ref = doc(db,"brands",brandId);
+    const snap = await getDoc(ref);
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  }
+
+  async function loadKpisForBrand(brandId){
+    // Simple counts: branches, POS users
+    try{
+      const branchesRef = collection(db,"brands",brandId,"branches");
+      const branchesSnap = await getDocs(branchesRef);
+      let branchCount = 0;
+      branchesSnap.forEach(()=>branchCount++);
+
+      const usersRef = collection(db,"users");
+      const qUsers = query(usersRef, where("brandId","==",brandId), where("role","==","cashier"));
+      const usersSnap = await getDocs(qUsers);
+      let posCount = 0;
+      usersSnap.forEach(()=>posCount++);
+
+      kpiBranchesEl.textContent = branchCount.toString();
+      kpiPosUsersEl.textContent = posCount.toString();
+    }catch(e){
+      console.error("Error loading KPIs",e);
+      kpiBranchesEl.textContent = "—";
+      kpiPosUsersEl.textContent = "—";
     }
 
-    function formatDate(ts){
-      if(!ts || !ts.seconds) return "";
-      const d = new Date(ts.seconds*1000);
-      return d.toLocaleString();
+    // For now, we’ll leave today’s sales/orders as 0 unless you hook them to stats
+    kpiSalesTodayEl.textContent = "0";
+    kpiOrdersTodayEl.textContent = "0";
+  }
+
+  function showDashboard(user, brand){
+    currentUser = user;
+    currentBrandId = brand?.id || null;
+    currentBrandData = brand || null;
+
+    viewLogin.classList.remove("active");
+    viewCreate.classList.remove("active");
+    viewSignup.classList.remove("active");
+    viewDashboard.classList.add("active");
+    authTabs.style.display = "none";
+
+    dashBrandName.textContent = brand?.name || "Unnamed brand";
+    const country = brand?.country || "";
+    const code = (brand?.defaultBranchCode || "") || "";
+    dashBrandSub.textContent = country ? `${country}${code ? " • "+code : ""}` : (code || "—");
+
+    const ownerName = brand?.ownerName || currentUser?.displayName || "Brand owner";
+    const ownerEmail = brand?.ownerEmail || currentUser?.email || "";
+    chipOwner.textContent = `Owner: ${ownerName}${ownerEmail ? " • "+ownerEmail : ""}`;
+
+    const status = brand?.status || "pending_setup";
+    if(status==="active"){
+      chipStatus.textContent = "Status: active";
+      chipStatus.classList.remove("chip-warn");
+      chipStatus.classList.add("chip-ok");
+    }else if(status==="deleted"){
+      chipStatus.textContent = "Status: deleted";
+      chipStatus.classList.remove("chip-ok");
+      chipStatus.classList.add("chip-warn");
+    }else{
+      chipStatus.textContent = "Status: pending setup";
+      chipStatus.classList.remove("chip-ok");
+      chipStatus.classList.add("chip-warn");
     }
 
-    function showLogin(){
-      loginScreen.style.display = "flex";
-      signupScreen.style.display = "none";
-      appShell.style.display = "none";
-    }
-    function showSignup(){
-      loginScreen.style.display = "none";
-      signupScreen.style.display = "flex";
-      appShell.style.display = "none";
-    }
-    function showApp(){
-      loginScreen.style.display = "none";
-      signupScreen.style.display = "none";
-      appShell.style.display = "flex";
-    }
+    const createdAt = brand?.createdAt?.toDate ? brand.createdAt.toDate() : null;
+    const createdStr = createdAt ? createdAt.toLocaleString() : "—";
+    brandInfoText.innerHTML =
+      `Created: <strong>${createdStr}</strong><br/>
+       Country: <strong>${brand?.country || "—"}</strong><br/>
+       Owner: <strong>${ownerName}</strong>`;
 
-    function showSettingsAlert(msg,type="success"){
-      const cls = type==="success"?"alert-success":type==="error"?"alert-error":"alert-info";
-      settingsAlertContainer.innerHTML = `<div class="alert ${cls}">${msg}</div>`;
-      setTimeout(()=>{settingsAlertContainer.innerHTML="";},3500);
-    }
+    loadKpisForBrand(brand.id).catch(()=>{});
+  }
 
-    function clearProductModal(){
-      productModalAlert.innerHTML = "";
-      editingProductId = null;
-      editingProductExistingImageUrl = null;
-      prodNameInput.value = "";
-      prodSkuInput.value = "";
-      prodBasePriceInput.value = "";
-      prodImageFileInput.value = "";
-      variantGroupNameInput.value = "";
-      variantLabelsContainer.innerHTML = "";
-      addVariantLabelRow();
-    }
-
-    function openProductModal(editProduct){
-      clearProductModal();
-      if(editProduct){
-        editingProductId = editProduct.id;
-        productModalTitle.textContent = "Edit product";
-        prodNameInput.value = editProduct.name || "";
-        prodSkuInput.value = editProduct.sku || "";
-        prodBasePriceInput.value = editProduct.basePrice != null ? editProduct.basePrice : "";
-        variantGroupNameInput.value = editProduct.variantGroupName || "";
-        editingProductExistingImageUrl = editProduct.imageUrl || null;
-
-        const labels = editProduct.variants || [];
-        if(labels.length === 0){
-          addVariantLabelRow();
-        }else{
-          labels.forEach(v=>addVariantLabelRow(v));
-        }
-      }else{
-        productModalTitle.textContent = "New product";
-      }
-      productModalBackdrop.classList.add("show");
-    }
-
-    function closeProductModal(){
-      productModalBackdrop.classList.remove("show");
-    }
-
-    function addVariantLabelRow(vData){
-      const row = document.createElement("div");
-      row.className = "variant-label-row";
-      row.innerHTML = `
-        <input class="variant-small-input var-label-name" placeholder="Label (e.g. Small)" value="${vData?.label || ""}"/>
-        <input class="variant-small-input var-label-price" type="number" step="0.01" min="0" placeholder="Price" value="${vData?.price ?? ""}"/>
-        <input class="variant-small-input var-label-stock" type="number" step="1" min="0" placeholder="Stock" value="${vData?.stock ?? ""}"/>
-        <input class="variant-small-input var-label-barcode" placeholder="Barcode" value="${vData?.barcode || ""}"/>
-        <button type="button" class="btn-mini btn-remove-label">✕</button>
-      `;
-      const removeBtn = row.querySelector(".btn-remove-label");
-      removeBtn.addEventListener("click",()=>{
-        row.remove();
-        const remaining = variantLabelsContainer.querySelectorAll(".variant-label-row").length;
-        if(remaining === 0) addVariantLabelRow();
-      });
-      variantLabelsContainer.appendChild(row);
-    }
-
-    btnAddVariantLabel.addEventListener("click",()=>addVariantLabelRow());
-
-    if(productModalClose) productModalClose.addEventListener("click",closeProductModal);
-    if(productModalCancel) productModalCancel.addEventListener("click",closeProductModal);
-
-    function showProductModalAlert(msg,type="error"){
-      const cls = type==="error"?"alert-error":"alert-info";
-      productModalAlert.innerHTML = `<div class="alert ${cls}">${msg}</div>`;
-    }
-
-    async function saveProduct(){
-      const name = prodNameInput.value.trim();
-      if(!name){
-        showProductModalAlert("Please enter a product name.","error");
-        return;
-      }
-      if(!currentBrandId){
-        showProductModalAlert("Brand not loaded yet.","error");
-        return;
-      }
-
-      const sku = prodSkuInput.value.trim() || null;
-      const basePrice = parseFloat(prodBasePriceInput.value||"0") || 0;
-      const groupName = variantGroupNameInput.value.trim() || null;
-
-      const rows = Array.from(variantLabelsContainer.querySelectorAll(".variant-label-row"));
-      const variants = [];
-      let totalStock = 0;
-      let minPrice = null;
-      let maxPrice = null;
-
-      for(const row of rows){
-        const labelEl = row.querySelector(".var-label-name");
-        const priceEl = row.querySelector(".var-label-price");
-        const stockEl = row.querySelector(".var-label-stock");
-        const barcodeEl = row.querySelector(".var-label-barcode");
-
-        const label = labelEl.value.trim();
-        const price = parseFloat(priceEl.value||"0") || basePrice || 0;
-        const stock = parseInt(stockEl.value||"0",10) || 0;
-        const barcode = barcodeEl.value.trim() || null;
-
-        if(!label) continue;
-
-        totalStock += stock;
-        if(minPrice === null || price < minPrice) minPrice = price;
-        if(maxPrice === null || price > maxPrice) maxPrice = price;
-
-        variants.push({
-          id: crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2)),
-          groupName: groupName,
-          label,
-          price,
-          stock,
-          barcode
+  async function ensureUserDocForBrandOwner(user, brand){
+    if(!user || !brand) return;
+    const userRef = doc(db,"users",user.uid);
+    const snap = await getDoc(userRef);
+    if(!snap.exists()){
+      await setDoc(userRef,{
+        name: brand.ownerName || user.displayName || "",
+        email: user.email || null,
+        role: "brand_owner",
+        brandId: brand.id,
+        brandName: brand.name || "",
+        status: "active",
+        createdAt: serverTimestamp()
+      },{merge:true});
+    }else{
+      const data = snap.data() || {};
+      if(!data.brandId){
+        await updateDoc(userRef,{
+          brandId: brand.id,
+          brandName: brand.name || "",
+          role: data.role || "brand_owner"
         });
       }
+    }
 
-      if(variants.length === 0){
-        showProductModalAlert("Please add at least one variant label with a name.","error");
+    // also map in userBrands (optional but useful)
+    const ubRef = doc(db,"userBrands", user.uid + "_" + brand.id);
+    await setDoc(ubRef,{
+      userId: user.uid,
+      brandId: brand.id,
+      brandName: brand.name || "",
+      role: "brand_owner",
+      createdAt: serverTimestamp()
+    },{merge:true});
+  }
+
+  // LOGIN FLOW
+  btnLogin.addEventListener("click", async ()=>{
+    hideAlert(loginAlert);
+    const email = loginEmail.value.trim();
+    const pass = loginPassword.value;
+    if(!email || !pass){
+      showAlert(loginAlert,"Enter email and password.");
+      return;
+    }
+    try{
+      btnLogin.disabled = true;
+      btnLogin.textContent = "Logging in…";
+      const cred = await signInWithEmailAndPassword(auth,email,pass);
+      // onAuthStateChanged will handle the rest
+    }catch(e){
+      console.error("Login error",e);
+      showAlert(loginAlert,"Invalid email or password.","error");
+    }finally{
+      btnLogin.disabled = false;
+      btnLogin.textContent = "Login";
+    }
+  });
+
+  // CREATE BRAND SELF-SERVE
+  btnCreateBrand.addEventListener("click", async ()=>{
+    hideAlert(createAlert);
+    const bName = createBrandName.value.trim();
+    const country = createCountry.value.trim() || null;
+    const branchName = createBranchName.value.trim() || "Main Branch";
+    const ownerName = createOwnerName.value.trim();
+    const ownerEmail = createOwnerEmail.value.trim();
+    const ownerPassword = createOwnerPassword.value;
+
+    if(!bName || !ownerName || !ownerEmail || !ownerPassword){
+      showAlert(createAlert,"Please fill brand name, owner name, email and password.","error");
+      return;
+    }
+    if(ownerPassword.length < 6){
+      showAlert(createAlert,"Password must be at least 6 characters.","error");
+      return;
+    }
+
+    try{
+      btnCreateBrand.disabled = true;
+      btnCreateBrand.textContent = "Creating…";
+
+      const ownerCred = await createUserWithEmailAndPassword(auth,ownerEmail,ownerPassword);
+
+      const brandRef = doc(collection(db,"brands"));
+      const brandId = brandRef.id;
+
+      await setDoc(brandRef,{
+        name: bName,
+        country,
+        status:"active",
+        isActive:true,
+        createdAt: serverTimestamp(),
+        ownerUserId: ownerCred.user.uid,
+        ownerEmail: ownerEmail,
+        ownerName: ownerName,
+        sendEmail:true,
+        sendWhatsApp:false
+      });
+
+      // default branch
+      const branchRef = doc(collection(brandRef,"branches"));
+      await setDoc(branchRef,{
+        name: branchName,
+        code:"MAIN",
+        isActive:true,
+        createdAt: serverTimestamp()
+      });
+
+      // users/{uid}
+      const userRef = doc(db,"users",ownerCred.user.uid);
+      await setDoc(userRef,{
+        name: ownerName,
+        email: ownerEmail,
+        role: "brand_owner",
+        brandId: brandId,
+        brandName: bName,
+        status:"active",
+        createdAt: serverTimestamp()
+      },{merge:true});
+
+      const ubRef = doc(db,"userBrands", ownerCred.user.uid + "_" + brandId);
+      await setDoc(ubRef,{
+        userId: ownerCred.user.uid,
+        brandId,
+        brandName: bName,
+        role: "brand_owner",
+        createdAt: serverTimestamp()
+      },{merge:true});
+
+      showAlert(createAlert,"Brand created successfully. Loading dashboard…","success");
+      // onAuthStateChanged will fire and load dashboard
+    }catch(e){
+      console.error("Create brand error",e);
+      showAlert(createAlert,"Failed to create brand. Check console for details.","error");
+    }finally{
+      btnCreateBrand.disabled = false;
+      btnCreateBrand.textContent = "Create brand";
+    }
+  });
+
+  // SIGNUP FROM SUPER ADMIN LINK
+  btnCompleteSignup.addEventListener("click", async ()=>{
+    hideAlert(signupAlert);
+    const ownerName = signupOwnerName.value.trim();
+    const ownerEmail = signupOwnerEmail.value.trim();
+    const ownerPassword = signupOwnerPassword.value;
+
+    if(!ownerName || !ownerEmail || !ownerPassword){
+      showAlert(signupAlert,"Fill your name, email, and password.","error");
+      return;
+    }
+    if(ownerPassword.length < 6){
+      showAlert(signupAlert,"Password must be at least 6 characters.","error");
+      return;
+    }
+    if(!signupBrandIdFromUrl || !signupTokenFromUrl){
+      showAlert(signupAlert,"Missing brand or token in URL.","error");
+      return;
+    }
+
+    try{
+      btnCompleteSignup.disabled = true;
+      btnCompleteSignup.textContent = "Creating account…";
+
+      const brand = await loadBrandById(signupBrandIdFromUrl);
+      if(!brand){
+        showAlert(signupAlert,"Brand not found. Ask Super Admin to resend the link.","error");
         return;
       }
-
-      const productsRef = collection(db,"brands",currentBrandId,"products");
-      let productRef;
-      if(editingProductId){
-        productRef = doc(productsRef, editingProductId);
-      }else{
-        productRef = doc(productsRef);
-      }
-
-      productModalSave.disabled = true;
-      productModalSave.textContent = "Saving…";
-
-      try{
-        let imageUrl = editingProductExistingImageUrl || null;
-        const file = prodImageFileInput.files?.[0];
-        if(file){
-          const refPath = `brands/${currentBrandId}/products/${productRef.id}/image`;
-          const fileRef = storageRef(storage, refPath);
-          await uploadBytes(fileRef,file);
-          imageUrl = await getDownloadURL(fileRef);
-        }
-
-        const payload = {
-          name,
-          sku,
-          basePrice,
-          variantGroupName: groupName,
-          variants,
-          stockTotal: totalStock,
-          minPrice: minPrice ?? basePrice,
-          maxPrice: maxPrice ?? basePrice,
-          imageUrl: imageUrl || null,
-          updatedAt: serverTimestamp()
-        };
-        if(!editingProductId){
-          payload.createdAt = serverTimestamp();
-          payload.isActive = true;
-        }
-
-        await setDoc(productRef, payload, {merge:true});
-        closeProductModal();
-        await loadProducts();
-        await loadOverview();
-      }catch(err){
-        console.error("Error saving product",err);
-        showProductModalAlert("Failed to save product. Check console.","error");
-      }finally{
-        productModalSave.disabled = false;
-        productModalSave.textContent = "Save product";
-      }
-    }
-
-    productModalSave.addEventListener("click",saveProduct);
-
-    function renderProducts(filterText=""){
-      const ft = filterText.trim().toLowerCase();
-      productsTbody.innerHTML = "";
-      const filtered = allProducts.filter(p=>{
-        if(!ft) return true;
-        const hay = `${p.name||""} ${p.sku||""}`.toLowerCase();
-        return hay.includes(ft);
-      });
-
-      if(filtered.length === 0){
-        productsTbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">${allProducts.length===0?"No products yet. Add your first product.":"No products match your search."}</div></td></tr>`;
+      if(brand.signupToken && brand.signupToken !== signupTokenFromUrl){
+        showAlert(signupAlert,"This signup link is invalid or has already been used.","error");
         return;
       }
-
-      for(const p of filtered){
-        const tr = document.createElement("tr");
-        const priceRange = (()=>{
-          if(p.minPrice == null && p.maxPrice == null) return "—";
-          if(p.minPrice === p.maxPrice) return `${p.minPrice}`;
-          return `${p.minPrice} – ${p.maxPrice}`;
-        })();
-
-        const variantsSummary = p.variants?.map(v=>v.label).join(", ") || "—";
-
-        tr.innerHTML = `
-          <td>
-            <div style="display:flex;align-items:center;gap:8px;">
-              ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;border:1px solid var(--border);"/>` : `<div style="width:32px;height:32px;border-radius:8px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:11px;color:#4b5563;">${(p.name||"?").charAt(0).toUpperCase()}</div>`}
-              <div style="display:flex;flex-direction:column;gap:2px;">
-                <span style="font-size:12px;font-weight:600;">${p.name || ""}</span>
-                <span class="muted">${p.sku || ""}</span>
-              </div>
-            </div>
-          </td>
-          <td>
-            <div style="display:flex;flex-direction:column;gap:2px;">
-              <span style="font-size:12px;">${variantsSummary}</span>
-              <span class="muted">${p.variantGroupName ? "Group: " + p.variantGroupName : ""}</span>
-            </div>
-          </td>
-          <td>${p.stockTotal ?? 0}</td>
-          <td>${priceRange}</td>
-          <td style="text-align:right;">
-            <button class="btn-mini btn-edit-product" data-id="${p.id}">Edit</button>
-            <button class="btn-mini btn-danger-mini" data-id="${p.id}">Delete</button>
-          </td>
-        `;
-        productsTbody.appendChild(tr);
-      }
-
-      qsa(".btn-edit-product").forEach(btn=>{
-        btn.addEventListener("click",()=>{
-          const id = btn.dataset.id;
-          const prod = allProducts.find(p=>p.id===id);
-          if(prod) openProductModal(prod);
-        });
-      });
-
-      qsa(".btn-danger-mini").forEach(btn=>{
-        btn.addEventListener("click",async()=>{
-          const id = btn.dataset.id;
-          if(!id || !currentBrandId) return;
-          const confirmed = confirm("Delete this product? It will be removed from POS.");
-          if(!confirmed) return;
-          try{
-            const ref = doc(db,"brands",currentBrandId,"products",id);
-            await deleteDoc(ref);
-            await loadProducts();
-            await loadOverview();
-          }catch(err){
-            console.error("Error deleting product",err);
-            alert("Failed to delete product.");
-          }
-        });
-      });
-    }
-
-    async function loadProducts(){
-      if(!currentBrandId) return;
-      try{
-        productsTbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Loading products…</div></td></tr>`;
-        const productsRef = collection(db,"brands",currentBrandId,"products");
-        const qProducts = query(productsRef, orderBy("createdAt","desc"));
-        const snap = await getDocs(qProducts);
-        const list = [];
-        snap.forEach(docSnap=>{
-          const data = docSnap.data() || {};
-          list.push({
-            id: docSnap.id,
-            ...data
-          });
-        });
-        allProducts = list;
-        renderProducts(productsSearchInput.value);
-      }catch(err){
-        console.error("Error loading products",err);
-        productsTbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Error loading products.</div></td></tr>`;
-      }
-    }
-
-    function renderCustomers(filterText=""){
-      const ft = filterText.trim().toLowerCase();
-      customersTbody.innerHTML = "";
-      const filtered = allCustomers.filter(c=>{
-        if(!ft) return true;
-        const hay = `${c.name||""} ${c.email||""} ${c.phone||""}`.toLowerCase();
-        return hay.includes(ft);
-      });
-
-      if(filtered.length === 0){
-        customersTbody.innerHTML = `<tr><td colspan="3"><div class="empty-state">${allCustomers.length===0?"No customers yet.":"No customers match your search."}</div></td></tr>`;
+      if(brand.ownerUserId){
+        showAlert(signupAlert,"This brand already has an owner. Please login instead.","error");
         return;
       }
 
-      for(const c of filtered){
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${c.name || "—"}</td>
-          <td>
-            <div style="display:flex;flex-direction:column;gap:2px;">
-              <span class="muted">${c.email || ""}</span>
-              <span class="muted">${c.phone || ""}</span>
-            </div>
-          </td>
-          <td><span class="muted">${formatDate(c.updatedAt || c.createdAt)}</span></td>
-        `;
-        customersTbody.appendChild(tr);
-      }
-    }
+      const cred = await createUserWithEmailAndPassword(auth,ownerEmail,ownerPassword);
 
-    async function loadCustomers(){
-      if(!currentBrandId) return;
+      const brandRef = doc(db,"brands",brand.id);
+      await updateDoc(brandRef,{
+        ownerUserId: cred.user.uid,
+        ownerEmail: ownerEmail,
+        ownerName: ownerName,
+        status:"active",
+        isActive:true,
+        signupToken: signupTokenFromUrl,
+        signupCompletedAt: serverTimestamp()
+      });
+
+      const userRef = doc(db,"users",cred.user.uid);
+      await setDoc(userRef,{
+        name: ownerName,
+        email: ownerEmail,
+        role: "brand_owner",
+        brandId: brand.id,
+        brandName: brand.name || "",
+        status:"active",
+        createdAt: serverTimestamp()
+      },{merge:true});
+
+      const ubRef = doc(db,"userBrands", cred.user.uid + "_" + brand.id);
+      await setDoc(ubRef,{
+        userId: cred.user.uid,
+        brandId: brand.id,
+        brandName: brand.name || "",
+        role: "brand_owner",
+        createdAt: serverTimestamp()
+      },{merge:true});
+
+      showAlert(signupAlert,"Account created. Loading dashboard…","success");
+      // onAuthStateChanged will catch and show dashboard
+    }catch(e){
+      console.error("Signup link error",e);
+      showAlert(signupAlert,"Failed to create account. Check console for details.","error");
+    }finally{
+      btnCompleteSignup.disabled = false;
+      btnCompleteSignup.textContent = "Create account";
+    }
+  });
+
+  // LOGOUT
+  if(btnLogout){
+    btnLogout.addEventListener("click", async ()=>{
       try{
-        customersTbody.innerHTML = `<tr><td colspan="3"><div class="empty-state">Loading customers…</div></td></tr>`;
-        const customersRef = collection(db,"brands",currentBrandId,"customers");
-        const snap = await getDocs(customersRef);
-        const list = [];
-        snap.forEach(docSnap=>{
-          const data = docSnap.data() || {};
-          list.push({
-            id: docSnap.id,
-            ...data
-          });
-        });
-        allCustomers = list;
-        renderCustomers(customersSearchInput.value);
-      }catch(err){
-        console.error("Error loading customers",err);
-        customersTbody.innerHTML = `<tr><td colspan="3"><div class="empty-state">Error loading customers.</div></td></tr>`;
+        await signOut(auth);
+      }catch(e){
+        console.error("Logout error",e);
       }
-    }
+    });
+  }
 
-    async function loadOverview(){
+  // OPEN POS (you can adapt the URL)
+  if(btnOpenPos){
+    btnOpenPos.addEventListener("click", ()=>{
       if(!currentBrandId) return;
-      try{
-        const productsRef = collection(db,"brands",currentBrandId,"products");
-        const productsSnap = await getDocs(productsRef);
-        let productCount = 0;
-        let stockUnits = 0;
-        productsSnap.forEach(docSnap=>{
-          const d = docSnap.data() || {};
-          productCount += 1;
-          stockUnits += d.stockTotal || 0;
-        });
-        kpiProductsEl.textContent = productCount.toString();
-        kpiStockUnitsEl.textContent = stockUnits.toString();
+      // Example POS URL, adapt to your deployment:
+      window.location.href = "/pos.html?brand="+encodeURIComponent(currentBrandId);
+    });
+  }
 
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const tomorrow = new Date(today.getTime()+24*60*60*1000);
-
-        const branchesRef = collection(db,"brands",currentBrandId,"branches");
-        let ordersToday = 0;
-        let salesToday = 0;
-
-        const branchesSnap = await getDocs(branchesRef);
-        for(const branchDoc of branchesSnap.docs){
-          const ordersCol = collection(branchDoc.ref,"orders");
-          const snapOrders = await getDocs(ordersCol);
-          snapOrders.forEach(os=>{
-            const data = os.data() || {};
-            const createdAt = data.createdAt || data.createdAtLocal;
-            if(!createdAt || !createdAt.seconds) return;
-            const d = new Date(createdAt.seconds*1000);
-            if(d >= today && d < tomorrow){
-              ordersToday += 1;
-              const total = data.total || 0;
-              const type = data.type || "sale";
-              if(type === "sale"){
-                salesToday += total;
-              }else if(type === "return"){
-                salesToday += total; // assume negative for returns
-              }
-            }
-          });
-        }
-
-        kpiOrdersTodayEl.textContent = ordersToday.toString();
-        kpiSalesTodayEl.textContent = salesToday.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
-      }catch(err){
-        console.error("Error loading overview",err);
-        kpiOrdersTodayEl.textContent = "—";
-        kpiSalesTodayEl.textContent = "—";
-      }
-    }
-
-    function applyBrandUI(){
-      if(!currentBrandDoc) return;
-      const name = currentBrandDoc.name || "Brand";
-      brandNameSidebar.textContent = name;
-      brandSubtitleSidebar.textContent = "Luma brand dashboard";
-      settingBrandName.value = name || "";
-      settingCountry.value = currentBrandDoc.country || "";
-      settingOwnerEmail.value = currentBrandDoc.ownerEmail || "";
-
-      const logoUrl = currentBrandDoc.logoUrl;
-      if(logoUrl){
-        brandLogoBadge.innerHTML = `<img src="${logoUrl}" alt="Brand logo"/>`;
-        brandLogoPreview.src = logoUrl;
-        brandLogoPreview.style.display = "block";
-        brandLogoPlaceholder.style.display = "none";
-      }else{
-        brandLogoBadge.innerHTML = `<span>${initialsFromString(name)}</span>`;
-        brandLogoPreview.style.display = "none";
-        brandLogoPlaceholder.style.display = "inline";
-      }
-    }
-
-    async function loadBrand(brandId){
-      if(!brandId) return null;
-      const brandRef = doc(db,"brands",brandId);
-      const snap = await getDoc(brandRef);
-      if(!snap.exists()) return null;
-      currentBrandDoc = snap.data() || {};
-      currentBrandId = brandId;
-      applyBrandUI();
-      await Promise.all([
-        loadProducts(),
-        loadCustomers(),
-        loadOverview()
-      ]);
-      return currentBrandDoc;
-    }
-
-    async function saveBrandSettings(){
+  // SOFT DELETE BRAND
+  if(btnDeleteBrand){
+    btnDeleteBrand.addEventListener("click", async ()=>{
       if(!currentBrandId) return;
+      const sure = confirm("Are you sure you want to delete (soft delete) this brand? POS will stop working.");
+      if(!sure) return;
       try{
-        saveSettingsBtn.disabled = true;
-        saveSettingsBtn.textContent = "Saving…";
-        settingsStatus.textContent = "Saving…";
-
-        const brandRef = doc(db,"brands",currentBrandId);
-        await updateDoc(brandRef,{
-          name: settingBrandName.value.trim() || null,
-          country: settingCountry.value.trim() || null,
-          ownerEmail: settingOwnerEmail.value.trim() || null,
-          updatedAt: serverTimestamp()
-        });
-
-        const logoFile = settingLogoFile.files?.[0];
-        if(logoFile){
-          const refPath = `brands/${currentBrandId}/brand-logo`;
-          const fileRef = storageRef(storage, refPath);
-          await uploadBytes(fileRef, logoFile);
-          const url = await getDownloadURL(fileRef);
-          await updateDoc(brandRef,{logoUrl:url,updatedAt:serverTimestamp()});
-          currentBrandDoc.logoUrl = url;
-        }
-
-        const snap = await getDoc(brandRef);
-        currentBrandDoc = snap.data() || currentBrandDoc;
-        applyBrandUI();
-        settingsStatus.textContent = "Saved.";
-        showSettingsAlert("Brand settings saved.","success");
-      }catch(err){
-        console.error("Error saving brand settings",err);
-        settingsStatus.textContent = "Error saving.";
-        showSettingsAlert("Failed to save settings.","error");
-      }finally{
-        saveSettingsBtn.disabled = false;
-        saveSettingsBtn.textContent = "Save brand settings";
-      }
-    }
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-// after creating brandRef and setDoc for brand:
-const uid = user.uid;
-await setDoc(doc(db, "users", uid), {
-  name: ownerName,       // from your form
-  email: user.email,
-  role: "brand_owner",
-  brandId: brandRef.id,
-  status: "active",
-  createdAt: serverTimestamp()
-});
-
-    async function softDeleteBrand(){
-      if(!currentBrandId) return;
-      const confirmed = confirm("Are you sure you want to delete this brand? It will be archived and hidden.");
-      if(!confirmed) return;
-      try{
-        deleteBrandBtn.disabled = true;
-        deleteBrandBtn.textContent = "Deleting…";
+        btnDeleteBrand.disabled = true;
         const brandRef = doc(db,"brands",currentBrandId);
         await updateDoc(brandRef,{
           status:"deleted",
           isActive:false,
           deletedAt: serverTimestamp()
         });
-        alert("Brand deleted (soft delete). You will be logged out.");
-        await signOut(auth);
-      }catch(err){
-        console.error("Error deleting brand",err);
-        alert("Failed to delete brand.");
+        chipStatus.textContent = "Status: deleted";
+        chipStatus.classList.remove("chip-ok");
+        chipStatus.classList.add("chip-warn");
+        alert("Brand marked as deleted. Super Admin will also see this.");
+      }catch(e){
+        console.error("Delete brand error",e);
+        alert("Failed to delete brand. Check console.");
       }finally{
-        deleteBrandBtn.disabled = false;
-        deleteBrandBtn.textContent = "Delete brand";
-      }
-    }
-
-    saveSettingsBtn.addEventListener("click",saveBrandSettings);
-    deleteBrandBtn.addEventListener("click",softDeleteBrand);
-
-    // Search & refresh
-    productsSearchInput.addEventListener("input",()=>renderProducts(productsSearchInput.value));
-    productsRefreshBtn.addEventListener("click",()=>loadProducts());
-    customersSearchInput.addEventListener("input",()=>renderCustomers(customersSearchInput.value));
-    customersRefreshBtn.addEventListener("click",()=>loadCustomers());
-    addProductBtn.addEventListener("click",()=>openProductModal());
-
-    // Login logic
-    loginBtn.addEventListener("click",async()=>{
-      loginError.style.display="none";
-      loginError.textContent="";
-      const email = loginEmail.value.trim();
-      const pass = loginPassword.value;
-      if(!email || !pass){
-        loginError.textContent="Enter email and password.";
-        loginError.style.display="block";
-        return;
-      }
-      try{
-        loginBtn.disabled = true;
-        loginBtn.textContent = "Logging in…";
-        await signInWithEmailAndPassword(auth,email,pass);
-      }catch(err){
-        console.error("Login error",err);
-        loginError.textContent="Invalid email or password.";
-        loginError.style.display="block";
-      }finally{
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Login";
+        btnDeleteBrand.disabled = false;
       }
     });
+  }
 
-    logoutBtn.addEventListener("click",async()=>{
-      try{await signOut(auth);}catch(e){console.error(e);}
-    });
+  // AUTH STATE
+  onAuthStateChanged(auth, async (user)=>{
+    parseQuery();
 
-    // NEW: Self-create brand button
-    goCreateBrandBtn.addEventListener("click",()=>{
-      signupMode = "self";
-      signupBrandId = null;
-      signupToken = null;
-      signupBrandData = null;
-      signupBrandLabel.textContent = "Create a new brand on Luma Store OS";
-      signupHelperText.textContent = "This will create both your brand and your owner account.";
-      signupAlert.style.display = "none";
-
-      signupBrandNameInput.value = "";
-      signupBrandNameInput.disabled = false;
-      signupCountryInput.value = "";
-      signupCountryInput.disabled = false;
-
-      signupName.value = "";
-      signupEmail.value = "";
-      signupPassword.value = "";
-
-      showSignup();
-    });
-
-    async function initSignupFromLink(){
-      const {brand,token} = parseQuery();
-      if(!brand || !token) return false;
+    if(signupBrandIdFromUrl && signupTokenFromUrl && !user){
+      // Coming from Super Admin signup link
       try{
-        const brandRef = doc(db,"brands",brand);
-        const snap = await getDoc(brandRef);
-        if(!snap.exists()){
-          signupBrandLabel.textContent = "Brand not found.";
-          signupAlert.textContent = "This signup link is invalid (brand not found).";
-          signupAlert.style.display = "block";
-          signupMode = "link";
-          signupBrandId = brand;
-          signupToken = token;
-          signupBrandData = null;
-          return true;
-        }
-        const data = snap.data() || {};
-        signupMode = "link";
-        signupBrandId = brand;
-        signupToken = token;
-        signupBrandData = data;
-
-        if(data.status === "deleted"){
-          signupBrandLabel.textContent = data.name || "Deleted brand";
-          signupAlert.textContent = "This brand has been deleted. Contact support.";
-          signupAlert.style.display = "block";
-          return true;
-        }
-        if(data.signupToken && data.signupToken !== token){
-          signupBrandLabel.textContent = data.name || "Brand";
-          signupAlert.textContent = "This signup link is invalid or already used.";
-          signupAlert.style.display = "block";
-          return true;
-        }
-
-        signupBrandLabel.textContent = `Brand: ${data.name || "Untitled"}`;
-        signupHelperText.textContent = "This will create your brand owner account and connect it to this existing brand.";
-        signupAlert.style.display = "none";
-
-        // Pre-fill and lock brand name/country from existing doc
-        signupBrandNameInput.value = data.name || "";
-        signupBrandNameInput.disabled = true;
-        signupCountryInput.value = data.country || "";
-        signupCountryInput.disabled = true;
-
-        return true;
-      }catch(err){
-        console.error("Error initializing signup from link",err);
-        signupAlert.textContent = "Error loading brand. Check console.";
-        signupAlert.style.display = "block";
-        signupMode = "link";
-        signupBrandId = brand;
-        signupToken = token;
-        signupBrandData = null;
-        return true;
-      }
-    }
-
-    async function handleSignupSubmit(){
-      signupAlert.style.display = "none";
-      signupAlert.textContent = "";
-
-      const brandName = signupBrandNameInput.value.trim();
-      const country = signupCountryInput.value.trim();
-      const name = signupName.value.trim();
-      const email = signupEmail.value.trim();
-      const pass = signupPassword.value;
-
-      if(!name || !email || !pass){
-        signupAlert.textContent = "Fill your name, email and password.";
-        signupAlert.style.display = "block";
-        return;
-      }
-
-      // For self-create mode we also require brand name
-      if(signupMode === "self" && !brandName){
-        signupAlert.textContent = "Please enter a brand name.";
-        signupAlert.style.display = "block";
-        return;
-      }
-
-      try{
-        signupBtn.disabled = true;
-        signupBtn.textContent = "Working…";
-
-        if(signupMode === "link" && signupBrandId && signupToken){
-          // Connect owner to existing brand created by Super Admin
-          const cred = await createUserWithEmailAndPassword(auth,email,pass);
-          const uid = cred.user.uid;
-
-          const brandRef = doc(db,"brands",signupBrandId);
-          const brandSnap = await getDoc(brandRef);
-          const brandData = brandSnap.exists() ? brandSnap.data() : (signupBrandData || {});
-          const finalBrandName = brandData.name || brandName || null;
-          const finalCountry = brandData.country || country || null;
-
-          await setDoc(doc(db,"users",uid),{
-            name,
-            email,
-            role:"brand_owner",
-            brandId: signupBrandId,
-            brandName: finalBrandName,
-            status:"active",
-            createdAt: serverTimestamp()
-          });
-
-          await updateDoc(brandRef,{
-            name: finalBrandName,
-            country: finalCountry,
-            ownerUserId: uid,
-            ownerEmail: email,
-            signupToken: signupToken,
-            signupCompletedAt: serverTimestamp(),
-            status: brandData.status === "pending_setup" ? "active" : (brandData.status || "active")
-          });
-
-          // onAuthStateChanged will continue
+        const brand = await loadBrandById(signupBrandIdFromUrl);
+        if(!brand){
+          showAlert(signupAlert,"Brand not found. Ask Super Admin to resend the link.","error");
         }else{
-          // Self-create brand: new brand doc + default branch + owner user
-          const cred = await createUserWithEmailAndPassword(auth,email,pass);
-          const uid = cred.user.uid;
-
-          const brandsCol = collection(db,"brands");
-          const brandRef = doc(brandsCol);
-          const newBrandId = brandRef.id;
-
-          await setDoc(brandRef,{
-            name: brandName,
-            country: country || null,
-            status:"active",
-            isActive:true,
-            ownerUserId: uid,
-            ownerEmail: email,
-            createdAt: serverTimestamp(),
-            branchCount:1,
-            defaultCurrency:null,
-            defaultTaxPercent:null
-          });
-
-          const branchRef = doc(brandRef,"branches",doc(collection(brandRef,"branches")).id);
-          await setDoc(branchRef,{
-            name:"Main Branch",
-            code:"MAIN",
-            location:null,
-            isActive:true,
-            createdAt: serverTimestamp()
-          });
-
-          await setDoc(doc(db,"users",uid),{
-            name,
-            email,
-            role:"brand_owner",
-            brandId: newBrandId,
-            brandName,
-            status:"active",
-            createdAt: serverTimestamp()
-          });
-
-          // onAuthStateChanged will continue
+          signupBrandName.value = brand.name || "(no name)";
+          signupBrandSub.textContent = `Brand: ${brand.name || "Unnamed"} • Country: ${brand.country || "—"}`;
         }
-      }catch(err){
-        console.error("Signup error",err);
-        signupAlert.textContent = "Failed to create account. Maybe email already used.";
-        signupAlert.style.display = "block";
-      }finally{
-        signupBtn.disabled = false;
-        signupBtn.textContent = "Continue";
+      }catch(e){
+        console.error("Error loading brand for signup",e);
       }
+      setAuthView("signup-link");
+      return;
     }
 
-    signupBtn.addEventListener("click",handleSignupSubmit);
+    if(!user){
+      currentUser = null;
+      currentBrandId = null;
+      currentBrandData = null;
 
-    // Auth state
-    onAuthStateChanged(auth,async(user)=>{
-      if(!user){
-        currentUser = null;
-        currentUserDoc = null;
-        currentBrandId = null;
-        currentBrandDoc = null;
+      // Default: show login/create toggle
+      setAuthView("login");
+      return;
+    }
 
-        const {brand,token} = parseQuery();
-        if(brand && token){
-          showSignup();
-          signupMode = "link";
-          await initSignupFromLink();
-        }else{
-          showLogin();
-        }
+    // User is logged in => find their brand
+    currentUser = user;
+
+    try{
+      const userRef = doc(db,"users",user.uid);
+      const userSnap = await getDoc(userRef);
+
+      let brandId = null;
+      let role = null;
+
+      if(userSnap.exists()){
+        const data = userSnap.data() || {};
+        brandId = data.brandId || null;
+        role = data.role || null;
+      }
+
+      // If we logged in immediately after completing signup with URL brand,
+      // we may need to use that brand if user doc not yet populated.
+      if(!brandId && signupBrandIdFromUrl){
+        brandId = signupBrandIdFromUrl;
+      }
+
+      // If still no brandId, we try to find one via userBrands
+      if(!brandId){
+        const ubRef = collection(db,"userBrands");
+        const qUb = query(ubRef, where("userId","==",user.uid));
+        const ubSnap = await getDocs(qUb);
+        ubSnap.forEach(docSnap=>{
+          if(!brandId){
+            const d = docSnap.data() || {};
+            brandId = d.brandId || null;
+          }
+        });
+      }
+
+      if(!brandId){
+        // fallback: send user back to create brand
+        setAuthView("create");
+        showAlert(createAlert,"We couldn't find a brand linked to this account. Create a brand now.","info");
         return;
       }
 
-      currentUser = user;
-      sidebarUserEmail.textContent = user.email || "";
-      loginError.style.display="none";
-
-      try{
-        const userRef = doc(db,"users",user.uid);
-        const snap = await getDoc(userRef);
-        if(!snap.exists()){
-          await signOut(auth);
-          alert("Your user record is missing. Contact support.");
-          return;
-        }
-        const data = snap.data() || {};
-        currentUserDoc = data;
-
-        const allowedRoles = ["brand_owner","brand_manager"];
-        if(!allowedRoles.includes(data.role)){
-          await signOut(auth);
-          alert("You do not have permission to access the brand dashboard.");
-          return;
-        }
-
-        sidebarUserRole.textContent = data.role.replace("_"," ");
-        userNameEl.textContent = data.name || (user.email || "");
-        userRoleLabelEl.textContent = data.role.replace("_"," ");
-        userAvatarEl.textContent = initialsFromString(data.name || user.email || "BO");
-
-        const brandId = data.brandId;
-        if(!brandId){
-          await signOut(auth);
-          alert("Your user has no brandId set. Contact support.");
-          return;
-        }
-
-        showApp();
-        showView("overview");
-        await loadBrand(brandId);
-      }catch(err){
-        console.error("Error loading user or brand",err);
-        await signOut(auth);
-        alert("Error loading user or brand.");
+      const brand = await loadBrandById(brandId);
+      if(!brand){
+        setAuthView("create");
+        showAlert(createAlert,"Brand doc not found. Create a new brand or contact Luma.","error");
+        return;
       }
-    });
 
-    // Simple initial UI
-    (async ()=>{
-      const {brand,token} = parseQuery();
-      if(brand && token){
-        showSignup();
-        signupMode = "link";
-        await initSignupFromLink();
-      }else{
-        showLogin();
-      }
-    })();
-  </script>
+      await ensureUserDocForBrandOwner(user,brand);
+      showDashboard(user,brand);
+    }catch(e){
+      console.error("Error in auth state handling",e);
+      setAuthView("login");
+      showAlert(loginAlert,"Error loading your brand. Try again.","error");
+    }
+  });
+</script>
 </body>
 </html>

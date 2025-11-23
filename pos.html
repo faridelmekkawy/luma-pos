@@ -2287,43 +2287,114 @@ if(currentFlatVariants.length){
             (typeof data.qty === "number" ? data.qty : 0)));
         }
 
-        // Apply each cart item
-        items.forEach(item=>{
-          const delta = sign * item.qty;
-          baseStock = Math.max(0, baseStock + delta);
+               const readQty = (obj) =>
+          typeof obj.stockQty === "number" ? obj.stockQty :
+          typeof obj.quantity === "number" ? obj.quantity :
+          typeof obj.qty === "number" ? obj.qty :
+          typeof obj.stock === "number" ? obj.stock : 0;
 
-          if(variantsArr && item.variantChoices && item.variantChoices.length){
-            const choice = item.variantChoices[0].choice;
-            const group = item.variantChoices[0].group || null;
-
-            variantsArr = variantsArr.map(v=>{
-              if(!v) return v;
-
-              const sameLabel = v.label === choice;
-              const sameGroup = !group || !data.variantGroup
-                ? true
-                : (data.variantGroup === group);
-
-              if(!sameLabel || !sameGroup) return v;
-
-              const currentVarStock =
-                typeof v.stockQty === "number" ? v.stockQty :
-                (typeof v.quantity === "number" ? v.quantity :
-                (typeof v.qty === "number" ? v.qty :
-                (typeof v.stock === "number" ? v.stock : 0)));
-
-              const newVarStock = Math.max(0, currentVarStock + delta);
-
-              return {
-                ...v,
-                stockQty: newVarStock,
-                quantity: newVarStock,
-                qty: newVarStock,
-                stock: newVarStock
-              };
-            });
-          }
+        const writeQty = (obj, newVal) => ({
+          ...obj,
+          stockQty: newVal,
+          quantity: newVal,
+          qty: newVal,
+          stock: newVal
         });
+ // Apply each cart item
+      items.forEach(item => {
+        const delta = sign * item.qty;
+        baseStock = Math.max(0, baseStock + delta);
+
+        if (!variantsArr) return;
+
+        // ✅ Prefer using variantMeta (groupIndex + labelIndex from POS modal)
+        if (item.variantMeta && typeof item.variantMeta.groupIndex === "number") {
+          const gi = item.variantMeta.groupIndex;
+          const li = item.variantMeta.labelIndex;
+
+          if (!variantsArr[gi]) return;
+
+          const v = { ...variantsArr[gi] };
+
+          if (li != null) {
+            // label-level stock (variant has labels/options array)
+            let labelsArr = Array.isArray(v.labels) ? [...v.labels]
+              : (Array.isArray(v.options) ? [...v.options] : null);
+
+            if (!labelsArr || !labelsArr[li]) {
+              variantsArr[gi] = v;
+              return;
+            }
+
+            const lbl = labelsArr[li];
+            const currentVarStock = readQty(lbl);
+            const newVarStock = Math.max(0, currentVarStock + delta);
+
+            labelsArr[li] = writeQty(lbl, newVarStock);
+
+            if (Array.isArray(v.labels)) v.labels = labelsArr;
+            else v.options = labelsArr;
+
+            variantsArr[gi] = v;
+          } else {
+            // variant-level stock only (no inner labels)
+            const currentVarStock = readQty(v);
+            const newVarStock = Math.max(0, currentVarStock + delta);
+            variantsArr[gi] = writeQty(v, newVarStock);
+          }
+
+          return;
+        }
+
+        // 🔁 Fallback: match using variantChoices (group + choice)
+        if (item.variantChoices && item.variantChoices.length) {
+          const choice = item.variantChoices[0].choice;
+          const group  = item.variantChoices[0].group || null;
+
+          variantsArr = variantsArr.map(v => {
+            if (!v) return v;
+
+            const labelsArr = Array.isArray(v.labels) ? v.labels
+              : (Array.isArray(v.options) ? v.options : null);
+
+            if (labelsArr) {
+              // label-level structure
+              const newLabels = labelsArr.map(lbl => {
+                const lblName = (typeof lbl === "string"
+                  ? lbl
+                  : (lbl.label || lbl.name || ""));
+
+                const sameLabel = lblName === choice;
+                const sameGroup = !group || !v.name
+                  ? true
+                  : (v.name === group);
+
+                if (!sameLabel || !sameGroup) return lbl;
+
+                const currentVarStock = readQty(lbl);
+                const newVarStock = Math.max(0, currentVarStock + delta);
+                return writeQty(lbl, newVarStock);
+              });
+
+              if (Array.isArray(v.labels)) return { ...v, labels: newLabels };
+              return { ...v, options: newLabels };
+            } else {
+              // flat variant: one object with label/qty
+              const sameLabel = v.label === choice || v.name === choice;
+              const sameGroup = !group || !v.groupName
+                ? true
+                : (v.groupName === group);
+
+              if (!sameLabel || !sameGroup) return v;
+
+              const currentVarStock = readQty(v);
+              const newVarStock = Math.max(0, currentVarStock + delta);
+              return writeQty(v, newVarStock);
+            }
+          });
+        }
+      });
+
 
         const updateData = {
           stockQty: baseStock,

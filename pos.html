@@ -1309,25 +1309,44 @@
     }
     renderCart();
   }
+function getBaseStockForProduct(product){
+  // If we have variants, sum their stock fields
+  if (Array.isArray(product.variants) && product.variants.length){
+    let sum = 0;
+    product.variants.forEach(v => {
+      if (!v) return;
+      const q =
+        typeof v.stockQty === "number" ? v.stockQty :
+        (typeof v.quantity === "number" ? v.quantity :
+        (typeof v.qty === "number" ? v.qty :
+        (typeof v.stock === "number" ? v.stock : 0)));
+      sum += q;
+    });
+    return sum;
+  }
+
+  // Fallback: use product-level fields
+  if (typeof product.stockQty === "number") return product.stockQty;
+  if (typeof product.stock === "number")    return product.stock;
+  if (typeof product.quantity === "number") return product.quantity;
+  if (typeof product.qty === "number")      return product.qty;
+  return null;
+}
 
   function computeProductStockLeft(product){
-  const baseStock =
-    typeof product.stockQty === "number" ? product.stockQty :
-    (typeof product.stock === "number" ? product.stock :
-    (typeof product.quantity === "number" ? product.quantity :
-    (typeof product.qty === "number" ? product.qty : null)));
-
-  if(typeof baseStock !== "number") return null;
+  const baseStock = getBaseStockForProduct(product);
+  if (typeof baseStock !== "number") return null;
 
   const baseId = product.id;
-  const usedInCart = cartItems.reduce((sum,item)=>{
+  const usedInCart = cartItems.reduce((sum, item) => {
     const pid = item.baseId || item.id;
     return pid === baseId ? sum + item.qty : sum;
-  },0);
+  }, 0);
 
   const left = baseStock - usedInCart;
   return left < 0 ? 0 : left;
 }
+
 
 
 function buildFlatVariantsForProduct(product){
@@ -1501,9 +1520,10 @@ function buildFlatVariantsForProduct(product){
       const variantsInfo = p.variants && p.variants.length
         ? ` • Variants: ${p.variants.map(v=>v.name || "").filter(Boolean).join(", ")}`
         : "";
-      const stockInfo = typeof p.stock === "number"
-        ? ` • Stock: ${p.stock} left`
-        : "";
+     const stockDisplay = computeProductStockLeft(p);
+const stockInfo = typeof stockDisplay === "number"
+  ? ` • Stock: ${stockDisplay} left`
+  : "";
       const thumbInner = p.imageUrl
         ? `<img src="${p.imageUrl}" alt="${p.name}"/>`
         : (p.name ? p.name[0].toUpperCase() : "P");

@@ -677,7 +677,7 @@
     let customersList = [];
     let ordersList = [];
     let ordersUnsub = null;
-
+    let productsUnsub = null;
     /* ALERTS + MODALS */
     function showAuthAlert(msg, type = "error") {
       const cls = type === "error" ? "auth-alert-error" : "auth-alert-info";
@@ -931,6 +931,7 @@
         await loadBrand();
         await loadBranches();
         await loadProducts();
+        listenToProductsRealtime();  
         await loadStaff();
         await loadCustomers();
         await loadOrders();
@@ -1018,6 +1019,28 @@
         });
       });
     }
+    function listenToProductsRealtime() {
+  if (productsUnsub) {
+    productsUnsub();
+    productsUnsub = null;
+  }
+
+  const qProds = query(collection(db, "brands", brandId, "products"));
+  productsUnsub = onSnapshot(qProds, snap => {
+    products = [];
+    snap.forEach(d => {
+      const data = d.data();
+      const b = branches.find(x => x.id === data.branchId);
+      products.push({
+        id: d.id,
+        ...data,
+        branchName: b ? b.name : (data.branchName || "")
+      });
+    });
+    renderProductsTable(); // 👈 refresh UI whenever DB changes
+  });
+}
+
 
     /* LOAD STAFF */
     async function loadStaff() {
@@ -1159,6 +1182,27 @@
       return variants;
     }
 
+    function getBaseStockForProduct(p) {
+  // If product has variants, sum their stock
+  if (Array.isArray(p.variants) && p.variants.length) {
+    return p.variants.reduce((sum, v) => {
+      if (!v) return sum;
+      const q =
+        typeof v.stockQty === "number" ? v.stockQty :
+        (typeof v.quantity === "number" ? v.quantity :
+        (typeof v.qty === "number" ? v.qty :
+        (typeof v.stock === "number" ? v.stock : 0)));
+      return sum + q;
+    }, 0);
+  }
+
+  // Fallback to product-level stock fields
+  if (typeof p.stockQty === "number") return p.stockQty;
+  if (typeof p.stock === "number")    return p.stock;
+  if (typeof p.quantity === "number") return p.quantity;
+  if (typeof p.qty === "number")      return p.qty;
+  return null;
+}
     /* PRODUCTS ANALYTICS & TABLE */
     function renderProductsAnalytics() {
       const branchFilter = globalBranchSelect.value;
@@ -1168,9 +1212,12 @@
       });
       const total = list.length;
       const active = list.filter(p => p.isActive !== false).length;
-      const lowStock = list.filter(
-        p => p.stockMode === "limited" && (p.stockQty ?? 0) <= 5
-      ).length;
+      const lowStock = list.filter(p => {
+  if (p.stockMode !== "limited") return false;
+  const base = getBaseStockForProduct(p);
+  return typeof base === "number" && base <= 5;
+}).length;
+
 
       productsAnalyticsEl.innerHTML = `
         <div class="card">
@@ -1246,7 +1293,11 @@
           <tbody>
       `;
       rows.forEach(p => {
-        const stockText = p.stockMode === "limited" ? (p.stockQty ?? 0) : "Unlimited";
+       let stockText = "Unlimited";
+if (p.stockMode === "limited") {
+  const base = getBaseStockForProduct(p);
+  stockText = typeof base === "number" ? base : (p.stockQty ?? 0);
+}
         const variantsStr = Array.isArray(p.variants)
           ? p.variants.map(v => `${v.label || ""} (${v.stockQty ?? ""})`).join(", ")
           : "";

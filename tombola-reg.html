@@ -155,16 +155,6 @@
       letter-spacing:0.04em;
       text-transform:uppercase;
     }
-    .hero-pill{
-      font-size:10px;
-      padding:4px 8px;
-      border-radius:999px;
-      background:rgba(15,23,42,0.5);
-      border:1px solid rgba(148,163,184,0.55);
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-    }
 
     .hero-list{
       margin-top:12px;
@@ -522,7 +512,7 @@
 </head>
 <body>
 <div class="blob orange"></div>
-<div class="blob teal"></div>
+div class="blob teal"></div>
 <div class="blob red"></div>
 
 <div class="shell">
@@ -534,32 +524,24 @@
         <div class="hero-title-block">
           <div class="hero-kicker">Lokamania bazaar</div>
           <div class="hero-title">Registration · 5th edition</div>
-          <div class="hero-pill">
-            🎟️ Tambola powered · Live draw
-          </div>
         </div>
       </div>
 
       <ul class="hero-list">
         <li>
           <div class="hero-dot"></div>
-          <div>Register once · receive your unique tambola number on WhatsApp.</div>
+          <div>Register once · receive your unique tombola number on WhatsApp.</div>
         </li>
         <li>
           <div class="hero-dot"></div>
-          <div>Help us curate better brands, categories and experiences for next Lokamania.</div>
-        </li>
-        <li>
-          <div class="hero-dot"></div>
-          <div>At the end of the event, one tambola number is randomly drawn to win a reward.</div>
+          <div>At the end of the event, one tombola number is randomly drawn to win a reward.</div>
         </li>
       </ul>
     </div>
 
     <div class="hero-footer-row">
       <div>
-        <div style="font-size:11px;margin-bottom:2px;">Today’s session</div>
-        <div style="font-size:13px;font-weight:600;">Lokamania 5 — Guest check-in</div>
+        <div style="font-size:13px;font-weight:600;">Lokamania 5 — Registration</div>
       </div>
       <div class="hero-tag-row">
         <span class="hero-tag">Local brands</span>
@@ -592,7 +574,7 @@
 
       <div class="button-row">
         <button type="submit" class="btn-primary" id="submitBtn">
-          <span>Get my tambola number</span>
+          <span>Get my tombola number</span>
           <span>✨</span>
         </button>
         <button type="button" class="btn-secondary" id="resetBtn" style="display:none;">Start a new registration</button>
@@ -607,8 +589,8 @@
       <div class="success-title">You’re in!</div>
       <div class="success-number" id="successTambola"></div>
       <div class="success-text">
-        We’ve saved your registration for Lokamania 5.  
-        Keep this tambola number and the WhatsApp message — we’ll use it for the live draw.
+        We’ve saved your registration for Lokamania 5.<br/>
+        Keep this tombola number and the WhatsApp message — we’ll use it for the live draw.
       </div>
       <div class="pill-line">
         <span>📱</span>
@@ -630,9 +612,6 @@
     set,
     update,
     push,
-    query,
-    orderByChild,
-    equalTo,
     runTransaction
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import {
@@ -653,9 +632,8 @@
   };
 
   const EVENT_ID = "lokamania5";
-  const WEBHOOK_URL = ""; // <= YOU WILL FILL THIS LATER (e.g. your n8n webhook)
+  const WEBHOOK_URL = ""; // <= you will fill this later
 
-  // ---------- INIT ----------
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const auth = getAuth(app);
@@ -673,7 +651,6 @@
   const successPanel = document.getElementById("successPanel");
   const successTambola = document.getElementById("successTambola");
   const successCloseBtn = document.getElementById("successCloseBtn");
-  const formCard = document.getElementById("formCard");
 
   let settingsCache = null;
   let isSubmitting = false;
@@ -682,9 +659,9 @@
     tambolaStart: 1001,
     tambolaLast: 1000,
     ballotMessageTemplate:
-      "Hey {name}! 🎪 Thanks for registering at Lokamania 5. Your tambola number is #{number}. Keep this message safe – we’ll use this number when we announce the winner later today.",
+      "Hey {name}! 🎪 Thanks for registering at Lokamania 5. Your tombola number is #{number}. Keep this message safe – we’ll use this number when we announce the winner later today.",
     winnerMessageTemplate:
-      "Hey {name}! 🎉 Your tambola number #{number} has been selected as a winner at Lokamania 5. Please head to the registration desk to claim your prize.",
+      "Hey {name}! 🎉 Your tombola number #{number} has been selected as a winner at Lokamania 5. Please head to the registration desk to claim your prize.",
     fields: {
       name:           { label: "Full name",                               required: true,  enabled: true,  order: 1 },
       phone:          { label: "Phone number (WhatsApp)",                 required: true,  enabled: true,  order: 2 },
@@ -698,8 +675,7 @@
       brandsNextTime: { label: "Brands you'd love to see next time",     required: false, enabled: true,  order:10 },
       heardAbout:     { label: "How did you hear about Lokamania?",      required: false, enabled: true,  order:11 },
       firstTime:      { label: "Is it your first time in Lokamania?",    required: true,  enabled: true,  order:12 },
-      budgetRange:    { label: "Estimated budget today",                 required: false, enabled: true,  order:13 },
-      shoppingFocus:  { label: "What are you mainly shopping for today?",required: false, enabled: true,  order:14 }
+      shoppingFocus:  { label: "What are you mainly shopping for today?",required: false, enabled: true,  order:13 }
     }
   };
 
@@ -721,7 +697,6 @@
     if(!snap.exists()){
       await set(settingsRef, DEFAULT_SETTINGS);
     }else{
-      // Merge  so new fields don't break things
       const existing = snap.val() || {};
       const merged = structuredClone(DEFAULT_SETTINGS);
       Object.assign(merged, existing);
@@ -818,7 +793,7 @@
       select.name = baseName;
       select.innerHTML = `
         <option value="">Select one</option>
-        <option value="instagram">Instagram</option>
+        <option value="instagram">Instagram</</option>
         <option value="tiktok">TikTok</option>
         <option value="friend">Friend</option>
         <option value="influencer">Influencer</option>
@@ -845,19 +820,6 @@
       `;
       group.appendChild(select);
       inputEl = select;
-    }else if(key === "budgetRange"){
-      const select = document.createElement("select");
-      select.className = "input";
-      select.name = baseName;
-      select.innerHTML = `
-        <option value="">Select range</option>
-        <option value="<500">&lt; 500 EGP</option>
-        <option value="500-1000">500–1000 EGP</option>
-        <option value="1000-2000">1000–2000 EGP</option>
-        <option value="2000+">2000+ EGP</option>
-      `;
-      group.appendChild(select);
-      inputEl = select;
     }else if(key === "shoppingFocus"){
       const row = document.createElement("div");
       row.className = "checkbox-row";
@@ -875,11 +837,7 @@
           <input type="checkbox" value="shoes"> Shoes
         </label>
         <label class="chip-option">
-          <input type="checkbox" value="jewelry"> Jewelry
-        </label>
-        <label class="chip-option">
-          <input type="checkbox" value="home_decor"> Home decor
-        </label>
+          <input type="checkbox" value="jewelry"> Jewelry</label>
         <label class="chip-option">
           <input type="checkbox" value="beauty"> Beauty</label>
       `;
@@ -902,7 +860,7 @@
 
       if(key === "phone"){
         input.placeholder = "+20…";
-        hint = "We use this to send your tambola number on WhatsApp.";
+        hint = "We use this to send your tombola number on WhatsApp.";
       }else if(key === "name"){
         input.placeholder = "Your full name";
       }else if(key === "city"){
@@ -1028,18 +986,16 @@
     return { ok, data };
   }
 
+  // NEW: duplicate check without index (read all once and scan client-side)
   async function checkDuplicate(phone,email){
-    // Check phone
-    if(phone){
-      const q1 = query(registrationsRef, orderByChild("phone"), equalTo(phone));
-      const snap1 = await get(q1);
-      if(snap1.exists()) return true;
-    }
-    // Check email
-    if(email){
-      const q2 = query(registrationsRef, orderByChild("email"), equalTo(email));
-      const snap2 = await get(q2);
-      if(snap2.exists()) return true;
+    const snap = await get(registrationsRef);
+    const data = snap.val() || {};
+    const normPhone = phone ? String(phone).trim() : "";
+    const normEmail = email ? String(email).trim().toLowerCase() : "";
+    for(const id in data){
+      const r = data[id] || {};
+      if(normPhone && String(r.phone || "").trim() === normPhone) return true;
+      if(normEmail && String(r.email || "").trim().toLowerCase() === normEmail) return true;
     }
     return false;
   }
@@ -1053,13 +1009,12 @@
       return current + 1;
     });
     const number = result.snapshot.val();
-    // ensure settingsCache updated
     settingsCache.tambolaLast = number;
     return number;
   }
 
   async function postToWebhook(payload){
-    if(!WEBHOOK_URL) return; // user will fill later
+    if(!WEBHOOK_URL) return;
     try{
       await fetch(WEBHOOK_URL,{
         method:"POST",
@@ -1108,7 +1063,7 @@
         showStatus("It looks like you’ve already registered with this phone or email.", "negative");
         isSubmitting = false;
         submitBtn.disabled = false;
-        submitBtn.textContent = "Get my tambola number";
+        submitBtn.textContent = "Get my tombola number";
         return;
       }
 
@@ -1136,7 +1091,6 @@
         brandsNextTime: data.brandsNextTime || "",
         heardAbout: data.heardAbout || "",
         firstTime: firstTimeVal,
-        budgetRange: data.budgetRange || "",
         shoppingFocus: data.shoppingFocus || ""
       };
 
@@ -1144,7 +1098,7 @@
       await postToWebhook({
         type:"lokamania_registration",
         eventId:EVENT_ID,
-        tambolaNumber,
+        tombolaNumber:tambolaNumber,
         data:payload
       });
 
@@ -1154,17 +1108,17 @@
       showStatus("Something went wrong while saving. Please try again.", "negative");
       isSubmitting = false;
       submitBtn.disabled = false;
-      submitBtn.textContent = "Get my tambola number";
+      submitBtn.textContent = "Get my tombola number";
       return;
     }
 
     isSubmitting = false;
     submitBtn.disabled = false;
-    submitBtn.textContent = "Get my tambola number";
+    submitBtn.textContent = "Get my tombola number";
   });
 
   function showSuccess(tambolaNumber, name){
-    successTambola.textContent = "#" + tambolaNumber;
+    successTambola.textContent = "#" + tombolaNumber;
     successPanel.classList.add("visible");
     resetBtn.style.display = "inline";
     showStatus("");
@@ -1183,4 +1137,3 @@
 </script>
 </body>
 </html>
-

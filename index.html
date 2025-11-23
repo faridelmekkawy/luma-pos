@@ -1308,37 +1308,53 @@
     </div>
   `;
 }
-    function refreshLowStockAlerts() {
-      const panel = qs("#lowStockPanel");
-      const listEl = qs("#lowStockList");
-      if (!panel || !listEl) return;
+   function refreshLowStockAlerts() {
+  const panel = qs("#lowStockPanel");
+  const listEl = qs("#lowStockList");
+  const titleEl = qs("#lowStockPanelTitle");
+  if (!panel || !listEl || !titleEl) return;
 
-      const branchFilter = globalBranchSelect.value;
-      const lowItems = [];
+  const branchFilter = globalBranchSelect.value;
+  const lowItems = [];
 
-      products.forEach(p => {
-        if (branchFilter !== "global" && p.branchId !== branchFilter) return;
-        const base = getBaseStockForProduct(p);
-        if (typeof base === "number" && base < 8) {
-          lowItems.push({
-            name: p.name || "Unnamed product",
-            branchName: p.branchName || "",
-            stock: base
-          });
-        }
+  products.forEach(p => {
+    if (branchFilter !== "global" && p.branchId !== branchFilter) return;
+    const base = getBaseStockForProduct(p);
+    if (typeof base === "number" && base < 8) {
+      lowItems.push({
+        name: p.name || "Unnamed product",
+        branchName: p.branchName || "",
+        stock: base
       });
-
-      if (!lowItems.length) {
-        panel.style.display = "none";
-        listEl.innerHTML = "";
-        return;
-      }
-
-      panel.style.display = "block";
-      listEl.innerHTML = lowItems
-        .map(i => `• <strong>${i.name}</strong>${i.branchName ? " (" + i.branchName + ")" : ""} — Stock: ${i.stock}`)
-        .join("<br>");
     }
+  });
+
+  if (!lowItems.length) {
+    panel.style.display = "none";
+    listEl.innerHTML = "";
+    titleEl.textContent = "Low Stock Alerts";
+    return;
+  }
+
+  panel.style.display = "block";
+
+  // 🔴 Banner text with product names
+  const namesForBanner = lowItems
+    .slice(0, 3)
+    .map(i => i.name + (i.branchName ? ` (${i.branchName})` : ""))
+    .join(", ");
+
+  const moreCount = lowItems.length > 3 ? ` +${lowItems.length - 3} more` : "";
+  titleEl.textContent = `Low Stock: ${namesForBanner}${moreCount}`;
+
+  // Detailed bullet list below the banner
+  listEl.innerHTML = lowItems
+    .map(
+      i =>
+        `• <strong>${i.name}</strong>${i.branchName ? " (" + i.branchName + ")" : ""} — Stock: ${i.stock}`
+    )
+    .join("<br>");
+}
 
     function renderProductsTable() {
       renderProductsAnalytics();
@@ -1903,10 +1919,10 @@
         <div class="field">
           <div class="field-label">File</div>
           <input id="import-file" type="file" accept=".xlsx,.xls,.csv"/>
-          <div class="field-hint">
-            Columns: name, code (SKU), price, stockMode, stockQty,
-            variantGroup, variants (like S|10;M|5).
-          </div>
+               <div class="field-hint">
+        Columns: name, code (SKU), price, stockQty, variantGroup, variants (like S|10;M|5).
+      </div>
+
         </div>
         <div class="modal-actions">
           <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>

@@ -384,9 +384,14 @@
               <div class="card-note">Net of returns, all branches.</div>
             </div>
             <div class="card">
-              <div class="card-title">Orders Today</div>
+              <div class="card-title">Sales Orders Today</div>
               <div id="dash-orders-today" class="card-number">0</div>
-              <div class="card-note">Sales + returns.</div>
+              <div class="card-note">Number of sales orders (no returns).</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Return Orders Today</div>
+              <div id="dash-orders-returns-today" class="card-number">0</div>
+              <div class="card-note">Number of return orders today.</div>
             </div>
             <div class="card">
               <div class="card-title">Active Branches</div>
@@ -653,7 +658,8 @@
 
     /* ANALYTICS BLOCKS */
     const dashSalesTodayEl = qs("#dash-sales-today");
-    const dashOrdersTodayEl = qs("#dash-orders-today");
+    const dashOrdersTodayEl = qs("#dash-orders-today");               // sales orders (no returns)
+    const dashOrdersReturnsTodayEl = qs("#dash-orders-returns-today");// return orders
     const dashActiveBranchesEl = qs("#dash-active-branches");
     const productsAnalyticsEl = qs("#products-analytics");
     const branchesAnalyticsEl = qs("#branches-analytics");
@@ -797,7 +803,7 @@
       }
     });
 
-    /* CREATE BRAND */
+    /* CREATE BRAND (fixed) */
     createForm.addEventListener("submit", async e => {
       e.preventDefault();
       clearAuthAlert();
@@ -818,10 +824,12 @@
       }
 
       try {
+        // 1) create auth user (this logs them in)
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         const user = cred.user;
         await updateProfile(user, { displayName: ownerName });
 
+        // 2) create brand
         const brandRef = await addDoc(collection(db, "brands"), {
           name: brandName,
           country: brandCountry || null,
@@ -834,27 +842,43 @@
           createdAt: serverTimestamp()
         });
 
+        // 3) userBrands link
         await setDoc(doc(db, "userBrands", user.uid), {
           primaryBrandId: brandRef.id,
           brandIds: [brandRef.id]
         });
 
-        await addDoc(collection(brandRef, "branches"), {
+        // 4) top-level users doc
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          name: ownerName,
+          email,
+          primaryBrandId: brandRef.id,
+          role: "brand_owner",
+          createdAt: serverTimestamp()
+        });
+
+        // 5) first branch
+        const mainBranchRef = await addDoc(collection(brandRef, "branches"), {
           name: "Main Branch",
           code: "MAIN",
           isActive: true,
           createdAt: serverTimestamp()
         });
 
+        // 6) staff record
         await setDoc(doc(brandRef, "staff", user.uid), {
           userId: user.uid,
           name: ownerName,
           email,
           role: "brand_owner",
           isActive: true,
+          branchId: mainBranchRef.id,
           createdAt: serverTimestamp()
         });
 
+        // onAuthStateChanged will now load this brand and show dashboard
+        showAuthAlert("Brand created successfully. Redirecting to dashboard…", "info");
       } catch (err) {
         console.error(err);
         let msg = "Failed to create brand.";
@@ -980,7 +1004,7 @@
       });
     }
 
-    /* LOAD PRODUCTS (single fixed collection: brands/{brandId}/products) */
+    /* LOAD PRODUCTS */
     async function loadProducts() {
       products = [];
       const snap = await getDocs(collection(db, "brands", brandId, "products"));
@@ -1055,27 +1079,32 @@
       });
     }
 
-    /* DASHBOARD UI */
+    /* DASHBOARD UI (fixed KPIs) */
     function updateDashboardUI() {
       const today = todayDate();
-      let salesToday = 0;
-      let ordersToday = 0;
+
+      let salesToday = 0;           // money (net of returns)
+      let salesOrdersToday = 0;     // count of sale orders only
+      let returnOrdersToday = 0;    // count of return orders only
 
       ordersList.forEach(o => {
         const d = orderDate(o);
-        if (d === today) {
-          ordersToday++;
-          const total = Number(o.total) || 0;
-          if (o.type === "return") {
-            salesToday -= Math.abs(total);
-          } else {
-            salesToday += total;
-          }
+        if (d !== today) return;
+
+        const total = Number(o.total) || 0;
+
+        if (o.type === "return") {
+          returnOrdersToday++;
+          salesToday -= Math.abs(total);
+        } else {
+          salesOrdersToday++;
+          salesToday += total;
         }
       });
 
       dashSalesTodayEl.textContent = salesToday.toFixed(2);
-      dashOrdersTodayEl.textContent = ordersToday;
+      dashOrdersTodayEl.textContent = salesOrdersToday;
+      dashOrdersReturnsTodayEl.textContent = returnOrdersToday;
       dashActiveBranchesEl.textContent = branches.filter(b => b.isActive !== false).length;
     }
 

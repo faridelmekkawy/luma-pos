@@ -1,4 +1,4 @@
-<!doctype html>
+f<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -240,6 +240,40 @@
       padding:16px;
     }
     .settings-title{font-size:14px;font-weight:600;margin-bottom:12px;}
+    .low-stock{
+      color:#b91c1c;
+      font-weight:600;
+    }
+    .low-stock-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:2px 8px;
+      border-radius:999px;
+      background:#fee2e2;
+      color:#b91c1c;
+      font-size:11px;
+      font-weight:600;
+      margin-left:4px;
+    }
+    #lowStockPanel{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#fef2f2;
+      border:1px solid #fee2e2;
+      display:none;
+      font-size:12px;
+    }
+    #lowStockPanelTitle{
+      font-weight:600;
+      color:#b91c1c;
+      margin-bottom:4px;
+    }
+    #lowStockList{
+      color:#7f1d1d;
+      font-size:12px;
+    }
 
     /* MODAL */
     #modal-container{
@@ -435,6 +469,13 @@
               <option value="stock-desc">Stock high → low</option>
             </select>
           </div>
+
+          <!-- Low stock alert panel -->
+          <div id="lowStockPanel">
+            <div id="lowStockPanelTitle">Low Stock Alerts</div>
+            <div id="lowStockList"></div>
+          </div>
+
           <div id="products-table" class="table-wrapper"></div>
         </section>
 
@@ -1037,7 +1078,9 @@
         branchName: b ? b.name : (data.branchName || "")
       });
     });
-    renderProductsTable(); // 👈 refresh UI whenever DB changes
+    renderProductsTable(); 
+    refreshLowStockAlerts();
+// 👈 refresh UI whenever DB changes
   });
 }
 
@@ -1205,34 +1248,65 @@
 }
     /* PRODUCTS ANALYTICS & TABLE */
     function renderProductsAnalytics() {
+  const branchFilter = globalBranchSelect.value;
+  const list = products.filter(p => {
+    if (branchFilter !== "global" && p.branchId !== branchFilter) return false;
+    return true;
+  });
+
+  const total = list.length;
+  const active = list.filter(p => p.isActive !== false).length;
+
+  const lowStock = list.filter(p => {
+    const base = getBaseStockForProduct(p);
+    return typeof base === "number" && base < 8; // 👈 low stock threshold
+  }).length;
+
+  productsAnalyticsEl.innerHTML = `
+    <div class="card">
+      <div class="card-title">Total Products</div>
+      <div class="card-number">${total}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Active Products</div>
+      <div class="card-number">${active}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Low Stock (&lt; 8)</div>
+      <div class="card-number">${lowStock}</div>
+    </div>
+  `;
+}
+    function refreshLowStockAlerts() {
+      const panel = qs("#lowStockPanel");
+      const listEl = qs("#lowStockList");
+      if (!panel || !listEl) return;
+
       const branchFilter = globalBranchSelect.value;
-      const list = products.filter(p => {
-        if (branchFilter !== "global" && p.branchId !== branchFilter) return false;
-        return true;
+      const lowItems = [];
+
+      products.forEach(p => {
+        if (branchFilter !== "global" && p.branchId !== branchFilter) return;
+        const base = getBaseStockForProduct(p);
+        if (typeof base === "number" && base < 8) {
+          lowItems.push({
+            name: p.name || "Unnamed product",
+            branchName: p.branchName || "",
+            stock: base
+          });
+        }
       });
-      const total = list.length;
-      const active = list.filter(p => p.isActive !== false).length;
-      const lowStock = list.filter(p => {
-  if (p.stockMode !== "limited") return false;
-  const base = getBaseStockForProduct(p);
-  return typeof base === "number" && base <= 5;
-}).length;
 
+      if (!lowItems.length) {
+        panel.style.display = "none";
+        listEl.innerHTML = "";
+        return;
+      }
 
-      productsAnalyticsEl.innerHTML = `
-        <div class="card">
-          <div class="card-title">Total Products</div>
-          <div class="card-number">${total}</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Active Products</div>
-          <div class="card-number">${active}</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Low Stock (≤5)</div>
-          <div class="card-number">${lowStock}</div>
-        </div>
-      `;
+      panel.style.display = "block";
+      listEl.innerHTML = lowItems
+        .map(i => `• <strong>${i.name}</strong>${i.branchName ? " (" + i.branchName + ")" : ""} — Stock: ${i.stock}`)
+        .join("<br>");
     }
 
     function renderProductsTable() {
@@ -1249,25 +1323,28 @@
       });
 
       rows.sort((a, b) => {
-        const stockA = a.stockMode === "limited" ? (a.stockQty ?? 0) : Infinity;
-        const stockB = b.stockMode === "limited" ? (b.stockQty ?? 0) : Infinity;
-        switch (sortVal) {
-          case "name-asc":
-            return (a.name || "").localeCompare(b.name || "");
-          case "name-desc":
-            return (b.name || "").localeCompare(a.name || "");
-          case "price-asc":
-            return (Number(a.price) || 0) - (Number(b.price) || 0);
-          case "price-desc":
-            return (Number(b.price) || 0) - (Number(a.price) || 0);
-          case "stock-asc":
-            return stockA - stockB;
-          case "stock-desc":
-            return stockB - stockA;
-          default:
-            return 0;
-        }
-      });
+  const baseA = getBaseStockForProduct(a);
+  const baseB = getBaseStockForProduct(b);
+  const stockA = typeof baseA === "number" ? baseA : Number.MAX_SAFE_INTEGER;
+  const stockB = typeof baseB === "number" ? baseB : Number.MAX_SAFE_INTEGER;
+  switch (sortVal) {
+    case "name-asc":
+      return (a.name || "").localeCompare(b.name || "");
+    case "name-desc":
+      return (b.name || "").localeCompare(a.name || "");
+    case "price-asc":
+      return (Number(a.price) || 0) - (Number(b.price) || 0);
+    case "price-desc":
+      return (Number(b.price) || 0) - (Number(a.price) || 0);
+    case "stock-asc":
+      return stockA - stockB;
+    case "stock-desc":
+      return stockB - stockA;
+    default:
+      return 0;
+  }
+});
+
 
       if (rows.length === 0) {
         productsTable.innerHTML = `<div class="table-empty">No products found.</div>`;
@@ -1293,11 +1370,14 @@
           <tbody>
       `;
       rows.forEach(p => {
-       let stockText = "Unlimited";
-if (p.stockMode === "limited") {
-  const base = getBaseStockForProduct(p);
-  stockText = typeof base === "number" ? base : (p.stockQty ?? 0);
-}
+               const baseStock = getBaseStockForProduct(p);
+        const stockValue = typeof baseStock === "number" ? baseStock : (p.stockQty ?? "");
+        const isLow = typeof stockValue === "number" && stockValue < 8;
+
+        const stockHtml = isLow
+          ? `<span class="low-stock">${stockValue}<span class="low-stock-badge">Low &lt; 8</span></span>`
+          : (stockValue === "" ? "" : stockValue);
+
         const variantsStr = Array.isArray(p.variants)
           ? p.variants.map(v => `${v.label || ""} (${v.stockQty ?? ""})`).join(", ")
           : "";
@@ -1311,7 +1391,7 @@ if (p.stockMode === "limited") {
             <td>${p.code || ""}</td>
             <td>${p.price ?? ""}</td>
             <td>${p.branchName || ""}</td>
-            <td>${stockText}</td>
+            <td>${stockHtml}</td>
             <td>${p.variantGroup || ""}</td>
             <td>${variantsStr}</td>
             <td>${p.isActive === false ? "No" : "Yes"}</td>
@@ -1321,6 +1401,7 @@ if (p.stockMode === "limited") {
       });
       html += `</tbody></table>`;
       productsTable.innerHTML = html;
+      refreshLowStockAlerts();
 
       productsTable.querySelectorAll("button[data-edit-product-id]").forEach(btn => {
         const productId = btn.getAttribute("data-edit-product-id");
@@ -1777,10 +1858,9 @@ if (p.stockMode === "limited") {
 
     /* SAMPLE CSV */
     qs("#btn-download-sample").addEventListener("click", () => {
-      const rows = [
-        ["name","code","price","stockMode","stockQty","variantGroup","variants"],
-        ["Latte","LATT001",70,"unlimited","", "", ""],
-        ["T-Shirt Black","TS-BLK",350,"limited",20,"Size","S|10;M|5;L|5"]
+            const rows = [
+        ["name","code","price","stockQty","variantGroup","variants"],
+        ["T-Shirt Black","TS-BLK",350,20,"Size","S|10;M|5;L|5"]
       ];
       downloadCsv("sample_products.csv", rows);
     });
@@ -1837,11 +1917,7 @@ if (p.stockMode === "limited") {
         const name = (row.name || row.Name || "").toString().trim();
         const sku = (row.code || row.Code || row.sku || row.SKU || "").toString().trim();
         const price = Number(row.price || row.Price || 0);
-        const stockModeRaw = (row.stockMode || row.stock_mode || "").toString().toLowerCase();
-        const stockMode = stockModeRaw === "limited" ? "limited" : "unlimited";
-        const stockQty = stockMode === "limited"
-          ? Number(row.stockQty || row.stock_qty || row.quantity || 0)
-          : null;
+        const stockQty = Number(row.stockQty || row.stock_qty || row.quantity || 0);
         const variantGroup = (row.variantGroup || row.variant_group || "").toString().trim();
         const variantsRaw = row.variants || row.Variants || "";
         const variants = variantsRaw
@@ -1862,7 +1938,6 @@ if (p.stockMode === "limited") {
             name,
             code: sku || null,
             price,
-            stockMode,
             stockQty,
             variantGroup: variantGroup || null,
             variants,
@@ -1913,14 +1988,6 @@ if (p.stockMode === "limited") {
         </div>
 
         <div class="field">
-          <div class="field-label">Stock Mode</div>
-          <select id="p-stock-mode" class="field-select">
-            <option value="unlimited">Unlimited</option>
-            <option value="limited">Limited quantity</option>
-          </select>
-        </div>
-
-        <div class="field">
           <div class="field-label">Stock Qty (for non-variant or total)</div>
           <input id="p-stock-qty" class="field-input" type="number"/>
         </div>
@@ -1963,8 +2030,7 @@ if (p.stockMode === "limited") {
       const sku = qs("#p-sku").value.trim();
       const price = Number(qs("#p-price").value);
       const branchIdForProd = qs("#p-branch").value;
-      const stockMode = qs("#p-stock-mode").value;
-      const stockQty = stockMode === "limited" ? Number(qs("#p-stock-qty").value || 0) : null;
+      const stockQty = Number(qs("#p-stock-qty").value || 0);
       const imageFile = qs("#p-image").files[0];
       const variantGroup = qs("#p-variant-group").value.trim();
       const variants = getVariantsFromModal();
@@ -1993,9 +2059,8 @@ if (p.stockMode === "limited") {
 
       await addDoc(collection(db, "brands", brandId, "products"), {
         name,
-        code: sku || null,
+        code: finalSku || null,
         price,
-        stockMode,
         stockQty,
         imageUrl,
         variantGroup: variantGroup || null,
@@ -2051,14 +2116,6 @@ if (p.stockMode === "limited") {
         </div>
 
         <div class="field">
-          <div class="field-label">Stock Mode</div>
-          <select id="ep-stock-mode" class="field-select">
-            <option value="unlimited" ${p.stockMode === "unlimited" ? "selected" : ""}>Unlimited</option>
-            <option value="limited" ${p.stockMode === "limited" ? "selected" : ""}>Limited</option>
-          </select>
-        </div>
-
-        <div class="field">
           <div class="field-label">Stock Qty</div>
           <input id="ep-stock-qty" class="field-input" type="number" value="${p.stockQty ?? ""}"/>
         </div>
@@ -2103,8 +2160,7 @@ if (p.stockMode === "limited") {
       const sku = qs("#ep-sku").value.trim();
       const price = Number(qs("#ep-price").value);
       const branchIdForProd = qs("#ep-branch").value;
-      const stockMode = qs("#ep-stock-mode").value;
-      const stockQty = stockMode === "limited" ? Number(qs("#ep-stock-qty").value || 0) : null;
+      const stockQty = Number(qs("#ep-stock-qty").value || 0);
       const variantGroup = qs("#ep-variant-group").value.trim();
       const variants = getVariantsFromModal();
       const imageFile = qs("#ep-image").files[0];
@@ -2141,7 +2197,7 @@ if (p.stockMode === "limited") {
 
       await updateDoc(pRef, {
         name,
-        code: sku || null,
+        code: finalSku || null,
         price,
         stockMode,
         stockQty,
@@ -2513,17 +2569,16 @@ if (p.stockMode === "limited") {
 
     /* EXPORT BUTTONS */
     qs("#btn-export-products").addEventListener("click", () => {
-      const rows = [["branch","name","code","price","stockMode","stockQty","variantGroup","variants","imageUrl"]];
+      const rows = [["branch","name","code","price","stockQty","variantGroup","variants","imageUrl"]];
       products.forEach(p => {
         const variantsStr = Array.isArray(p.variants)
           ? p.variants.map(v => `${v.label || ""} (${v.stockQty ?? ""})`).join(";")
           : "";
-        rows.push([
+         rows.push([
           p.branchName || "",
           p.name || "",
           p.code || "",
           p.price ?? "",
-          p.stockMode || "",
           p.stockQty ?? "",
           p.variantGroup || "",
           variantsStr,

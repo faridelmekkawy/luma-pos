@@ -294,7 +294,7 @@
       border-radius:11px;
       border:1px solid #e5e7eb;
       padding:7px 9px;
-      font-size:12px;
+      font-size:13px;
       font-family:inherit;
       background:var(--panel-soft);
       transition:border-color 0.16s,box-shadow 0.16s,background 0.16s,transform 0.1s;
@@ -492,6 +492,14 @@
       100%{opacity:0;transform:translate3d(0,120vh,0) rotateZ(340deg);}
     }
 
+    /* Avoid zoom on mobile for phone/email inputs */
+    @media (max-width:640px){
+      input[type="tel"],
+      input[type="email"]{
+        font-size:16px;
+      }
+    }
+
     @media (max-width:840px){
       .shell{
         grid-template-columns:minmax(0,1fr);
@@ -512,7 +520,7 @@
 </head>
 <body>
 <div class="blob orange"></div>
-div class="blob teal"></div>
+<div class="blob teal"></div>
 <div class="blob red"></div>
 
 <div class="shell">
@@ -522,7 +530,7 @@ div class="blob teal"></div>
       <div class="hero-header">
         <div class="logo-badge"></div>
         <div class="hero-title-block">
-          <div class="hero-kicker">Lokamania bazaar</div>
+          <div class="hero-kicker">Lokamania tombola</div>
           <div class="hero-title">Registration · 5th edition</div>
         </div>
       </div>
@@ -540,9 +548,7 @@ div class="blob teal"></div>
     </div>
 
     <div class="hero-footer-row">
-      <div>
-        <div style="font-size:13px;font-weight:600;">Lokamania 5 — Registration</div>
-      </div>
+      <div style="font-size:13px;font-weight:600;">Lokamania 5 — Registration</div>
       <div class="hero-tag-row">
         <span class="hero-tag">Local brands</span>
         <span class="hero-tag">Streetwear &amp; lifestyle</span>
@@ -569,7 +575,6 @@ div class="blob teal"></div>
     </div>
 
     <form id="registrationForm" novalidate>
-      <!-- Dynamic fields will be injected here -->
       <div id="fieldsContainer"></div>
 
       <div class="button-row">
@@ -620,7 +625,6 @@ div class="blob teal"></div>
     onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  // ---------- CONFIG ----------
   const firebaseConfig = {
     apiKey:"AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
     authDomain:"events-339ce.firebaseapp.com",
@@ -632,7 +636,7 @@ div class="blob teal"></div>
   };
 
   const EVENT_ID = "lokamania5";
-  const WEBHOOK_URL = ""; // <= you will fill this later
+  const WEBHOOK_URL = ""; // you will fill this later
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
@@ -672,10 +676,10 @@ div class="blob teal"></div>
       schoolOrCollege:{ label: "School / College name",                   required: false, enabled: true,  order: 7 },
       favoriteBrand:  { label: "Favorite brand",                          required: false, enabled: true,  order: 8 },
       favoriteItem:   { label: "Favorite clothing item",                  required: false, enabled: true,  order: 9 },
-      brandsNextTime: { label: "Brands you'd love to see next time",     required: false, enabled: true,  order:10 },
-      heardAbout:     { label: "How did you hear about Lokamania?",      required: false, enabled: true,  order:11 },
-      firstTime:      { label: "Is it your first time in Lokamania?",    required: true,  enabled: true,  order:12 },
-      shoppingFocus:  { label: "What are you mainly shopping for today?",required: false, enabled: true,  order:13 }
+      brandsNextTime: { label: "Brands you'd love to see next time",      required: false, enabled: true,  order:10 },
+      heardAbout:     { label: "How did you hear about Lokamania?",       required: false, enabled: true,  order:11 },
+      firstTime:      { label: "Is it your first time in Lokamania?",     required: true,  enabled: true,  order:12 },
+      shoppingFocus:  { label: "What are you mainly shopping for today?", required: false, enabled: true,  order:13 }
     }
   };
 
@@ -701,6 +705,10 @@ div class="blob teal"></div>
       const merged = structuredClone(DEFAULT_SETTINGS);
       Object.assign(merged, existing);
       merged.fields = { ...DEFAULT_SETTINGS.fields, ...(existing.fields || {}) };
+      // Hard-delete old budgetRange field if it exists
+      if(merged.fields && merged.fields.budgetRange){
+        delete merged.fields.budgetRange;
+      }
       await set(settingsRef, merged);
     }
   }
@@ -708,6 +716,10 @@ div class="blob teal"></div>
   async function loadSettingsAndBuildForm(){
     const snap = await get(settingsRef);
     settingsCache = snap.val() || DEFAULT_SETTINGS;
+    // also make sure budget is not built even if somehow present
+    if(settingsCache.fields && settingsCache.fields.budgetRange){
+      delete settingsCache.fields.budgetRange;
+    }
     buildFormFromSettings(settingsCache.fields || DEFAULT_SETTINGS.fields);
     statusBadge.textContent = "Ready";
     statusBadge.classList.add("green");
@@ -793,7 +805,7 @@ div class="blob teal"></div>
       select.name = baseName;
       select.innerHTML = `
         <option value="">Select one</option>
-        <option value="instagram">Instagram</</option>
+        <option value="instagram">Instagram</option>
         <option value="tiktok">TikTok</option>
         <option value="friend">Friend</option>
         <option value="influencer">Influencer</option>
@@ -837,9 +849,11 @@ div class="blob teal"></div>
           <input type="checkbox" value="shoes"> Shoes
         </label>
         <label class="chip-option">
-          <input type="checkbox" value="jewelry"> Jewelry</label>
+          <input type="checkbox" value="jewelry"> Jewelry
+        </label>
         <label class="chip-option">
-          <input type="checkbox" value="beauty"> Beauty</label>
+          <input type="checkbox" value="beauty"> Beauty
+        </label>
       `;
       group.appendChild(row);
       hint = "Pick all that apply.";
@@ -986,7 +1000,7 @@ div class="blob teal"></div>
     return { ok, data };
   }
 
-  // NEW: duplicate check without index (read all once and scan client-side)
+  // Duplicate check without index: read once, scan client-side
   async function checkDuplicate(phone,email){
     const snap = await get(registrationsRef);
     const data = snap.val() || {};
@@ -1076,7 +1090,7 @@ div class="blob teal"></div>
 
       const payload = {
         eventId: EVENT_ID,
-        tambolaNumber,
+        tambolaNumber,          // DB field
         createdAt: now,
         filledBy: "guest",
         name: data.name || "",
@@ -1102,7 +1116,7 @@ div class="blob teal"></div>
         data:payload
       });
 
-      showSuccess(tambolaNumber, payload.name || "");
+      showSuccess(tambolaNumber);
     }catch(err){
       console.error(err);
       showStatus("Something went wrong while saving. Please try again.", "negative");
@@ -1117,8 +1131,9 @@ div class="blob teal"></div>
     submitBtn.textContent = "Get my tombola number";
   });
 
-  function showSuccess(tambolaNumber, name){
-    successTambola.textContent = "#" + tombolaNumber;
+  function showSuccess(tambolaNumber){
+    // FIX: use the correct variable name
+    successTambola.textContent = "#" + tambolaNumber;
     successPanel.classList.add("visible");
     resetBtn.style.display = "inline";
     showStatus("");

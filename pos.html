@@ -1311,58 +1311,79 @@
   }
 
   function computeProductStockLeft(product){
-    if(typeof product.stock !== "number") return null;
-    const baseId = product.id;
-    const usedInCart = cartItems.reduce((sum,item)=>{
-      const pid = item.baseId || item.id;
-      return pid === baseId ? sum + item.qty : sum;
-    },0);
-    const left = product.stock - usedInCart;
-    return left < 0 ? 0 : left;
-  }
+  const baseStock =
+    typeof product.stockQty === "number" ? product.stockQty :
+    (typeof product.stock === "number" ? product.stock :
+    (typeof product.quantity === "number" ? product.quantity :
+    (typeof product.qty === "number" ? product.qty : null)));
 
-  function buildFlatVariantsForProduct(product){
-    const flat = [];
-    const variants = product.variants;
-    if(!Array.isArray(variants)) return flat;
-    variants.forEach((v,vIndex)=>{
-      const groupName = v.name || v.groupName || "";
-      const labelsArr = Array.isArray(v.labels) ? v.labels
-                       : (Array.isArray(v.options) ? v.options : null);
-      if(labelsArr){
-        labelsArr.forEach((lbl,lIndex)=>{
-          const labelName = typeof lbl === "string"
-            ? lbl
-            : (lbl.label || lbl.name || `Option ${lIndex+1}`);
-          const qty = typeof lbl.quantity === "number"
-            ? lbl.quantity
-            : (typeof lbl.qty === "number" ? lbl.qty
-            : (typeof lbl.stock === "number" ? lbl.stock : null));
-          flat.push({
-            groupName,
-            labelName,
-            qty,
-            groupIndex:vIndex,
-            labelIndex:lIndex
-          });
-        });
-      }else{
-        const labelName = v.label || v.name || `Variant ${vIndex+1}`;
-        const qty = typeof v.quantity === "number"
-          ? v.quantity
-          : (typeof v.qty === "number" ? v.qty
-          : (typeof v.stock === "number" ? v.stock : null));
+  if(typeof baseStock !== "number") return null;
+
+  const baseId = product.id;
+  const usedInCart = cartItems.reduce((sum,item)=>{
+    const pid = item.baseId || item.id;
+    return pid === baseId ? sum + item.qty : sum;
+  },0);
+
+  const left = baseStock - usedInCart;
+  return left < 0 ? 0 : left;
+}
+
+
+function buildFlatVariantsForProduct(product){
+  const flat = [];
+  const variants = product.variants;
+  if(!Array.isArray(variants)) return flat;
+
+  variants.forEach((v,vIndex)=>{
+    // Prefer the product-level variantGroup if group name is missing
+    let groupName = v.name || v.groupName || product.variantGroup || "";
+
+    const labelsArr = Array.isArray(v.labels)
+      ? v.labels
+      : (Array.isArray(v.options) ? v.options : null);
+
+    if(labelsArr){
+      labelsArr.forEach((lbl,lIndex)=>{
+        const labelName = typeof lbl === "string"
+          ? lbl
+          : (lbl.label || lbl.name || `Option ${lIndex+1}`);
+
+        const qty =
+          typeof lbl.stockQty === "number" ? lbl.stockQty :
+          (typeof lbl.quantity === "number" ? lbl.quantity :
+          (typeof lbl.qty === "number" ? lbl.qty :
+          (typeof lbl.stock === "number" ? lbl.stock : null)));
+
         flat.push({
           groupName,
           labelName,
           qty,
           groupIndex:vIndex,
-          labelIndex:null
+          labelIndex:lIndex
         });
-      }
-    });
-    return flat;
-  }
+      });
+    }else{
+      const labelName = v.label || v.name || `Variant ${vIndex+1}`;
+      const qty =
+        typeof v.stockQty === "number" ? v.stockQty :
+        (typeof v.quantity === "number" ? v.quantity :
+        (typeof v.qty === "number" ? v.qty :
+        (typeof v.stock === "number" ? v.stock : null)));
+
+      flat.push({
+        groupName,
+        labelName,
+        qty,
+        groupIndex:vIndex,
+        labelIndex:null
+      });
+    }
+  });
+
+  return flat;
+}
+
 
   async function loadBrandAndBranch(){
     const brandRef = doc(db,"brands",brandId);
@@ -1440,10 +1461,12 @@
       const p = d.data() || {};
       if(p.isActive === false) return;
       const rawStock =
-        typeof p.stock === "number" ? p.stock :
-        (typeof p.quantity === "number" ? p.quantity :
-        (typeof p.qty === "number" ? p.qty :
-        (typeof p.currentStock === "number" ? p.currentStock : null)));
+  typeof p.stockQty === "number" ? p.stockQty :
+  (typeof p.stock === "number" ? p.stock :
+  (typeof p.quantity === "number" ? p.quantity :
+  (typeof p.qty === "number" ? p.qty :
+  (typeof p.currentStock === "number" ? p.currentStock : null))));
+
       products.push({
         id:d.id,
         name:p.name || "Item",
@@ -1994,33 +2017,58 @@
     }
 
     productModalVariantsEl.innerHTML = "";
-    if(currentFlatVariants.length){
-      productModalVariantsRowEl.style.display = "flex";
-      const groupDiv = document.createElement("div");
-      groupDiv.className = "field-pos";
-      const labelDiv = document.createElement("div");
-      labelDiv.className = "field-label-pos";
-      labelDiv.textContent = "Variant";
-      const selectEl = document.createElement("select");
-      selectEl.className = "field-select-pos";
-      selectEl.id = "product-variant-select";
+if(currentFlatVariants.length){
+  productModalVariantsRowEl.style.display = "flex";
+  const groupDiv = document.createElement("div");
+  groupDiv.className = "field-pos";
+  const labelDiv = document.createElement("div");
+  labelDiv.className = "field-label-pos";
+  labelDiv.textContent = "Variant";
+  const selectEl = document.createElement("select");
+  selectEl.className = "field-select-pos";
+  selectEl.id = "product-variant-select";
 
-      currentFlatVariants.forEach((fv, idx)=>{
-        const optionEl = document.createElement("option");
-        optionEl.value = String(idx);
-        const baseLabel = fv.groupName ? `${fv.groupName} — ${fv.labelName}` : fv.labelName;
-        const qtySuffix = typeof fv.qty === "number" ? ` (${fv.qty} left)` : "";
-        optionEl.textContent = baseLabel + qtySuffix;
-        selectEl.appendChild(optionEl);
-      });
+  currentFlatVariants.forEach((fv, idx)=>{
+    const optionEl = document.createElement("option");
+    optionEl.value = String(idx);
 
-      groupDiv.appendChild(labelDiv);
-      groupDiv.appendChild(selectEl);
-      productModalVariantsEl.appendChild(groupDiv);
-    }else{
-      productModalVariantsRowEl.style.display = "none";
+    const baseLabel = fv.groupName
+      ? `${fv.groupName} — ${fv.labelName}`
+      : fv.labelName;
+
+    // Compute how many of this variant are left after cart items
+    let rawQty = typeof fv.qty === "number" ? fv.qty : null;
+    let availableQty = rawQty;
+
+    if(rawQty != null){
+      const usedInCartVariant = cartItems.reduce((sum,item)=>{
+        if((item.baseId || item.id) !== product.id) return sum;
+        if(!item.variantChoices || !item.variantChoices.length) return sum;
+
+        const vc = item.variantChoices[0];
+        const sameLabel = vc.choice === fv.labelName;
+        const sameGroup =
+          !fv.groupName || !vc.group
+            ? true
+            : (vc.group === fv.groupName);
+
+        return (sameLabel && sameGroup) ? sum + item.qty : sum;
+      },0);
+
+      availableQty = Math.max(0, rawQty - usedInCartVariant);
     }
 
+    const qtySuffix = availableQty != null ? ` (${availableQty} left)` : "";
+    optionEl.textContent = baseLabel + qtySuffix;
+    selectEl.appendChild(optionEl);
+  });
+
+  groupDiv.appendChild(labelDiv);
+  groupDiv.appendChild(selectEl);
+  productModalVariantsEl.appendChild(groupDiv);
+}else{
+  productModalVariantsRowEl.style.display = "none";
+}
     productModalQtyEl.value = "1";
     productModalEl.style.display = "flex";
     productModalQtyEl.focus();
@@ -2177,129 +2225,123 @@
     return item.variantMeta;
   }
 
-  async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId){
-    const sign = mode==="return" ? 1 : -1; // sale reduces stock, return adds back
+ async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId){
+  const sign = mode === "return" ? 1 : -1; // sale reduces, return adds
 
-    const productDeltas = {};
-    const variantDeltas = {};
+  // Group items by product
+  const byProduct = new Map();
+  cartItemsSource.forEach(item=>{
+    const pid = item.baseId || item.id;
+    if(!pid) return;
+    if(!byProduct.has(pid)) byProduct.set(pid, []);
+    byProduct.get(pid).push(item);
+  });
 
-    cartItemsSource.forEach(i=>{
-      const pid = i.baseId || i.id;
-      if(!pid) return;
+  for(const [pid, items] of byProduct.entries()){
+    const productRef = doc(db,"brands",brandIdParam,"products",pid);
 
-      // resolve variantMeta if missing using variantKey + in-memory products
-      if(!i.variantMeta && i.variantKey){
-        const resolved = resolveVariantMetaFromKey(i, brandIdParam);
-        if(resolved){
-          i.variantMeta = resolved;
-        }
-      }
+    try{
+      await runTransaction(db, async (tx)=>{
+        const snap = await tx.get(productRef);
+        if(!snap.exists()) return;
 
-      const delta = sign * i.qty;
-      productDeltas[pid] = (productDeltas[pid] || 0) + delta;
+        const data = snap.data() || {};
+        let variantsArr = Array.isArray(data.variants) ? [...data.variants] : null;
 
-      if(i.variantMeta && typeof i.variantMeta.groupIndex === "number"){
-        const g = i.variantMeta.groupIndex;
-        const l = (typeof i.variantMeta.labelIndex === "number" ? i.variantMeta.labelIndex : null);
-        if(!variantDeltas[pid]) variantDeltas[pid] = {};
-        if(!variantDeltas[pid][g]) variantDeltas[pid][g] = {};
-        const key = l === null ? "__self__" : String(l);
-        variantDeltas[pid][g][key] = (variantDeltas[pid][g][key] || 0) + delta;
-      }
-    });
-
-    const adjustVariantsStruct = (variants, perGroup) => {
-      if(!Array.isArray(variants) || !perGroup) return variants;
-      const cloned = variants.map(v=>({...v}));
-      Object.entries(perGroup).forEach(([gIndexStr, labelsMap])=>{
-        const gIndex = parseInt(gIndexStr,10);
-        if(Number.isNaN(gIndex)) return;
-        const g = cloned[gIndex];
-        if(!g) return;
-        Object.entries(labelsMap).forEach(([labelKey, delta])=>{
-          if(labelKey === "__self__"){
-            const baseStock =
-              typeof g.stock === "number" ? g.stock :
-              (typeof g.quantity === "number" ? g.quantity :
-              (typeof g.qty === "number" ? g.qty : 0));
-            const newStock = Math.max(0, baseStock + delta);
-            if(typeof g.stock === "number") g.stock = newStock;
-            else if(typeof g.quantity === "number") g.quantity = newStock;
-            else g.quantity = newStock;
-            return;
-          }
-          const lIndex = parseInt(labelKey,10);
-          if(Number.isNaN(lIndex)) return;
-          const labelsArr = Array.isArray(g.labels) ? g.labels :
-                            (Array.isArray(g.options) ? g.options : null);
-          if(!labelsArr || !labelsArr[lIndex]) return;
-          const lbl = {...labelsArr[lIndex]};
-          const baseStock =
-            typeof lbl.stock === "number" ? lbl.stock :
-            (typeof lbl.quantity === "number" ? lbl.quantity :
-            (typeof lbl.qty === "number" ? lbl.qty : 0));
-          const newStock = Math.max(0, baseStock + delta);
-          if(typeof lbl.stock === "number") lbl.stock = newStock;
-          else if(typeof lbl.quantity === "number") lbl.quantity = newStock;
-          else lbl.quantity = newStock;
-          labelsArr[lIndex] = lbl;
-          if(Array.isArray(g.labels)) g.labels = labelsArr;
-          else if(Array.isArray(g.options)) g.options = labelsArr;
-        });
-      });
-      return cloned;
-    };
-
-    for(const [pid,delta] of Object.entries(productDeltas)){
-      const productRef = doc(db,"brands",brandIdParam,"products",pid);
-      try{
-        await runTransaction(db, async (tx)=>{
-          const snap = await tx.get(productRef);
-          if(!snap.exists()) return;
-          const data = snap.data() || {};
-          const baseStock =
-            typeof data.stock === "number" ? data.stock :
+        // Start baseStock from variants sum if we have per-variant stock
+        let baseStock;
+        if(variantsArr){
+          baseStock = variantsArr.reduce((sum,v)=>{
+            const vs =
+              typeof v.stockQty === "number" ? v.stockQty :
+              (typeof v.quantity === "number" ? v.quantity :
+              (typeof v.qty === "number" ? v.qty :
+              (typeof v.stock === "number" ? v.stock : 0)));
+            return sum + vs;
+          },0);
+        }else{
+          baseStock =
+            typeof data.stockQty === "number" ? data.stockQty :
+            (typeof data.stock === "number" ? data.stock :
             (typeof data.quantity === "number" ? data.quantity :
-            (typeof data.qty === "number" ? data.qty : 0));
-          const newStock = Math.max(0, baseStock + delta);
+            (typeof data.qty === "number" ? data.qty : 0)));
+        }
 
-          const updated = {
-            stock:newStock,
-            quantity:newStock
-          };
+        // Apply each cart item
+        items.forEach(item=>{
+          const delta = sign * item.qty;
+          baseStock = Math.max(0, baseStock + delta);
 
-          if(variantDeltas[pid]){
-            const newVariants = adjustVariantsStruct(data.variants || [], variantDeltas[pid]);
-            updated.variants = newVariants;
+          if(variantsArr && item.variantChoices && item.variantChoices.length){
+            const choice = item.variantChoices[0].choice;
+            const group = item.variantChoices[0].group || null;
+
+            variantsArr = variantsArr.map(v=>{
+              if(!v) return v;
+
+              const sameLabel = v.label === choice;
+              const sameGroup = !group || !data.variantGroup
+                ? true
+                : (data.variantGroup === group);
+
+              if(!sameLabel || !sameGroup) return v;
+
+              const currentVarStock =
+                typeof v.stockQty === "number" ? v.stockQty :
+                (typeof v.quantity === "number" ? v.quantity :
+                (typeof v.qty === "number" ? v.qty :
+                (typeof v.stock === "number" ? v.stock : 0)));
+
+              const newVarStock = Math.max(0, currentVarStock + delta);
+
+              return {
+                ...v,
+                stockQty: newVarStock,
+                quantity: newVarStock,
+                qty: newVarStock,
+                stock: newVarStock
+              };
+            });
           }
-
-          tx.set(productRef, updated, { merge:true });
         });
 
-        // update local cache for current brand
-        if(brandIdParam === brandId){
-          const idx = products.findIndex(p=>p.id===pid);
-          if(idx>=0){
-            const prod = products[idx];
-            const currentLocal =
-              typeof prod.stock === "number" ? prod.stock :
-              (typeof prod.quantity === "number" ? prod.quantity :
-              (typeof prod.qty === "number" ? prod.qty : 0));
-            const newLocal = Math.max(0, currentLocal + delta);
-            prod.stock = newLocal;
-            prod.quantity = newLocal;
-            if(variantDeltas[pid] && Array.isArray(prod.variants)){
-              prod.variants = adjustVariantsStruct(prod.variants, variantDeltas[pid]);
-            }
-            products[idx] = prod;
-          }
+        const updateData = {
+          stockQty: baseStock,
+          stock: baseStock,
+          quantity: baseStock,
+          qty: baseStock
+        };
+        if(variantsArr) updateData.variants = variantsArr;
+
+        tx.set(productRef, updateData, { merge:true });
+      });
+
+      // Update local cache for this product (top-level stock only)
+      if(brandIdParam === brandId){
+        const idx = products.findIndex(p=>p.id === pid);
+        if(idx >= 0){
+          const p = products[idx];
+          const currentTop =
+            typeof p.stockQty === "number" ? p.stockQty :
+            (typeof p.stock === "number" ? p.stock :
+            (typeof p.quantity === "number" ? p.quantity :
+            (typeof p.qty === "number" ? p.qty : 0)));
+
+          // We could recompute from Firestore but for UI it's enough to
+          // apply the same total delta we used above:
+          const totalDelta = items.reduce((sum,i)=> sum + sign * i.qty, 0);
+          const newTop = Math.max(0, currentTop + totalDelta);
+          products[idx] = { ...p, stockQty:newTop, stock:newTop, quantity:newTop, qty:newTop };
         }
-      }catch(e){
-        console.warn("Failed to adjust stock for product",pid,e);
       }
+    }catch(e){
+      console.warn("Failed to adjust stock for product", pid, e);
     }
-    renderProductsList(topSearchEl.value);
   }
+
+  // Re-render list with updated product stock
+  renderProductsList(topSearchEl.value);
+}
 
   async function syncQueuedOrders(){
     if(!offlineOrders.length){

@@ -850,11 +850,11 @@
             <span id="summary-subtotal">0.00</span>
           </div>
           <div class="summary-row">
-            <span class="summary-label" id="summary-tax-label">Tax</span>
+            <span class="summary-label" id="summary-tax-label">VAT (0%)</span>
             <span id="summary-tax">0.00</span>
           </div>
           <div class="summary-row">
-            <span class="summary-label" id="summary-service-label">Service</span>
+            <span class="summary-label" id="summary-service-label">Service Fee (0%)</span>
             <span id="summary-service">0.00</span>
           </div>
           <div class="summary-row">
@@ -1388,6 +1388,10 @@
     branchData = branchSnap.data();
     branchBadgeEl.textContent = `Branch: ${branchData.name || "Branch"}`;
 
+    // VAT / Tax
+    const branchVat = typeof branchData.vat === "number" ? branchData.vat : null;
+    const brandVat = typeof brandData.vat === "number" ? brandData.vat : null;
+
     const branchTax = typeof branchData.taxPercent === "number"
       ? branchData.taxPercent
       : (typeof branchData.tax === "number" ? branchData.tax
@@ -1397,7 +1401,15 @@
       : (typeof brandData.tax === "number" ? brandData.tax
       : (typeof brandData.vatPercent === "number" ? brandData.vatPercent : null));
 
-    taxPercent = branchTax != null ? branchTax : (brandTax != null ? brandTax : 0);
+    taxPercent =
+      branchVat != null ? branchVat :
+      brandVat != null ? brandVat :
+      branchTax != null ? branchTax :
+      brandTax != null ? brandTax : 0;
+
+    // Service Fee
+    const branchServiceFee = typeof branchData.serviceFee === "number" ? branchData.serviceFee : null;
+    const brandServiceFee = typeof brandData.serviceFee === "number" ? brandData.serviceFee : null;
 
     const branchService = typeof branchData.servicePercent === "number"
       ? branchData.servicePercent
@@ -1408,16 +1420,19 @@
       : (typeof brandData.service === "number" ? brandData.service
       : (typeof brandData.serviceFeePercent === "number" ? brandData.serviceFeePercent : null));
 
-    servicePercent = branchService != null ? branchService : (brandService != null ? brandService : 0);
+    servicePercent =
+      branchServiceFee != null ? branchServiceFee :
+      brandServiceFee != null ? brandServiceFee :
+      branchService != null ? branchService :
+      brandService != null ? brandService : 0;
 
-    summaryTaxLabelEl.textContent = `Tax (${taxPercent || 0}%)`;
-    summaryServiceLabelEl.textContent = `Service (${servicePercent || 0}%)`;
+    summaryTaxLabelEl.textContent = `VAT (${taxPercent || 0}%)`;
+    summaryServiceLabelEl.textContent = `Service Fee (${servicePercent || 0}%)`;
   }
 
   async function loadProducts(){
     productsListEl.innerHTML = `<div class="empty">Loading products…</div>`;
-    // PRODUCTS IN A FIXED PLACE SHARED WITH DASHBOARD:
-    // brands/{brandId}/products
+    // products in brands/{brandId}/products (shared with dashboard)
     const productsCol = collection(db,"brands",brandId,"products");
     const snap = await getDocs(productsCol);
     products = [];
@@ -1663,7 +1678,8 @@
         variantKey: it.variantKey || null,
         variantChoices: Array.isArray(it.variantChoices) ? it.variantChoices : null,
         imageUrl: it.productImageUrl || it.imageUrl || null,
-        productUrl: it.productUrl || it.url || null
+        productUrl: it.productUrl || it.url || null,
+        variantMeta: null // will be reconstructed when adjusting stock using variantKey
       });
     });
 
@@ -2120,19 +2136,121 @@
     codeInputEl.focus();
   }
 
+  function resolveVariantMetaFromKey(item, brandIdParam){
+    if(!item.variantKey || item.variantMeta || !item.baseId) return item.variantMeta;
+    if(brandIdParam !== brandId) return item.variantMeta; // only resolve for current in-memory brand
+
+    const pid = item.baseId;
+    const prod = products.find(p=>p.id === pid);
+    if(!prod || !Array.isArray(prod.variants)) return item.variantMeta;
+
+    const [groupNameKey, choiceNameKey] = item.variantKey.split(":");
+    if(!groupNameKey || !choiceNameKey) return item.variantMeta;
+
+    const gNameTarget = groupNameKey.trim().toLowerCase();
+    const cNameTarget = choiceNameKey.trim().toLowerCase();
+
+    for(let gi=0; gi<prod.variants.length; gi++){
+      const vg = prod.variants[gi] || {};
+      const vgName = (vg.name || vg.groupName || "").toString().trim().toLowerCase();
+      if(vgName !== gNameTarget) continue;
+
+      const labelsArr = Array.isArray(vg.labels) ? vg.labels
+                        : (Array.isArray(vg.options) ? vg.options : null);
+      if(labelsArr){
+        for(let li=0; li<labelsArr.length; li++){
+          const lbl = labelsArr[li];
+          const lblName = (typeof lbl === "string"
+            ? lbl
+            : (lbl.label || lbl.name || "")).toString().trim().toLowerCase();
+          if(lblName === cNameTarget){
+            return { groupIndex: gi, labelIndex: li };
+          }
+        }
+      }else{
+        const lblName = (vg.label || vg.name || "").toString().trim().toLowerCase();
+        if(lblName === cNameTarget){
+          return { groupIndex: gi, labelIndex: null };
+        }
+      }
+    }
+    return item.variantMeta;
+  }
+
   async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId){
     const sign = mode==="return" ? 1 : -1; // sale reduces stock, return adds back
-    const deltas = {};
+
+    const productDeltas = {};
+    const variantDeltas = {};
+
     cartItemsSource.forEach(i=>{
       const pid = i.baseId || i.id;
       if(!pid) return;
+
+      // resolve variantMeta if missing using variantKey + in-memory products
+      if(!i.variantMeta && i.variantKey){
+        const resolved = resolveVariantMetaFromKey(i, brandIdParam);
+        if(resolved){
+          i.variantMeta = resolved;
+        }
+      }
+
       const delta = sign * i.qty;
-      deltas[pid] = (deltas[pid] || 0) + delta;
+      productDeltas[pid] = (productDeltas[pid] || 0) + delta;
+
+      if(i.variantMeta && typeof i.variantMeta.groupIndex === "number"){
+        const g = i.variantMeta.groupIndex;
+        const l = (typeof i.variantMeta.labelIndex === "number" ? i.variantMeta.labelIndex : null);
+        if(!variantDeltas[pid]) variantDeltas[pid] = {};
+        if(!variantDeltas[pid][g]) variantDeltas[pid][g] = {};
+        const key = l === null ? "__self__" : String(l);
+        variantDeltas[pid][g][key] = (variantDeltas[pid][g][key] || 0) + delta;
+      }
     });
 
-    for(const [pid,delta] of Object.entries(deltas)){
-      // STOCK IS UPDATED IN THE SAME GLOBAL PRODUCTS COLLECTION:
-      // brands/{brandId}/products/{productId}
+    const adjustVariantsStruct = (variants, perGroup) => {
+      if(!Array.isArray(variants) || !perGroup) return variants;
+      const cloned = variants.map(v=>({...v}));
+      Object.entries(perGroup).forEach(([gIndexStr, labelsMap])=>{
+        const gIndex = parseInt(gIndexStr,10);
+        if(Number.isNaN(gIndex)) return;
+        const g = cloned[gIndex];
+        if(!g) return;
+        Object.entries(labelsMap).forEach(([labelKey, delta])=>{
+          if(labelKey === "__self__"){
+            const baseStock =
+              typeof g.stock === "number" ? g.stock :
+              (typeof g.quantity === "number" ? g.quantity :
+              (typeof g.qty === "number" ? g.qty : 0));
+            const newStock = Math.max(0, baseStock + delta);
+            if(typeof g.stock === "number") g.stock = newStock;
+            else if(typeof g.quantity === "number") g.quantity = newStock;
+            else g.quantity = newStock;
+            return;
+          }
+          const lIndex = parseInt(labelKey,10);
+          if(Number.isNaN(lIndex)) return;
+          const labelsArr = Array.isArray(g.labels) ? g.labels :
+                            (Array.isArray(g.options) ? g.options : null);
+          if(!labelsArr || !labelsArr[lIndex]) return;
+          const lbl = {...labelsArr[lIndex]};
+          const baseStock =
+            typeof lbl.stock === "number" ? lbl.stock :
+            (typeof lbl.quantity === "number" ? lbl.quantity :
+            (typeof lbl.qty === "number" ? lbl.qty : 0));
+          const newStock = Math.max(0, baseStock + delta);
+          if(typeof lbl.stock === "number") lbl.stock = newStock;
+          else if(typeof lbl.quantity === "number") lbl.quantity = newStock;
+          else lbl.quantity = newStock;
+          labelsArr[lIndex] = lbl;
+          if(Array.isArray(g.labels)) g.labels = labelsArr;
+          else if(Array.isArray(g.options)) g.options = labelsArr;
+        });
+      });
+      return cloned;
+    };
+
+    for(const [pid,delta] of Object.entries(productDeltas)){
       const productRef = doc(db,"brands",brandIdParam,"products",pid);
       try{
         await runTransaction(db, async (tx)=>{
@@ -2144,17 +2262,36 @@
             (typeof data.quantity === "number" ? data.quantity :
             (typeof data.qty === "number" ? data.qty : 0));
           const newStock = Math.max(0, baseStock + delta);
-          tx.set(productRef,{
+
+          const updated = {
             stock:newStock,
             quantity:newStock
-          },{ merge:true });
+          };
+
+          if(variantDeltas[pid]){
+            const newVariants = adjustVariantsStruct(data.variants || [], variantDeltas[pid]);
+            updated.variants = newVariants;
+          }
+
+          tx.set(productRef, updated, { merge:true });
         });
+
+        // update local cache for current brand
         if(brandIdParam === brandId){
           const idx = products.findIndex(p=>p.id===pid);
           if(idx>=0){
-            const currentLocal = typeof products[idx].stock === "number" ? products[idx].stock : 0;
+            const prod = products[idx];
+            const currentLocal =
+              typeof prod.stock === "number" ? prod.stock :
+              (typeof prod.quantity === "number" ? prod.quantity :
+              (typeof prod.qty === "number" ? prod.qty : 0));
             const newLocal = Math.max(0, currentLocal + delta);
-            products[idx].stock = newLocal;
+            prod.stock = newLocal;
+            prod.quantity = newLocal;
+            if(variantDeltas[pid] && Array.isArray(prod.variants)){
+              prod.variants = adjustVariantsStruct(prod.variants, variantDeltas[pid]);
+            }
+            products[idx] = prod;
           }
         }
       }catch(e){
@@ -2419,7 +2556,7 @@
 
       await setDoc(orderRef,orderData);
 
-      // Update stock (online) in global products collection
+      // Update stock (online) in global products collection (and variant labels)
       try{
         await adjustStockForOrder(cartItems, currentMode, brandId);
       }catch(e){
@@ -2786,7 +2923,7 @@
             if((i.baseId || i.id) === product.id && i.variantKey === variantKey){
               return sum + i.qty;
             }
-            return 0;
+            return sum;
           },0);
           availableQtyForVariant = selectedVariant.qty - usedInCartVariant;
         }

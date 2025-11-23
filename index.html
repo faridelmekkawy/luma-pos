@@ -1,4 +1,4 @@
-f<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -712,6 +712,7 @@ f<!doctype html>
     let currentUser = null;
     let brandId = null;
     let brandData = {};
+    let isBrandCreationInProgress = false;
     let branches = [];
     let products = [];
     let staffUsers = [];
@@ -866,6 +867,8 @@ f<!doctype html>
 
       try {
         // 1) create auth user (this logs them in)
+             isBrandCreationInProgress = true;
+
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         const user = cred.user;
         await updateProfile(user, { displayName: ownerName });
@@ -919,18 +922,46 @@ f<!doctype html>
         });
 
         // onAuthStateChanged will now load this brand and show dashboard
-        showAuthAlert("Brand created successfully. Redirecting to dashboard…", "info");
+                brandId = brandRef.id;
+
+        // Load data for the new brand and show dashboard
+        await loadBrand();
+        await loadBranches();
+        await loadProducts();
+        listenToProductsRealtime();
+        await loadStaff();
+        await loadCustomers();
+        await loadOrders();
+        listenToOrdersRealtime();
+
+        updateDashboardUI();
+        renderProductsTable();
+        renderBranchesTable();
+        renderStaffTable();
+        renderCustomersTable();
+        renderOrdersTable();
+        renderRecentOrdersTable();
+
+        isBrandCreationInProgress = false;
+        showApp();
+
       } catch (err) {
         console.error(err);
         let msg = "Failed to create brand.";
         if (err.code === "auth/email-already-in-use") msg = "Email already in use.";
         showAuthAlert(msg);
+        isBrandCreationInProgress = false;
       }
     });
 
     /* AUTH STATE */
     onAuthStateChanged(auth, async user => {
       try {
+                if (isBrandCreationInProgress) {
+          // Wait until brand creation flow finishes
+          return;
+        }
+
         clearAuthAlert();
         if (!user) {
           currentUser = null;
@@ -1916,6 +1947,13 @@ f<!doctype html>
       for (const row of rows) {
         const name = (row.name || row.Name || "").toString().trim();
         const sku = (row.code || row.Code || row.sku || row.SKU || "").toString().trim();
+                let finalSku = sku;
+        if (!finalSku && name) {
+          const base = name.toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 4) || "SKU";
+          const ts = Date.now().toString(36).toUpperCase().slice(-4);
+          finalSku = `${base}-${ts}`;
+        }
+
         const price = Number(row.price || row.Price || 0);
         const stockQty = Number(row.stockQty || row.stock_qty || row.quantity || 0);
         const variantGroup = (row.variantGroup || row.variant_group || "").toString().trim();
@@ -1936,7 +1974,7 @@ f<!doctype html>
         for (const b of branches) {
           await addDoc(collection(db, "brands", brandId, "products"), {
             name,
-            code: sku || null,
+            code: finalSku || null,
             price,
             stockQty,
             variantGroup: variantGroup || null,
@@ -2028,6 +2066,13 @@ f<!doctype html>
     async function saveProduct() {
       const name = qs("#p-name").value.trim();
       const sku = qs("#p-sku").value.trim();
+            let finalSku = sku;
+      if (!finalSku) {
+        const base = name.toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 4) || "SKU";
+        const ts = Date.now().toString(36).toUpperCase().slice(-4);
+        finalSku = `${base}-${ts}`;
+      }
+
       const price = Number(qs("#p-price").value);
       const branchIdForProd = qs("#p-branch").value;
       const stockQty = Number(qs("#p-stock-qty").value || 0);
@@ -2045,12 +2090,13 @@ f<!doctype html>
         return;
       }
 
-      if (sku && products.some(p => p.code === sku && p.branchId === branchIdForProd)) {
+      if (products.some(p => p.code === finalSku && p.branchId === branchIdForProd)) {
         alert("A product with this SKU already exists for this branch.");
         return;
       }
 
-      const uidKey = sku || `prod-${Date.now()}`;
+      const uidKey = finalSku || `prod-${Date.now()}`;
+
       const imageUrl = imageFile
         ? await uploadImageToStorage(imageFile, `brands/${brandId}/products/${uidKey}`)
         : null;
@@ -2187,9 +2233,15 @@ f<!doctype html>
       const snap = await getDoc(pRef);
       const old = snap.exists() ? snap.data() : {};
       let imageUrl = old.imageUrl || null;
+            let finalSku = sku || old.code || null;
+      if (!finalSku && name) {
+        const base = name.toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 4) || "SKU";
+        const ts = Date.now().toString(36).toUpperCase().slice(-4);
+        finalSku = `${base}-${ts}`;
+      }
 
       if (imageFile) {
-        const key = sku || old.code || productId;
+        const key = finalSku || productId;
         imageUrl = await uploadImageToStorage(imageFile, `brands/${brandId}/products/${key}`);
       }
 
@@ -2199,7 +2251,6 @@ f<!doctype html>
         name,
         code: finalSku || null,
         price,
-        stockMode,
         stockQty,
         variants,
         variantGroup: variantGroup || null,

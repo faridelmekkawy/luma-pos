@@ -627,6 +627,34 @@
               <div class="field">
                 <label><input type="checkbox" id="set-send-email"/> Always send email receipts</label>
               </div>
+
+                          <div class="settings-card">
+              <div class="settings-title">Discount Codes</div>
+
+              <div class="field">
+                <div class="field-label">New Code</div>
+                <input id="disc-code" class="field-input" placeholder="e.g. WINTER25"/>
+              </div>
+
+              <div class="field">
+                <div class="field-label">Percentage %</div>
+                <input id="disc-percent" class="field-input" type="number" placeholder="e.g. 10"/>
+              </div>
+
+              <div class="field">
+                <div class="field-label">Description (optional)</div>
+                <input id="disc-desc" class="field-input" placeholder="Short note (e.g. Winter sale)"/>
+              </div>
+
+              <button id="btn-add-discount" class="btn btn-primary" style="margin-top:6px;">
+                Add / Update Code
+              </button>
+
+              <div id="discounts-list" style="margin-top:12px;font-size:12px;">
+                <!-- Filled by JS -->
+              </div>
+            </div>
+
               <!-- WhatsApp option removed as requested -->
               <button id="btn-save-receipt-settings" class="btn btn-primary">Save</button>
             </div>
@@ -720,6 +748,8 @@
     let ordersList = [];
     let ordersUnsub = null;
     let productsUnsub = null;
+    let discounts = [];
+
     /* ALERTS + MODALS */
     function showAuthAlert(msg, type = "error") {
       const cls = type === "error" ? "auth-alert-error" : "auth-alert-info";
@@ -866,7 +896,23 @@
       }
 
       try {
-        // 1) create auth user (this logs them in)
+               await loadBrand();
+        await loadBranches();
+        await loadProducts();
+        listenToProductsRealtime();
+        await loadStaff();
+        await loadCustomers();
+        await loadOrders();
+        listenToOrdersRealtime();
+
+        updateDashboardUI();
+        renderProductsTable();
+        renderBranchesTable();
+        renderStaffTable();
+        renderCustomersTable();
+        renderOrdersTable();
+        renderRecentOrdersTable();
+ // 1) create auth user (this logs them in)
              isBrandCreationInProgress = true;
 
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
@@ -932,6 +978,8 @@
         await loadStaff();
         await loadCustomers();
         await loadOrders();
+        await loadDiscounts();
+
         listenToOrdersRealtime();
 
         updateDashboardUI();
@@ -941,6 +989,8 @@
         renderCustomersTable();
         renderOrdersTable();
         renderRecentOrdersTable();
+        renderDiscounts();
+
 
         isBrandCreationInProgress = false;
         showApp();
@@ -1000,7 +1050,7 @@
           return;
         }
 
-        await loadBrand();
+               await loadBrand();
         await loadBranches();
         await loadProducts();
         listenToProductsRealtime();  
@@ -1008,6 +1058,7 @@
         await loadCustomers();
         await loadOrders();
         listenToOrdersRealtime();
+        await loadDiscounts();
 
         updateDashboardUI();
         renderProductsTable();
@@ -1016,8 +1067,10 @@
         renderCustomersTable();
         renderOrdersTable();
         renderRecentOrdersTable();
+        renderDiscounts();
 
         showApp();
+        
       } catch (err) {
         console.error("Error during auth/brand loading:", err);
         showAuth();
@@ -1129,6 +1182,69 @@
       customersList = [];
       const snap = await getDocs(collection(db, "brands", brandId, "customers"));
       snap.forEach(d => customersList.push({ id: d.id, ...d.data() }));
+    }
+    /* LOAD DISCOUNTS */
+    async function loadDiscounts() {
+      discounts = [];
+      const snap = await getDocs(collection(db, "brands", brandId, "discounts"));
+      snap.forEach(d => discounts.push({ id: d.id, ...d.data() }));
+    }
+    function renderDiscounts() {
+      const listEl = qs("#discounts-list");
+      if (!listEl) return;
+
+      if (!discounts.length) {
+        listEl.innerHTML = `
+          <div class="table-empty" style="border:none;padding:0;">
+            No discount codes yet.
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>%</th>
+              <th>Active</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      discounts.forEach(d => {
+        html += `
+          <tr>
+            <td>${d.code || ""}</td>
+            <td>${d.percent ?? ""}</td>
+            <td>${d.isActive ? "Yes" : "No"}</td>
+            <td>
+              <button class="btn btn-ghost" data-toggle-disc="${d.id}">
+                ${d.isActive ? "Disable" : "Enable"}
+              </button>
+              <button class="btn btn-ghost" data-delete-disc="${d.id}">
+                Delete
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      listEl.innerHTML = html;
+
+      listEl.querySelectorAll("[data-toggle-disc]").forEach(btn => {
+        const id = btn.getAttribute("data-toggle-disc");
+        btn.addEventListener("click", () => toggleDiscountActive(id));
+      });
+
+      listEl.querySelectorAll("[data-delete-disc]").forEach(btn => {
+        const id = btn.getAttribute("data-delete-disc");
+        btn.addEventListener("click", () => deleteDiscount(id));
+      });
     }
 
     /* LOAD ORDERS */
@@ -1861,6 +1977,79 @@
 
     qs("#search-orders").addEventListener("input", renderOrdersTable);
     qs("#sort-orders").addEventListener("change", renderOrdersTable);
+    qs("#btn-add-discount")?.addEventListener("click", saveDiscountCode);
+    async function saveDiscountCode() {
+      const codeInput = qs("#disc-code");
+      const pctInput = qs("#disc-percent");
+      const descInput = qs("#disc-desc");
+
+      let code = codeInput.value.trim().toUpperCase();
+      const percent = Number(pctInput.value || 0);
+      const description = descInput.value.trim();
+
+      if (!code) {
+        alert("Enter a discount code.");
+        return;
+      }
+      if (!percent || percent <= 0) {
+        alert("Enter a positive percentage.");
+        return;
+      }
+
+      // Check if this code already exists
+      const existing = discounts.find(
+        d => (d.code || "").toUpperCase() === code
+      );
+
+      if (existing) {
+        // Update same doc
+        await updateDoc(
+          doc(db, "brands", brandId, "discounts", existing.id),
+          {
+            code,
+            percent,
+            description,
+            isActive: existing.isActive !== undefined ? existing.isActive : true
+          }
+        );
+      } else {
+        // Create new
+        await addDoc(collection(db, "brands", brandId, "discounts"), {
+          code,
+          percent,
+          description,
+          isActive: true,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      // Clear inputs
+      codeInput.value = "";
+      pctInput.value = "";
+      descInput.value = "";
+
+      await loadDiscounts();
+      renderDiscounts();
+    }
+    async function toggleDiscountActive(id) {
+      const disc = discounts.find(d => d.id === id);
+      if (!disc) return;
+
+      await updateDoc(
+        doc(db, "brands", brandId, "discounts", id),
+        { isActive: !disc.isActive }
+      );
+
+      await loadDiscounts();
+      renderDiscounts();
+    }
+
+    async function deleteDiscount(id) {
+      if (!confirm("Delete this discount code?")) return;
+      await deleteDoc(doc(db, "brands", brandId, "discounts", id));
+      await loadDiscounts();
+      renderDiscounts();
+    }
 
     /* RECENT ORDERS */
     function renderRecentOrdersTable() {

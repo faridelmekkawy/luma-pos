@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Lokamania 5 — Registration Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg:#f3f4f6;
+      --panel:#ffffff;
+      --panel-soft:#f9fafb;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --accent:#f97316;      /* orange */
+      --accent-alt:#0f766e;  /* teal */
+      --accent-soft:#ffedd5;
+      --radius-lg:18px;
+      --radius-md:12px;
+      --shadow-lg:0 18px 40px rgba(15,23,42,0.16);
+      --shadow-md:0 10px 25px rgba(15,23,42,0.10);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+      min-height:100vh;
+      background:radial-gradient(circle at top left,#fef3c7,#f3f4f6 45%,#e0f2fe);
+      color:var(--ink);
+    }
+    .shell{
+      display:flex;
+      min-height:100vh;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      width:260px;
+      padding:20px 18px;
+      background:rgba(255,255,255,0.92);
+      backdrop-filter:blur(18px);
+      border-right:1px solid rgba(148,163,184,0.3);
+      display:flex;
+      flex-direction:column;
+      gap:24px;
+    }
+    .brand-block{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .brand-logo{
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      background:conic-gradient(from 220deg,#f97316,#0f766e,#ef4444,#f97316);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:800;
+      font-size:18px;
+    }
+    .brand-main{
+      font-size:13px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+    }
+    .brand-sub{
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:0.14em;
+    }
+    .nav-section-title{
+      font-size:11px;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:0.16em;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .nav-list{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .nav-item{
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      cursor:pointer;
+      color:var(--muted);
+      transition:background 0.16s ease,transform 0.12s ease,color 0.16s;
+    }
+    .nav-item span{display:flex;align-items:center;gap:8px;}
+    .nav-item.active{
+      background:var(--accent-soft);
+      color:var(--accent-alt);
+      font-weight:600;
+    }
+    .nav-item:hover{
+      background:rgba(15,23,42,0.04);
+      transform:translateY(-1px);
+    }
+    .nav-pill{
+      font-size:10px;
+      padding:2px 6px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.06);
+    }
+    .sidebar-footer{
+      margin-top:auto;
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    /* Main */
+    .main{
+      flex:1;
+      padding:22px 26px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .topbar-title{
+      font-size:19px;
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .topbar-chip{
+      font-size:11px;
+      padding:4px 9px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.06);
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+    }
+    .topbar-right{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .topbar-badge{
+      font-size:11px;
+      padding:5px 9px;
+      border-radius:999px;
+      background:rgba(56,189,248,0.18);
+      color:#0369a1;
+    }
+    .topbar-user{
+      font-size:12px;
+      padding:5px 9px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.06);
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:16px;
+      margin-top:12px;
+    }
+    .card{
+      background:rgba(255,255,255,0.96);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-md);
+      padding:16px 18px;
+      position:relative;
+      overflow:hidden;
+    }
+    .card-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:8px;
+    }
+    .card-title{
+      font-size:12px;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:0.18em;
+      color:var(--muted);
+    }
+    .card-sub{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .kpi-value{
+      font-size:26px;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+    .kpi-label{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .badge-soft{
+      font-size:11px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.04);
+      color:var(--muted);
+    }
+    .badge-soft.green{
+      background:rgba(22,163,74,0.08);
+      color:#15803d;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid transparent;
+      font-size:12px;
+      font-weight:500;
+      cursor:pointer;
+      background:var(--accent-alt);
+      color:#fff;
+      transition:background 0.16s,transform 0.12s,box-shadow 0.16s;
+      box-shadow:0 8px 18px rgba(15,118,110,0.25);
+    }
+    .btn:hover{
+      background:#115e59;
+      transform:translateY(-1px);
+    }
+    .btn.outline{
+      background:transparent;
+      color:var(--accent-alt);
+      border-color:rgba(15,118,110,0.4);
+      box-shadow:none;
+    }
+    .btn.outline:hover{
+      background:rgba(15,118,110,0.05);
+    }
+
+    .table-wrapper{
+      border-radius:var(--radius-md);
+      border:1px solid var(--border);
+      overflow:auto;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+      min-width:720px;
+    }
+    th,td{
+      padding:8px 10px;
+      border-bottom:1px solid #e5e7eb;
+      text-align:left;
+      white-space:nowrap;
+    }
+    th{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      color:var(--muted);
+      background:var(--panel-soft);
+    }
+    tr:nth-child(even) td{
+      background:#f9fafb;
+    }
+
+    .tabs{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-top:8px;
+      border-bottom:1px solid rgba(148,163,184,0.4);
+    }
+    .tab-btn{
+      padding:7px 10px;
+      font-size:12px;
+      border-radius:999px;
+      cursor:pointer;
+      border:none;
+      background:transparent;
+      color:var(--muted);
+      font-weight:500;
+      margin-bottom:6px;
+    }
+    .tab-btn.active{
+      background:var(--accent-soft);
+      color:var(--accent-alt);
+    }
+    .tab-pane{display:none;}
+    .tab-pane.active{display:block;}
+
+    .field-grid{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      font-size:12px;
+    }
+    .field label{
+      font-size:11px;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      color:var(--muted);
+    }
+    .input, textarea{
+      border-radius:10px;
+      border:1px solid var(--border);
+      padding:7px 9px;
+      font-size:12px;
+      font-family:inherit;
+      background:var(--panel-soft);
+      transition:border-color 0.16s,box-shadow 0.16s,background 0.16s;
+    }
+    textarea{min-height:80px;resize:vertical;}
+    .input:focus, textarea:focus{
+      outline:none;
+      border-color:var(--accent-alt);
+      box-shadow:0 0 0 1px rgba(15,118,110,0.3);
+      background:#fff;
+    }
+    .small-note{
+      font-size:11px;
+      color:var(--muted);
+    }
+    .field-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      padding:6px 0;
+      border-bottom:1px dashed #e5e7eb;
+    }
+    .field-row:last-child{border-bottom:none;}
+    .toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      font-size:11px;
+      cursor:pointer;
+      color:var(--muted);
+    }
+    .toggle input{accent-color:var(--accent-alt);}
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:3px 7px;
+      font-size:11px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.06);
+      color:var(--muted);
+    }
+
+    .status-bar{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:6px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .status-bar span.strong{color:#16a34a;font-weight:500;}
+    .empty-state{
+      font-size:12px;
+      color:var(--muted);
+      padding:16px 0;
+    }
+
+    @media (max-width:960px){
+      .shell{flex-direction:column;}
+      .sidebar{
+        width:100%;
+        flex-direction:row;
+        align-items:center;
+        justify-content:space-between;
+        border-right:none;
+        border-bottom:1px solid rgba(148,163,184,0.3);
+      }
+      .sidebar-footer{display:none;}
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div>
+      <div class="brand-block">
+        <div class="brand-logo">L</div>
+        <div>
+          <div class="brand-main">Lokamania 5</div>
+          <div class="brand-sub">Guest insights · Tambola</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="nav-section-title">Views</div>
+      <div class="nav-list">
+        <div class="nav-item active" data-section="dashboard">
+          <span>Dashboard</span>
+          <span class="nav-pill">Live</span>
+        </div>
+        <div class="nav-item" data-section="settings">
+          <span>Settings</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="nav-section-title">Winner</div>
+      <div class="nav-list">
+        <!-- CHANGE this link later to your real winner page URL -->
+        <a id="winnerLink" href="#" class="nav-item" style="text-decoration:none;">
+          <span>Open winner screen</span>
+          <span class="nav-pill">Link spot</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      Powered by Luma · RTDB<br/>
+      Event key: <strong>lokamania5</strong>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        Lokamania 5 Registrations
+        <span class="topbar-chip">Client dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-badge" id="connectionStatus">Connecting to Firebase…</div>
+        <div class="topbar-user">
+          <span style="width:18px;height:18px;border-radius:999px;background:rgba(15,23,42,0.16);display:inline-block;"></span>
+          <span>Admin view</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- DASHBOARD VIEW -->
+    <section id="dashboardSection">
+      <div class="grid">
+        <!-- KPIs -->
+        <div class="card" style="grid-column:span 4;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Total registrations</div>
+              <div class="card-sub">All unique tambola entries for Lokamania 5</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiTotal">–</div>
+          <div class="kpi-label">Including guests + usher-filled</div>
+        </div>
+
+        <div class="card" style="grid-column:span 4;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Unique contacts</div>
+              <div class="card-sub">Phones &amp; emails (no duplicates)</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiUniquePhones">–</div>
+          <div class="kpi-label">
+            Phones: <span id="kpiPhonesInline">–</span> · Emails: <span id="kpiEmailsInline">–</span>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column:span 4;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Peak registration hour</div>
+              <div class="card-sub">Highest traffic window (by created time)</div>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiPeakHour">–</div>
+          <div class="kpi-label" id="kpiPeakHourDetail">Waiting for data…</div>
+        </div>
+
+        <!-- Registrations list -->
+        <div class="card" style="grid-column:span 12;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Registrations list</div>
+              <div class="card-sub">Real-time data from RTDB · events/lokamania5/registrations</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn outline" id="btnRefresh">
+                ⟳ Refresh
+              </button>
+              <button class="btn" id="btnExportCsv">
+                ⬇ Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrapper" id="tableWrapper">
+            <table>
+              <thead>
+              <tr>
+                <th>#</th>
+                <th>Tambola</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>City</th>
+                <th>Age</th>
+                <th>First time?</th>
+                <th>Fav brand</th>
+                <th>Heard via</th>
+                <th>Filled by</th>
+                <th>Created at</th>
+              </tr>
+              </thead>
+              <tbody id="registrationsBody">
+              <tr><td colspan="12" class="empty-state">No registrations yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="status-bar">
+            <span id="tableStatus">Listening for updates…</span>
+            <span class="small-note">CSV includes all fields: name, phone, email, gender, city, age group, school/college, favorite brand + item, brands-to-see-next, first-time, budget, shopping-focus, etc.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS VIEW -->
+    <section id="settingsSection" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Settings</div>
+            <div class="card-sub">Configure registration fields and WhatsApp messages directly from here</div>
+          </div>
+          <button class="btn" id="btnSaveSettings">💾 Save settings</button>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="fieldsTab">Registration fields</button>
+          <button class="tab-btn" data-tab="messagesTab">Messages</button>
+          <button class="tab-btn" data-tab="eventTab">Event config</button>
+        </div>
+
+        <!-- Fields tab -->
+        <div class="tab-pane active" id="fieldsTab">
+          <p class="small-note">
+            Toggle which fields appear on the registration form and edit their labels. “Required” means the guest cannot submit without filling it.
+          </p>
+          <div id="fieldsContainer" style="margin-top:10px;border-top:1px solid #e5e7eb;padding-top:6px;"></div>
+        </div>
+
+        <!-- Messages tab -->
+        <div class="tab-pane" id="messagesTab">
+          <div class="field-grid">
+            <div class="field" style="grid-column:span 6;">
+              <label for="ballotMessage">Ballot (registration) message</label>
+              <textarea id="ballotMessage" class="input"></textarea>
+              <div class="small-note">
+                Sent on WhatsApp after registration. You can use placeholders:
+                <code>{name}</code>, <code>{number}</code>, <code>{event}</code>.
+              </div>
+            </div>
+            <div class="field" style="grid-column:span 6;">
+              <label for="winnerMessage">Winner message (English)</label>
+              <textarea id="winnerMessage" class="input"></textarea>
+              <div class="small-note">
+                Sent when someone wins. Placeholders:
+                <code>{name}</code>, <code>{number}</code>, <code>{event}</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event tab -->
+        <div class="tab-pane" id="eventTab">
+          <div class="field-grid">
+            <div class="field" style="grid-column:span 4;">
+              <label for="tambolaStart">Tambola start number</label>
+              <input id="tambolaStart" class="input" type="number" min="1">
+              <div class="small-note">First ticket number for Lokamania 5 (e.g. 1001).</div>
+            </div>
+            <div class="field" style="grid-column:span 4;">
+              <label for="tambolaLast">Last used number</label>
+              <input id="tambolaLast" class="input" type="number" min="0" disabled>
+              <div class="small-note">Read-only. Updated by registration system when people sign up.</div>
+            </div>
+            <div class="field" style="grid-column:span 4;">
+              <label>Winner screen link</label>
+              <input id="winnerLinkInput" class="input" type="text" placeholder="https://…/winner.html">
+              <div class="small-note">We’ll also update the sidebar “Open winner screen” button with this link.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-bar">
+          <span id="settingsStatus">Loading settings…</span>
+          <span class="small-note">All settings are stored under <code>events/lokamania5/settings</code> in RTDB.</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+  // ---------------- FIREBASE INIT ----------------
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    onValue,
+    get,
+    set,
+    update
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import {
+    getAuth,
+    signInAnonymously,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey:"AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
+    authDomain:"events-339ce.firebaseapp.com",
+    projectId:"events-339ce",
+    storageBucket:"events-339ce.firebasestorage.app",
+    messagingSenderId:"175601544315",
+    appId:"1:175601544315:web:00c94b4affa972b3a286de",
+    // RTDB URL added so you don't need to touch the console:
+    databaseURL:"https://events-339ce-default-rtdb.firebaseio.com"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  const EVENT_ID = "lokamania5";
+  const eventBaseRef = ref(db, `events/${EVENT_ID}`);
+  const registrationsRef = ref(db, `events/${EVENT_ID}/registrations`);
+  const settingsRef = ref(db, `events/${EVENT_ID}/settings`);
+
+  const connectionStatusEl = document.getElementById("connectionStatus");
+  const kpiTotalEl = document.getElementById("kpiTotal");
+  const kpiUniquePhonesEl = document.getElementById("kpiUniquePhones");
+  const kpiPhonesInlineEl = document.getElementById("kpiPhonesInline");
+  const kpiEmailsInlineEl = document.getElementById("kpiEmailsInline");
+  const kpiPeakHourEl = document.getElementById("kpiPeakHour");
+  const kpiPeakHourDetailEl = document.getElementById("kpiPeakHourDetail");
+  const registrationsBodyEl = document.getElementById("registrationsBody");
+  const tableStatusEl = document.getElementById("tableStatus");
+  const winnerLinkSidebarEl = document.getElementById("winnerLink");
+
+  const fieldsContainerEl = document.getElementById("fieldsContainer");
+  const ballotMessageEl = document.getElementById("ballotMessage");
+  const winnerMessageEl = document.getElementById("winnerMessage");
+  const tambolaStartEl = document.getElementById("tambolaStart");
+  const tambolaLastEl = document.getElementById("tambolaLast");
+  const winnerLinkInputEl = document.getElementById("winnerLinkInput");
+  const settingsStatusEl = document.getElementById("settingsStatus");
+
+  const btnExportCsv = document.getElementById("btnExportCsv");
+  const btnRefresh = document.getElementById("btnRefresh");
+  const btnSaveSettings = document.getElementById("btnSaveSettings");
+
+  // Dashboard / settings section toggling
+  const navItems = document.querySelectorAll(".nav-item[data-section]");
+  const dashboardSection = document.getElementById("dashboardSection");
+  const settingsSection = document.getElementById("settingsSection");
+
+  navItems.forEach(item => {
+    item.addEventListener("click", () => {
+      const section = item.getAttribute("data-section");
+      navItems.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+      if(section === "dashboard"){
+        dashboardSection.style.display = "";
+        settingsSection.style.display = "none";
+      }else{
+        dashboardSection.style.display = "none";
+        settingsSection.style.display = "";
+      }
+    });
+  });
+
+  // Tabs inside settings
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabPanes = document.querySelectorAll(".tab-pane");
+  tabButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.dataset.tab;
+      tabButtons.forEach(b => b.classList.remove("active"));
+      tabPanes.forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(tabId).classList.add("active");
+    });
+  });
+
+  // ------------ DEFAULT SETTINGS STRUCTURE ---------------
+  const DEFAULT_SETTINGS = {
+    tambolaStart: 1001,
+    tambolaLast: 1000,
+    winnerLink: "",
+    ballotMessageTemplate:
+      "Hey {name}! 🎪 Thanks for registering at Lokamania 5. Your tambola number is #{number}. Keep this message safe – we’ll use this number when we announce the winner later today.",
+    winnerMessageTemplate:
+      "Hey {name}! 🎉 Your tambola number #{number} has been selected as a winner at Lokamania 5. Please head to the registration desk to claim your prize.",
+    fields: {
+      name:           { label: "Full name",                               required: true,  enabled: true,  order: 1 },
+      phone:          { label: "Phone number (WhatsApp)",                 required: true,  enabled: true,  order: 2 },
+      email:          { label: "Email",                                   required: true,  enabled: true,  order: 3 },
+      gender:         { label: "Gender",                                  required: true,  enabled: true,  order: 4 },
+      city:           { label: "City",                                    required: true,  enabled: true,  order: 5 },
+      ageGroup:       { label: "Age group",                               required: true,  enabled: true,  order: 6 },
+      schoolOrCollege:{ label: "School / College name",                   required: false, enabled: true,  order: 7 },
+      favoriteBrand:  { label: "Favorite brand",                          required: false, enabled: true,  order: 8 },
+      favoriteItem:   { label: "Favorite clothing item",                  required: false, enabled: true,  order: 9 },
+      brandsNextTime: { label: "Brands you'd love to see next time",     required: false, enabled: true,  order:10 },
+      heardAbout:     { label: "How did you hear about Lokamania?",      required: false, enabled: true,  order:11 },
+      firstTime:      { label: "Is it your first time in Lokamania?",    required: true,  enabled: true,  order:12 },
+      budgetRange:    { label: "Estimated budget today",                 required: false, enabled: true,  order:13 },
+      shoppingFocus:  { label: "What are you mainly shopping for today?",required: false, enabled: true,  order:14 }
+    }
+  };
+
+  let settingsCache = null;
+  let registrationsCache = [];
+
+  // ---------------- AUTH + INIT -----------------
+  signInAnonymously(auth).catch(err => {
+    console.error("Anon auth error", err);
+    connectionStatusEl.textContent = "Auth error – check Firebase rules.";
+  });
+
+  onAuthStateChanged(auth, async (user) => {
+    if(user){
+      connectionStatusEl.textContent = "Connected as anonymous viewer";
+      await ensureDefaultSettings();
+      subscribeToSettings();
+      subscribeToRegistrations();
+    }
+  });
+
+  async function ensureDefaultSettings(){
+    // If event/settings does not exist, create default structure
+    const snap = await get(settingsRef);
+    if(!snap.exists()){
+      await set(settingsRef, DEFAULT_SETTINGS);
+    }else{
+      // Merge new defaults with existing (in case we add new fields later)
+      const existing = snap.val() || {};
+      const merged = structuredClone(DEFAULT_SETTINGS);
+
+      Object.assign(merged, existing);
+      merged.fields = { ...DEFAULT_SETTINGS.fields, ...(existing.fields || {}) };
+
+      await set(settingsRef, merged);
+    }
+  }
+
+  // ---------------- SETTINGS UI -----------------
+  function renderFieldsSettings(fields){
+    fieldsContainerEl.innerHTML = "";
+    const entries = Object.entries(fields).sort((a,b)=> (a[1].order||0)-(b[1].order||0));
+    entries.forEach(([key, cfg]) => {
+      const row = document.createElement("div");
+      row.className = "field-row";
+      row.innerHTML = `
+        <div style="flex:0 0 130px;font-weight:600;font-size:12px;">${key}</div>
+        <div style="flex:1;">
+          <input class="input" data-field-label="${key}" value="${cfg.label || ""}">
+        </div>
+        <label class="toggle"><input type="checkbox" data-field-required="${key}" ${cfg.required ? "checked":""}> Required</label>
+        <label class="toggle"><input type="checkbox" data-field-enabled="${key}" ${cfg.enabled ? "checked":""}> Enabled</label>
+      `;
+      fieldsContainerEl.appendChild(row);
+    });
+  }
+
+  function subscribeToSettings(){
+    onValue(settingsRef, (snap) => {
+      const val = snap.val() || DEFAULT_SETTINGS;
+      settingsCache = val;
+
+      // Fields
+      const fields = { ...DEFAULT_SETTINGS.fields, ...(val.fields || {}) };
+      settingsCache.fields = fields;
+      renderFieldsSettings(fields);
+
+      // Messages
+      ballotMessageEl.value = val.ballotMessageTemplate || DEFAULT_SETTINGS.ballotMessageTemplate;
+      winnerMessageEl.value = val.winnerMessageTemplate || DEFAULT_SETTINGS.winnerMessageTemplate;
+
+      // Event config
+      tambolaStartEl.value = val.tambolaStart ?? DEFAULT_SETTINGS.tambolaStart;
+      tambolaLastEl.value  = val.tambolaLast ?? DEFAULT_SETTINGS.tambolaLast;
+      winnerLinkInputEl.value = val.winnerLink || "";
+      if(val.winnerLink){
+        winnerLinkSidebarEl.href = val.winnerLink;
+        winnerLinkSidebarEl.querySelector(".nav-pill").textContent = "Live";
+      }else{
+        winnerLinkSidebarEl.href = "#";
+        winnerLinkSidebarEl.querySelector(".nav-pill").textContent = "Link spot";
+      }
+
+      settingsStatusEl.textContent = "Settings loaded.";
+    });
+  }
+
+  btnSaveSettings.addEventListener("click", async () => {
+    if(!settingsCache) return;
+
+    // collect fields
+    const newFields = { ...settingsCache.fields };
+    Object.keys(newFields).forEach(key => {
+      const labelInput = fieldsContainerEl.querySelector(`[data-field-label="${key}"]`);
+      const reqInput = fieldsContainerEl.querySelector(`[data-field-required="${key}"]`);
+      const enInput  = fieldsContainerEl.querySelector(`[data-field-enabled="${key}"]`);
+      if(labelInput){
+        newFields[key].label = labelInput.value || newFields[key].label;
+      }
+      if(reqInput){
+        newFields[key].required = reqInput.checked;
+      }
+      if(enInput){
+        newFields[key].enabled = enInput.checked;
+      }
+    });
+
+    const newSettings = {
+      ...settingsCache,
+      tambolaStart: Number(tambolaStartEl.value || DEFAULT_SETTINGS.tambolaStart),
+      ballotMessageTemplate: ballotMessageEl.value || DEFAULT_SETTINGS.ballotMessageTemplate,
+      winnerMessageTemplate: winnerMessageEl.value || DEFAULT_SETTINGS.winnerMessageTemplate,
+      winnerLink: winnerLinkInputEl.value || "",
+      fields: newFields
+    };
+
+    try{
+      await update(settingsRef, newSettings);
+      settingsStatusEl.innerHTML = `<span class="strong">Settings saved ✓</span>`;
+      if(newSettings.winnerLink){
+        winnerLinkSidebarEl.href = newSettings.winnerLink;
+        winnerLinkSidebarEl.querySelector(".nav-pill").textContent = "Live";
+      }
+      setTimeout(()=> { settingsStatusEl.textContent = "Settings up to date."; }, 2500);
+    }catch(err){
+      console.error(err);
+      settingsStatusEl.textContent = "Error saving settings – see console.";
+    }
+  });
+
+  // ---------------- REGISTRATIONS + KPI -----------------
+  function subscribeToRegistrations(){
+    onValue(registrationsRef, (snap) => {
+      const data = snap.val() || {};
+      const entries = Object.entries(data).map(([id,val]) => ({ id, ...val }));
+      registrationsCache = entries;
+      renderRegistrationsTable(entries);
+      computeKpis(entries);
+    }, (err) => {
+      console.error(err);
+      tableStatusEl.textContent = "Error listening to registrations. Check rules / path.";
+    });
+  }
+
+  function renderRegistrationsTable(list){
+    registrationsBodyEl.innerHTML = "";
+    if(!list.length){
+      registrationsBodyEl.innerHTML = `<tr><td colspan="12" class="empty-state">No registrations yet.</td></tr>`;
+      tableStatusEl.textContent = "Waiting for first registration…";
+      return;
+    }
+
+    // Sort by createdAt desc if present
+    list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    list.forEach((reg, idx) => {
+      const tr = document.createElement("tr");
+      const created = reg.createdAt ? new Date(reg.createdAt).toLocaleString() : "—";
+      const firstTime = typeof reg.firstTime !== "undefined"
+        ? (reg.firstTime ? "Yes" : "No")
+        : (reg.isFirstTime ? "Yes" : (reg.isFirstTime === false ? "No" : "—"));
+
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${reg.tambolaNumber ?? "–"}</td>
+        <td>${reg.name ?? "–"}</td>
+        <td>${reg.phone ?? "–"}</td>
+        <td>${reg.email ?? "–"}</td>
+        <td>${reg.city ?? "–"}</td>
+        <td>${reg.ageGroup ?? "–"}</td>
+        <td>${firstTime}</td>
+        <td>${reg.favoriteBrand ?? "–"}</td>
+        <td>${reg.heardAbout ?? "–"}</td>
+        <td>${reg.filledBy ?? "guest"}</td>
+        <td>${created}</td>
+      `;
+      registrationsBodyEl.appendChild(tr);
+    });
+
+    tableStatusEl.textContent = `Showing ${list.length} registrations.`;
+  }
+
+  function computeKpis(list){
+    const total = list.length;
+    kpiTotalEl.textContent = String(total);
+
+    const phoneSet = new Set();
+    const emailSet = new Set();
+    const hourCount = {}; // "19" -> count
+    list.forEach(reg => {
+      if(reg.phone) phoneSet.add(String(reg.phone).trim());
+      if(reg.email) emailSet.add(String(reg.email).trim().toLowerCase());
+      if(reg.createdAt){
+        const d = new Date(reg.createdAt);
+        if(!isNaN(d)){
+          const h = d.getHours();
+          hourCount[h] = (hourCount[h] || 0) + 1;
+        }
+      }
+    });
+
+    kpiUniquePhonesEl.textContent = String(phoneSet.size + emailSet.size);
+    kpiPhonesInlineEl.textContent = `${phoneSet.size} phones`;
+    kpiEmailsInlineEl.textContent = `${emailSet.size} emails`;
+
+    if(Object.keys(hourCount).length === 0){
+      kpiPeakHourEl.textContent = "–";
+      kpiPeakHourDetailEl.textContent = "Need registrations with createdAt to compute peak hour.";
+    }else{
+      let bestHour = null;
+      let bestCount = -1;
+      for(const h in hourCount){
+        if(hourCount[h] > bestCount){
+          bestCount = hourCount[h];
+          bestHour = Number(h);
+        }
+      }
+      const label = `${String(bestHour).padStart(2,"0")}:00–${String((bestHour+1)%24).padStart(2,"0")}:00`;
+      kpiPeakHourEl.textContent = label;
+      kpiPeakHourDetailEl.textContent = `${bestCount} registrations in that hour.`;
+    }
+  }
+
+  // Simple manual refresh (forces one-time get)
+  btnRefresh.addEventListener("click", async () => {
+    try{
+      const snap = await get(registrationsRef);
+      const data = snap.val() || {};
+      const list = Object.entries(data).map(([id,val]) => ({ id, ...val }));
+      registrationsCache = list;
+      renderRegistrationsTable(list);
+      computeKpis(list);
+      tableStatusEl.textContent = `Manually refreshed at ${new Date().toLocaleTimeString()}.`;
+    }catch(err){
+      console.error(err);
+      tableStatusEl.textContent = "Refresh failed – see console.";
+    }
+  });
+
+  // ---------------- CSV EXPORT -----------------
+  btnExportCsv.addEventListener("click", () => {
+    if(!registrationsCache.length){
+      alert("No registrations to export yet.");
+      return;
+    }
+    const rows = [];
+    const header = [
+      "id","tambolaNumber","name","phone","email","gender","city","ageGroup",
+      "schoolOrCollege","favoriteBrand","favoriteItem","brandsNextTime",
+      "heardAbout","firstTime","budgetRange","shoppingFocus","filledBy","createdAt"
+    ];
+    rows.push(header);
+
+    registrationsCache.forEach(reg => {
+      const row = [
+        reg.id || "",
+        reg.tambolaNumber ?? "",
+        reg.name ?? "",
+        reg.phone ?? "",
+        reg.email ?? "",
+        reg.gender ?? "",
+        reg.city ?? "",
+        reg.ageGroup ?? "",
+        reg.schoolOrCollege ?? "",
+        reg.favoriteBrand ?? "",
+        reg.favoriteItem ?? "",
+        reg.brandsNextTime ?? "",
+        reg.heardAbout ?? "",
+        typeof reg.firstTime !== "undefined"
+          ? (reg.firstTime ? "Yes" : "No")
+          : (reg.isFirstTime ? "Yes" : (reg.isFirstTime === false ? "No" : "")),
+        reg.budgetRange ?? "",
+        reg.shoppingFocus ?? "",
+        reg.filledBy ?? "",
+        reg.createdAt ? new Date(reg.createdAt).toISOString() : ""
+      ];
+      rows.push(row);
+    });
+
+    const csvContent = rows.map(r => r.map(v => {
+      const s = String(v ?? "");
+      if(s.includes(",") || s.includes("\"") || s.includes("\n")){
+        return "\"" + s.replace(/"/g,'""') + "\"";
+      }
+      return s;
+    }).join(",")).join("\n");
+
+    const blob = new Blob([csvContent], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `lokamania5_registrations_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+</script>
+</body>
+</html>

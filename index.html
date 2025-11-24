@@ -1233,12 +1233,13 @@ renderTopStaff(staffStats);
         return;
       }
 
-      let html = `
+            let html = `
         <table>
           <thead>
             <tr>
               <th>Code</th>
               <th>%</th>
+              <th>Scope</th>   <!-- ✅ new column -->
               <th>Active</th>
               <th></th>
             </tr>
@@ -1246,11 +1247,18 @@ renderTopStaff(staffStats);
           <tbody>
       `;
 
+
       discounts.forEach(d => {
+               const scopeLabel =
+          d.scope === "online_only"
+            ? "Online only"
+            : "In-store & online";
+
         html += `
           <tr>
             <td>${d.code || ""}</td>
             <td>${d.percent ?? ""}</td>
+            <td>${scopeLabel}</td>
             <td>${d.isActive ? "Yes" : "No"}</td>
             <td>
               <button class="btn btn-ghost" data-toggle-disc="${d.id}">
@@ -1262,6 +1270,7 @@ renderTopStaff(staffStats);
             </td>
           </tr>
         `;
+
       });
 
       html += `</tbody></table>`;

@@ -1165,6 +1165,8 @@
   let lastCustomerSearchTerm = "";
   let currentMode = "sale"; // "sale" | "return"
   let currentReturnOrderMeta = null; // {orderDocId, orderId, data}
+  let currentCustomerHasUsedDiscountBefore = false;
+
 
   let taxPercent = 0;
   let servicePercent = 0;
@@ -1911,16 +1913,18 @@
     checkoutSuggestionsEl.classList.remove("hidden");
   }
 
-  async function ensureCustomer(){
+   async function ensureCustomer(){
     const name = checkoutNameEl.value.trim();
     const phone = checkoutPhoneEl.value.trim();
     const email = checkoutEmailEl.value.trim();
     const customersCol = collection(db,"brands",brandId,"customers");
 
     if(!name && !phone && !email){
+      currentCustomerHasUsedDiscountBefore = false;
       return { id:null, data:null };
     }
 
+    // If we already have a customerId in memory, update + read the flag
     if(currentCustomerId){
       const ref = doc(customersCol,currentCustomerId);
       await setDoc(ref,{
@@ -1929,9 +1933,25 @@
         email: email || null,
         updatedAt:serverTimestamp()
       },{ merge:true });
+
+      // read the discount flag
+      try{
+        const snap = await getDoc(ref);
+        if(snap.exists()){
+          const d = snap.data() || {};
+          currentCustomerHasUsedDiscountBefore = !!d.hasUsedDiscountCode;
+        }else{
+          currentCustomerHasUsedDiscountBefore = false;
+        }
+      }catch(e){
+        console.warn("Failed to read hasUsedDiscountCode", e);
+        currentCustomerHasUsedDiscountBefore = false;
+      }
+
       return { id:currentCustomerId, data:{ name, phone, email } };
     }
 
+    // Try find existing by email/phone
     const found = await findExistingCustomer(email,phone);
     if(found){
       const ref = doc(customersCol,found.id);
@@ -1941,8 +1961,10 @@
         email: email || found.data.email || null,
         updatedAt:serverTimestamp()
       },{ merge:true });
+
       currentCustomerId = found.id;
       currentCustomerHasUsedDiscountBefore = !!found.data.hasUsedDiscountCode;
+
       const data = {
         name: name || found.data.name || null,
         phone: phone || found.data.phone || null,
@@ -1950,6 +1972,22 @@
       };
       return { id:found.id, data };
     }
+
+    // Brand-new customer → definitely never used a discount
+    const newRef = await addDoc(customersCol,{
+      name: name || null,
+      phone: phone || null,
+      email: email || null,
+      hasUsedDiscountCode:false,
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    });
+    currentCustomerId = newRef.id;
+    currentCustomerHasUsedDiscountBefore = false;
+
+    return { id:newRef.id, data:{ name, phone, email } };
+  }
+
 
     const newRef = await addDoc(customersCol,{
       name: name || null,
@@ -2753,6 +2791,29 @@
       const customerResult = await ensureCustomer();
       const customerId = customerResult.id;
       const customer = customerResult.data;
+            // For now, we assume there is NO discount code on this order
+      // (we'll wire real discount-code logic later)
+      const appliedDiscount = null;       // no discount used this order
+      const discountAmount = 0;          // amount discounted on this order
+      const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
+
+      // Rule: send coupon only if:
+      //  - no discount on this order
+      //  - AND customer never had a discount before
+      const willIssueNewCoupon = !appliedDiscount && !customerHadUsedDiscountBefore;
+
+      // If we are issuing a new coupon, mark the customer in Firestore
+      if(customerId && willIssueNewCoupon && navigator.onLine){
+        try{
+          const customersCol = collection(db,"brands",brandId,"customers");
+          const customerRef = doc(customersCol, customerId);
+          await setDoc(customerRef, { hasUsedDiscountCode:true }, { merge:true });
+          currentCustomerHasUsedDiscountBefore = true;
+        }catch(e){
+          console.warn("Failed to flag hasUsedDiscountCode on customer", e);
+        }
+      }
+
       const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
 
       // If this order uses a discount, mark customer
@@ -2854,7 +2915,7 @@
         );
       }
 
-      const payload = {
+          const payload = {
         orderId,
         orderDocId:orderRef.id,
         createdAt:now.toISOString(),
@@ -2886,7 +2947,7 @@
         isReturn: currentMode==="return",
         originalOrderId: orderData.originalOrderId || null,
 
-        // Discount details for email template
+        // Discount info (currently always null / 0 until we wire discount codes)
         discount: appliedDiscount ? {
           code: appliedDiscount.code,
           percent: appliedDiscount.percent,
@@ -2894,8 +2955,8 @@
           amount: discountAmount
         } : null,
 
-        // Whether to issue a new coupon in the email (your n8n logic)
-        shouldIssueNewCoupon: !customerHadUsedDiscountBefore
+        // 👉 This is what n8n/email should use to decide if a coupon goes in the receipt
+        shouldIssueNewCoupon: willIssueNewCoupon
       };
 
       fetch(WEBHOOK_URL,{

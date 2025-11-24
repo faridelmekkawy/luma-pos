@@ -656,6 +656,17 @@
                 <div class="field-label">Percentage %</div>
                 <input id="disc-percent" class="field-input" type="number" placeholder="e.g. 10"/>
               </div>
+                    <div class="field">
+        <div class="field-label">Where can this code be used?</div>
+        <select id="disc-scope" class="field-input">
+          <option value="store_and_online">In-store &amp; online</option>
+          <option value="online_only">Online only (not valid at POS)</option>
+        </select>
+        <div class="field-hint">
+          POS will block “online only” codes at the cashier.
+        </div>
+      </div>
+              
 
               <div class="field">
                 <div class="field-label">Description (optional)</div>
@@ -2143,6 +2154,9 @@ function renderCashierPaymentChart(stats) {
       let code = codeInput.value.trim().toUpperCase();
       const percent = Number(pctInput.value || 0);
       const description = descInput.value.trim();
+      const scopeSelect = qs("#disc-scope");
+      const scope = scopeSelect ? scopeSelect.value : "store_and_online";
+
 
       if (!code) {
         alert("Enter a discount code.");
@@ -2160,24 +2174,28 @@ function renderCashierPaymentChart(stats) {
 
       if (existing) {
         // Update same doc
-        await updateDoc(
-          doc(db, "brands", brandId, "discounts", existing.id),
-          {
-            code,
-            percent,
-            description,
-            isActive: existing.isActive !== undefined ? existing.isActive : true
-          }
-        );
-      } else {
-        // Create new
-        await addDoc(collection(db, "brands", brandId, "discounts"), {
+            await updateDoc(
+        doc(db, "brands", brandId, "discounts", existing.id),
+        {
           code,
           percent,
           description,
-          isActive: true,
-          createdAt: serverTimestamp()
-        });
+          scope, // ✅ new field
+          isActive: existing.isActive !== undefined ? existing.isActive : true
+        }
+      );
+
+      } else {
+        // Create new
+             await addDoc(collection(db, "brands", brandId, "discounts"), {
+        code,
+        percent,
+        description,
+        scope, // ✅ new field
+        isActive: true,
+        createdAt: serverTimestamp()
+      });
+
       }
 
       // Clear inputs

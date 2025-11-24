@@ -1165,7 +1165,7 @@
   let lastCustomerSearchTerm = "";
   let currentMode = "sale"; // "sale" | "return"
   let currentReturnOrderMeta = null; // {orderDocId, orderId, data}
-  let currentCustomerHasUsedDiscountBefore = false;
+ 
 
 
   let taxPercent = 0;
@@ -1913,94 +1913,81 @@
     checkoutSuggestionsEl.classList.remove("hidden");
   }
 
-   async function ensureCustomer(){
-    const name = checkoutNameEl.value.trim();
-    const phone = checkoutPhoneEl.value.trim();
-    const email = checkoutEmailEl.value.trim();
-    const customersCol = collection(db,"brands",brandId,"customers");
+  async function ensureCustomer(){
+  const name = checkoutNameEl.value.trim();
+  const phone = checkoutPhoneEl.value.trim();
+  const email = checkoutEmailEl.value.trim();
+  const customersCol = collection(db,"brands",brandId,"customers");
 
-    if(!name && !phone && !email){
-      currentCustomerHasUsedDiscountBefore = false;
-      return { id:null, data:null };
-    }
+  if(!name && !phone && !email){
+    currentCustomerHasUsedDiscountBefore = false;
+    return { id:null, data:null };
+  }
 
-    // If we already have a customerId in memory, update + read the flag
-    if(currentCustomerId){
-      const ref = doc(customersCol,currentCustomerId);
-      await setDoc(ref,{
-        name: name || null,
-        phone: phone || null,
-        email: email || null,
-        updatedAt:serverTimestamp()
-      },{ merge:true });
+  // If we already have a customerId in memory, update + read the flag
+  if(currentCustomerId){
+    const ref = doc(customersCol,currentCustomerId);
+    await setDoc(ref,{
+      name: name || null,
+      phone: phone || null,
+      email: email || null,
+      updatedAt:serverTimestamp()
+    },{ merge:true });
 
-      // read the discount flag
-      try{
-        const snap = await getDoc(ref);
-        if(snap.exists()){
-          const d = snap.data() || {};
-          currentCustomerHasUsedDiscountBefore = !!d.hasUsedDiscountCode;
-        }else{
-          currentCustomerHasUsedDiscountBefore = false;
-        }
-      }catch(e){
-        console.warn("Failed to read hasUsedDiscountCode", e);
+    // read the discount flag
+    try{
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        const d = snap.data() || {};
+        currentCustomerHasUsedDiscountBefore = !!d.hasUsedDiscountCode;
+      }else{
         currentCustomerHasUsedDiscountBefore = false;
       }
-
-      return { id:currentCustomerId, data:{ name, phone, email } };
+    }catch(e){
+      console.warn("Failed to read hasUsedDiscountCode", e);
+      currentCustomerHasUsedDiscountBefore = false;
     }
 
-    // Try find existing by email/phone
-    const found = await findExistingCustomer(email,phone);
-    if(found){
-      const ref = doc(customersCol,found.id);
-      await setDoc(ref,{
-        name: name || found.data.name || null,
-        phone: phone || found.data.phone || null,
-        email: email || found.data.email || null,
-        updatedAt:serverTimestamp()
-      },{ merge:true });
-
-      currentCustomerId = found.id;
-      currentCustomerHasUsedDiscountBefore = !!found.data.hasUsedDiscountCode;
-
-      const data = {
-        name: name || found.data.name || null,
-        phone: phone || found.data.phone || null,
-        email: email || found.data.email || null
-      };
-      return { id:found.id, data };
-    }
-
-    // Brand-new customer → definitely never used a discount
-    const newRef = await addDoc(customersCol,{
-      name: name || null,
-      phone: phone || null,
-      email: email || null,
-      hasUsedDiscountCode:false,
-      createdAt:serverTimestamp(),
-      updatedAt:serverTimestamp()
-    });
-    currentCustomerId = newRef.id;
-    currentCustomerHasUsedDiscountBefore = false;
-
-    return { id:newRef.id, data:{ name, phone, email } };
+    return { id:currentCustomerId, data:{ name, phone, email } };
   }
 
-
-    const newRef = await addDoc(customersCol,{
-      name: name || null,
-      phone: phone || null,
-      email: email || null,
-      hasUsedDiscountCode:false,
-      createdAt:serverTimestamp(),
+  // Try find existing by email/phone
+  const found = await findExistingCustomer(email,phone);
+  if(found){
+    const ref = doc(customersCol,found.id);
+    await setDoc(ref,{
+      name: name || found.data.name || null,
+      phone: phone || found.data.phone || null,
+      email: email || found.data.email || null,
       updatedAt:serverTimestamp()
-    });
-    currentCustomerId = newRef.id;
-    currentCustomerHasUsedDiscountBefore = false;
-    return { id:newRef.id, data:{ name, phone, email } };
+    },{ merge:true });
+
+    currentCustomerId = found.id;
+    currentCustomerHasUsedDiscountBefore = !!found.data.hasUsedDiscountCode;
+
+    const data = {
+      name: name || found.data.name || null,
+      phone: phone || found.data.phone || null,
+      email: email || found.data.email || null
+    };
+    return { id:found.id, data };
   }
+
+  // Brand-new customer → definitely never used a discount
+  const newRef = await addDoc(customersCol,{
+    name: name || null,
+    phone: phone || null,
+    email: email || null,
+    hasUsedDiscountCode:false,
+    createdAt:serverTimestamp(),
+    updatedAt:serverTimestamp()
+  });
+  currentCustomerId = newRef.id;
+  currentCustomerHasUsedDiscountBefore = false;
+
+  return { id:newRef.id, data:{ name, phone, email } };
+}
+
 
   async function generateOrderId(){
     const now = new Date();
@@ -2754,260 +2741,246 @@
   }
 
   async function handlePlaceOrder(){
-    if(cartItems.length === 0){
-      showCheckoutAlert("Cart is empty.");
-      return;
-    }
-    const name = checkoutNameEl.value.trim();
-    const email = checkoutEmailEl.value.trim();
-    const phone = checkoutPhoneEl.value.trim();
-    const pm = paymentMethodEl.value;
-    const cardTxn = checkoutCardTxnEl.value.trim();
-
-    if(!name){
-      showCheckoutAlert("Customer name is required.");
-      return;
-    }
-    if(!email){
-      showCheckoutAlert("Customer email is required.");
-      return;
-    }
-    if(pm === "card" && !cardTxn){
-      showCheckoutAlert("Card transaction number is required for card payments.");
-      return;
-    }
-
-    const totals = computeTotals();
-    const totalPositive = totals.total;
-    const subtotalPositive = totals.subtotal;
-    const taxAmount = totals.taxAmount;
-    const serviceAmount = totals.serviceAmount;
-    const discountAmount = totals.discountAmount || 0;
-    const paymentMethod = pm;
-
-    btnCheckoutConfirm.disabled = true;
-    btnCheckoutConfirm.textContent = "Placing…";
-    try{
-      const customerResult = await ensureCustomer();
-      const customerId = customerResult.id;
-      const customer = customerResult.data;
-            // For now, we assume there is NO discount code on this order
-      // (we'll wire real discount-code logic later)
-      const appliedDiscount = null;       // no discount used this order
-      const discountAmount = 0;          // amount discounted on this order
-      const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
-
-      // Rule: send coupon only if:
-      //  - no discount on this order
-      //  - AND customer never had a discount before
-      const willIssueNewCoupon = !appliedDiscount && !customerHadUsedDiscountBefore;
-
-      // If we are issuing a new coupon, mark the customer in Firestore
-      if(customerId && willIssueNewCoupon && navigator.onLine){
-        try{
-          const customersCol = collection(db,"brands",brandId,"customers");
-          const customerRef = doc(customersCol, customerId);
-          await setDoc(customerRef, { hasUsedDiscountCode:true }, { merge:true });
-          currentCustomerHasUsedDiscountBefore = true;
-        }catch(e){
-          console.warn("Failed to flag hasUsedDiscountCode on customer", e);
-        }
-      }
-
-      const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
-
-      // If this order uses a discount, mark customer
-      if(appliedDiscount && customerId){
-        try{
-          const custRef = doc(db,"brands",brandId,"customers",customerId);
-          await setDoc(custRef,{
-            hasUsedDiscountCode:true,
-            lastDiscountCodeUsed: appliedDiscount.code,
-            lastDiscountUsedAt: serverTimestamp()
-          },{ merge:true });
-        }catch(e){
-          console.warn("Failed to flag customer discount usage", e);
-        }
-      }
-
-      const orderId = await generateOrderId();
-      const now = new Date();
-
-      const itemsForDb = cartItems.map(i=>{
-        const qtySign = (currentMode==="return" ? -1 : 1);
-        const qtyVal = i.qty * qtySign;
-        const lineTotalVal = i.price * i.qty * qtySign;
-        return {
-          productId:i.baseId || i.id,
-          name:i.name,
-          code:i.code || null,
-          qty:qtyVal,
-          price:i.price,
-          lineTotal:lineTotalVal,
-          variantKey:i.variantKey || null,
-          variantChoices:i.variantChoices || null,
-          productImageUrl:i.imageUrl || null,
-          productUrl:i.productUrl || null
-        };
-      });
-
-      const ordersCol = collection(db,"brands",brandId,"branches",branchId,"orders");
-      const orderRef = doc(ordersCol);
-
-      const sign = currentMode==="return" ? -1 : 1;
-
-      const baseOrderData = {
-        orderId,
-        createdAt:serverTimestamp(),
-        createdAtLocal:now.toISOString(),
-        paymentMethod,
-        subtotal: sign * subtotalPositive,
-        taxPercent,
-        servicePercent,
-        taxAmount: sign * taxAmount,
-        serviceAmount: sign * serviceAmount,
-        total: sign * totalPositive,
-        discountPercent: appliedDiscount?.percent || 0,
-        discountAmount: sign * (discountAmount || 0),
-        discountCode: appliedDiscount?.code || null,
-        discountScope: appliedDiscount?.scope || null,
-        items:itemsForDb,
-        customerId:customerId || null,
-        customerName:customer?.name || nameOrNull(checkoutNameEl.value),
-        customerPhone:customer?.phone || phoneOrNull(checkoutPhoneEl.value),
-        customerEmail:customer?.email || emailOrNull(checkoutEmailEl.value),
-        cardTransaction: paymentMethod === "card" ? cardTxn : null,
-        brandId,
-        branchId
-      };
-
-      const orderData = currentMode==="return"
-        ? {
-            ...baseOrderData,
-            status:"return",
-            type:"return",
-            isReturn:true,
-            originalOrderId: currentReturnOrderMeta?.orderId || null,
-            originalOrderDocId: currentReturnOrderMeta?.orderDocId || null,
-            originalPaymentMethod: currentReturnOrderMeta?.data?.paymentMethod || null
-          }
-        : {
-            ...baseOrderData,
-            status:"normal",
-            type:"sale",
-            isReturn:false
-          };
-
-      await setDoc(orderRef,orderData);
-
-      // Update stock (online) in global products collection (and variant labels)
-      try{
-        await adjustStockForOrder(cartItems, currentMode, brandId);
-      }catch(e){
-        console.warn("Stock adjust failed",e);
-      }
-
-      // Update original order refund status if this is a return
-      if(currentMode==="return" && currentReturnOrderMeta?.orderDocId && navigator.onLine){
-        await recomputeOriginalRefundStatus(
-          currentReturnOrderMeta.orderId,
-          currentReturnOrderMeta.orderDocId
-        );
-      }
-
-          const payload = {
-        orderId,
-        orderDocId:orderRef.id,
-        createdAt:now.toISOString(),
-        brandId,
-        brandName:brandData?.name || null,
-        brandLogoUrl:brandData?.logoUrl || brandData?.logo || null,
-        branchId,
-        branchName:branchData?.name || null,
-        posUser:{
-          username:posUser?.username || null,
-          displayName:posUser?.displayName || null,
-          role:posUser?.role || null
-        },
-        customer:{
-          id:customerId || null,
-          name:orderData.customerName,
-          phone:orderData.customerPhone,
-          email:orderData.customerEmail
-        },
-        total:orderData.total,
-        subtotal:orderData.subtotal,
-        taxPercent:orderData.taxPercent,
-        servicePercent:orderData.servicePercent,
-        taxAmount:orderData.taxAmount,
-        serviceAmount:orderData.serviceAmount,
-        items:itemsForDb,
-        paymentMethod,
-        cardTransaction: paymentMethod === "card" ? cardTxn : null,
-        isReturn: currentMode==="return",
-        originalOrderId: orderData.originalOrderId || null,
-
-        // Discount info (currently always null / 0 until we wire discount codes)
-        discount: appliedDiscount ? {
-          code: appliedDiscount.code,
-          percent: appliedDiscount.percent,
-          scope: appliedDiscount.scope || "store_and_online",
-          amount: discountAmount
-        } : null,
-
-        // 👉 This is what n8n/email should use to decide if a coupon goes in the receipt
-        shouldIssueNewCoupon: willIssueNewCoupon
-      };
-
-      fetch(WEBHOOK_URL,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify(payload)
-      }).catch(err=>console.error("Webhook error",err));
-
-      showGlobalAlert(`${currentMode==="return" ? "Return" : "Order"} ${orderId} created successfully.`,"ok");
-
-      // Reset discount for next order
-      appliedDiscount = null;
-      if(discountCodeInputEl) discountCodeInputEl.value = "";
-      discountRowEl.style.display = "none";
-      summaryDiscountEl.textContent = "-0.00";
-
-      cartItems = [];
-      renderCart();
-      currentCustomerId = null;
-      currentReturnOrderMeta = null;
-      closeCheckoutModal();
-      codeInputEl.focus();
-    }catch(err){
-      console.error(err);
-      const networkCodes = ["unavailable","failed-precondition","network-request-failed"];
-      if(!navigator.onLine || networkCodes.includes(err.code)){
-        const snapshot = cartItems.map(i=>({...i}));
-        queueOfflineOrder({
-          mode:currentMode,
-          totalPositive,
-          subtotalPositive,
-          taxPercentValue:taxPercent,
-          servicePercentValue:servicePercent,
-          taxAmountValue:taxAmount,
-          serviceAmountValue:serviceAmount,
-          paymentMethod,
-          cardTxn,
-          name,
-          phone,
-          email,
-          cartItemsSnapshot:snapshot,
-          originalOrderMeta:currentReturnOrderMeta
-        });
-      }else{
-        showCheckoutAlert("Error placing order. Check console.");
-      }
-    }finally{
-      btnCheckoutConfirm.disabled = false;
-      btnCheckoutConfirm.textContent = "Confirm & place order";
-    }
+  if(cartItems.length === 0){
+    showCheckoutAlert("Cart is empty.");
+    return;
   }
+  const name = checkoutNameEl.value.trim();
+  const email = checkoutEmailEl.value.trim();
+  const phone = checkoutPhoneEl.value.trim();
+  const pm = paymentMethodEl.value;
+  const cardTxn = checkoutCardTxnEl.value.trim();
+
+  if(!name){
+    showCheckoutAlert("Customer name is required.");
+    return;
+  }
+  if(!email){
+    showCheckoutAlert("Customer email is required.");
+    return;
+  }
+  if(pm === "card" && !cardTxn){
+    showCheckoutAlert("Card transaction number is required for card payments.");
+    return;
+  }
+
+  const totals = computeTotals();
+  const totalPositive = totals.total;
+  const subtotalPositive = totals.subtotal;
+  const taxAmount = totals.taxAmount;
+  const serviceAmount = totals.serviceAmount;
+  const discountAmount = totals.discountAmount || 0;
+  const paymentMethod = pm;
+
+  btnCheckoutConfirm.disabled = true;
+  btnCheckoutConfirm.textContent = "Placing…";
+  try{
+    const customerResult = await ensureCustomer();
+    const customerId = customerResult.id;
+    const customer = customerResult.data;
+
+    // Use GLOBAL appliedDiscount (from discount logic)
+    const orderHasDiscount = !!appliedDiscount;
+    const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
+
+    // Rule: send coupon only if:
+    //  - no discount on this order
+    //  - AND customer never had a discount/coupon before
+    const willIssueNewCoupon = !orderHasDiscount && !customerHadUsedDiscountBefore;
+
+    // If we are issuing a new coupon, mark the customer in Firestore
+    if(customerId && willIssueNewCoupon && navigator.onLine){
+      try{
+        const customersCol = collection(db,"brands",brandId,"customers");
+        const customerRef = doc(customersCol, customerId);
+        await setDoc(customerRef, { hasUsedDiscountCode:true }, { merge:true });
+        currentCustomerHasUsedDiscountBefore = true;
+      }catch(e){
+        console.warn("Failed to flag hasUsedDiscountCode on customer", e);
+      }
+    }
+
+    const orderId = await generateOrderId();
+    const now = new Date();
+
+    const itemsForDb = cartItems.map(i=>{
+      const qtySign = (currentMode==="return" ? -1 : 1);
+      const qtyVal = i.qty * qtySign;
+      const lineTotalVal = i.price * i.qty * qtySign;
+      return {
+        productId:i.baseId || i.id,
+        name:i.name,
+        code:i.code || null,
+        qty:qtyVal,
+        price:i.price,
+        lineTotal:lineTotalVal,
+        variantKey:i.variantKey || null,
+        variantChoices:i.variantChoices || null,
+        productImageUrl:i.imageUrl || null,
+        productUrl:i.productUrl || null
+      };
+    });
+
+    const ordersCol = collection(db,"brands",brandId,"branches",branchId,"orders");
+    const orderRef = doc(ordersCol);
+
+    const sign = currentMode==="return" ? -1 : 1;
+
+    const baseOrderData = {
+      orderId,
+      createdAt:serverTimestamp(),
+      createdAtLocal:now.toISOString(),
+      paymentMethod,
+      subtotal: sign * subtotalPositive,
+      taxPercent,
+      servicePercent,
+      taxAmount: sign * taxAmount,
+      serviceAmount: sign * serviceAmount,
+      total: sign * totalPositive,
+      discountPercent: appliedDiscount?.percent || 0,
+      discountAmount: sign * (discountAmount || 0),
+      discountCode: appliedDiscount?.code || null,
+      discountScope: appliedDiscount?.scope || null,
+      items:itemsForDb,
+      customerId:customerId || null,
+      customerName:customer?.name || nameOrNull(checkoutNameEl.value),
+      customerPhone:customer?.phone || phoneOrNull(checkoutPhoneEl.value),
+      customerEmail:customer?.email || emailOrNull(checkoutEmailEl.value),
+      cardTransaction: paymentMethod === "card" ? cardTxn : null,
+      brandId,
+      branchId
+    };
+
+    const orderData = currentMode==="return"
+      ? {
+          ...baseOrderData,
+          status:"return",
+          type:"return",
+          isReturn:true,
+          originalOrderId: currentReturnOrderMeta?.orderId || null,
+          originalOrderDocId: currentReturnOrderMeta?.orderDocId || null,
+          originalPaymentMethod: currentReturnOrderMeta?.data?.paymentMethod || null
+        }
+      : {
+          ...baseOrderData,
+          status:"normal",
+          type:"sale",
+          isReturn:false
+        };
+
+    await setDoc(orderRef,orderData);
+
+    // Update stock
+    try{
+      await adjustStockForOrder(cartItems, currentMode, brandId);
+    }catch(e){
+      console.warn("Stock adjust failed",e);
+    }
+
+    // For returns, recompute original refund status
+    if(currentMode==="return" && currentReturnOrderMeta?.orderDocId && navigator.onLine){
+      await recomputeOriginalRefundStatus(
+        currentReturnOrderMeta.orderId,
+        currentReturnOrderMeta.orderDocId
+      );
+    }
+
+    // Build webhook payload
+    const payload = {
+      orderId,
+      orderDocId:orderRef.id,
+      createdAt:now.toISOString(),
+      brandId,
+      brandName:brandData?.name || null,
+      brandLogoUrl:brandData?.logoUrl || brandData?.logo || null,
+      branchId,
+      branchName:branchData?.name || null,
+      posUser:{
+        username:posUser?.username || null,
+        displayName:posUser?.displayName || null,
+        role:posUser?.role || null
+      },
+      customer:{
+        id:customerId || null,
+        name:orderData.customerName,
+        phone:orderData.customerPhone,
+        email:orderData.customerEmail
+      },
+      total:orderData.total,
+      subtotal:orderData.subtotal,
+      taxPercent:orderData.taxPercent,
+      servicePercent:orderData.servicePercent,
+      taxAmount:orderData.taxAmount,
+      serviceAmount:orderData.serviceAmount,
+      items:itemsForDb,
+      paymentMethod,
+      cardTransaction: paymentMethod === "card" ? cardTxn : null,
+      isReturn: currentMode==="return",
+      originalOrderId: orderData.originalOrderId || null,
+
+      discount: appliedDiscount ? {
+        code: appliedDiscount.code,
+        percent: appliedDiscount.percent,
+        scope: appliedDiscount.scope || "store_and_online",
+        amount: discountAmount
+      } : null,
+
+      // 👉 what n8n/email should use for issuing a coupon
+      shouldIssueNewCoupon: willIssueNewCoupon
+    };
+
+    console.log("POS → Webhook payload:", payload);
+
+    fetch(WEBHOOK_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify(payload)
+    }).catch(err=>console.error("Webhook error",err));
+
+    showGlobalAlert(`${currentMode==="return" ? "Return" : "Order"} ${orderId} created successfully.`,"ok");
+
+    // Reset discount for next order
+    appliedDiscount = null;
+    if(discountCodeInputEl) discountCodeInputEl.value = "";
+    discountRowEl.style.display = "none";
+    summaryDiscountEl.textContent = "-0.00";
+
+    cartItems = [];
+    renderCart();
+    currentCustomerId = null;
+    currentReturnOrderMeta = null;
+    closeCheckoutModal();
+    codeInputEl.focus();
+  }catch(err){
+    console.error(err);
+    const networkCodes = ["unavailable","failed-precondition","network-request-failed"];
+    if(!navigator.onLine || networkCodes.includes(err.code)){
+      const snapshot = cartItems.map(i=>({...i}));
+      queueOfflineOrder({
+        mode:currentMode,
+        totalPositive,
+        subtotalPositive,
+        taxPercentValue:taxPercent,
+        servicePercentValue:servicePercent,
+        taxAmountValue:taxAmount,
+        serviceAmountValue:serviceAmount,
+        paymentMethod,
+        cardTxn,
+        name,
+        phone,
+        email,
+        cartItemsSnapshot:snapshot,
+        originalOrderMeta:currentReturnOrderMeta
+      });
+    }else{
+      showCheckoutAlert("Error placing order. Check console.");
+    }
+  }finally{
+    btnCheckoutConfirm.disabled = false;
+    btnCheckoutConfirm.textContent = "Confirm & place order";
+  }
+}
+
 
   function updateModeUI(){
     // reset discount on mode change

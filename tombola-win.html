@@ -9,18 +9,18 @@
 
   <style>
     :root{
-      --bg:#0f172a;
-      --bg-soft:#020617;
-      --panel:#020617;
-      --panel-soft:#0b1220;
-      --ink:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#f97316;
-      --accent-alt:#22c55e;
-      --accent-soft:#1f2937;
-      --border:#1f2937;
+      /* Match registration / dashboard style */
+      --bg:#f3f4f6;
+      --panel:#ffffff;
+      --panel-soft:#f9fafb;
+      --ink:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --accent:#f97316;      /* orange */
+      --accent-alt:#0f766e;  /* teal */
+      --accent-soft:#ffedd5;
+      --shadow-lg:0 18px 40px rgba(15,23,42,0.18);
       --radius-lg:22px;
-      --shadow-lg:0 26px 60px rgba(0,0,0,0.7);
     }
 
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -29,24 +29,22 @@
       font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
       min-height:100vh;
       background:
-        radial-gradient(circle at top left,rgba(249,115,22,0.25),transparent 55%),
-        radial-gradient(circle at bottom right,rgba(34,197,94,0.25),transparent 55%),
-        linear-gradient(135deg,#020617,#020617 40%,#000000);
+        radial-gradient(circle at top left,#ffedd5,#f3f4f6 40%,#e0f2fe);
       color:var(--ink);
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:16px;
+      padding:18px;
     }
 
     .frame{
       width:100%;
-      max-width:980px;
-      background:radial-gradient(circle at top,rgba(15,23,42,0.9),rgba(2,6,23,0.98));
+      max-width:720px;
+      background:var(--panel);
       border-radius:32px;
-      padding:22px 24px 24px;
       box-shadow:var(--shadow-lg);
       border:1px solid rgba(148,163,184,0.35);
+      padding:22px 22px 20px;
       position:relative;
       overflow:hidden;
     }
@@ -56,8 +54,8 @@
       position:absolute;
       inset:-40%;
       background:
-        radial-gradient(circle at 10% 0,rgba(249,115,22,0.15),transparent 55%),
-        radial-gradient(circle at 90% 100%,rgba(56,189,248,0.18),transparent 55%);
+        radial-gradient(circle at 0 0,rgba(249,115,22,0.12),transparent 60%),
+        radial-gradient(circle at 100% 100%,rgba(56,189,248,0.16),transparent 60%);
       opacity:0.8;
       pointer-events:none;
       z-index:-1;
@@ -65,38 +63,35 @@
 
     .top-row{
       display:flex;
+      align-items:center;
       justify-content:space-between;
-      align-items:center;
-      margin-bottom:18px;
       gap:12px;
+      margin-bottom:16px;
     }
 
-    .badge-stack{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    .event-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:5px 10px;
-      border-radius:999px;
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:0.14em;
-      background:rgba(15,23,42,0.9);
-      border:1px solid rgba(148,163,184,0.45);
-      color:#e5e7eb;
-    }
-
-    .event-title{
-      font-size:22px;
-      font-weight:700;
+    .event-block{
       display:flex;
       align-items:center;
       gap:10px;
+    }
+
+    .logo-orb{
+      width:42px;
+      height:42px;
+      border-radius:999px;
+      background:conic-gradient(from 220deg,#f97316,#0f766e,#38bdf8,#f97316);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      font-size:18px;
+      color:#fff;
+      box-shadow:0 10px 24px rgba(249,115,22,0.55);
+    }
+
+    .event-main{
+      font-size:18px;
+      font-weight:700;
     }
 
     .event-sub{
@@ -106,28 +101,13 @@
       color:var(--muted);
     }
 
-    .logo-orb{
-      width:42px;
-      height:42px;
-      border-radius:999px;
-      background:
-        conic-gradient(from 220deg,#f97316,#22c55e,#38bdf8,#f97316);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      font-size:18px;
-      color:white;
-      box-shadow:0 0 25px rgba(249,115,22,0.55);
-    }
-
     .status-chip{
       font-size:11px;
       padding:5px 10px;
       border-radius:999px;
-      background:rgba(34,197,94,0.12);
-      color:#bbf7d0;
-      border:1px solid rgba(34,197,94,0.6);
+      background:rgba(16,185,129,0.08);
+      border:1px solid rgba(5,150,105,0.6);
+      color:#047857;
       display:flex;
       align-items:center;
       gap:6px;
@@ -137,29 +117,16 @@
       width:8px;
       height:8px;
       border-radius:999px;
-      background:#22c55e;
-      box-shadow:0 0 12px rgba(34,197,94,0.9);
-    }
-
-    .layout{
-      display:grid;
-      grid-template-columns: minmax(0,2.2fr) minmax(0,1.3fr);
-      gap:18px;
-      align-items:stretch;
-    }
-
-    @media (max-width:900px){
-      .layout{
-        grid-template-columns:1fr;
-      }
+      background:#10b981;
+      box-shadow:0 0 10px rgba(16,185,129,0.9);
     }
 
     .winner-card{
+      margin-top:4px;
       border-radius:var(--radius-lg);
-      background:
-        radial-gradient(circle at top,rgba(15,23,42,0.9),rgba(15,23,42,1));
-      border:1px solid rgba(148,163,184,0.6);
-      padding:18px 18px 20px;
+      background:linear-gradient(135deg,#ffffff,#fef3c7);
+      border:1px solid rgba(254,215,170,0.9);
+      padding:18px 18px 16px;
       position:relative;
       overflow:hidden;
     }
@@ -167,10 +134,10 @@
     .winner-card::before{
       content:"";
       position:absolute;
-      inset:-40px;
+      inset:-30%;
       background:
-        radial-gradient(circle at 20% 0,rgba(250,250,250,0.08),transparent 55%),
-        radial-gradient(circle at 80% 100%,rgba(251,191,36,0.08),transparent 55%);
+        radial-gradient(circle at 0 0,rgba(249,115,22,0.16),transparent 55%),
+        radial-gradient(circle at 100% 100%,rgba(56,189,248,0.18),transparent 55%);
       opacity:0.7;
       pointer-events:none;
       z-index:-1;
@@ -186,87 +153,65 @@
     .winner-label{
       font-size:11px;
       text-transform:uppercase;
-      letter-spacing:0.16em;
-      color:#9ca3af;
+      letter-spacing:0.18em;
+      color:var(--muted);
     }
 
-    .winner-small-chip{
+    .winner-chip{
       font-size:10px;
-      padding:3px 7px;
+      padding:3px 8px;
       border-radius:999px;
-      background:rgba(15,23,42,0.8);
+      background:rgba(15,23,42,0.04);
+      color:var(--muted);
       border:1px solid rgba(148,163,184,0.5);
-      display:flex;
-      align-items:center;
-      gap:5px;
-      color:#e5e7eb;
     }
 
     .highlight-number{
-      font-size:46px;
-      font-weight:800;
-      letter-spacing:0.06em;
       text-align:center;
-      margin-top:4px;
-      margin-bottom:6px;
-      color:#fef3c7;
-      text-shadow:
-        0 0 18px rgba(250,204,21,0.75),
-        0 0 40px rgba(250,204,21,0.60);
+      margin-top:6px;
+      margin-bottom:4px;
     }
 
-    .highlight-number span{
-      font-size:16px;
-      font-weight:600;
-      letter-spacing:0.2em;
-      text-transform:uppercase;
-      color:#fed7aa;
+    .highlight-number span.label{
       display:block;
-      margin-bottom:3px;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.22em;
+      color:var(--muted);
+      margin-bottom:2px;
+    }
+
+    .highlight-number div.value{
+      font-size:42px;
+      font-weight:800;
+      letter-spacing:0.12em;
+      color:#92400e;
+      text-shadow:0 0 16px rgba(250,204,21,0.9);
+    }
+
+    /* While mixing, give a subtle pulse to the number area */
+    .mixing .highlight-number div.value{
+      animation:pulseWinner 700ms ease-in-out infinite;
+    }
+
+    @keyframes pulseWinner{
+      0%{ transform:scale(1); text-shadow:0 0 10px rgba(250,204,21,0.55);}
+      50%{ transform:scale(1.04); text-shadow:0 0 24px rgba(250,204,21,0.9);}
+      100%{ transform:scale(1); text-shadow:0 0 10px rgba(250,204,21,0.55);}
     }
 
     .winner-name{
       text-align:center;
       font-size:16px;
       font-weight:600;
-      margin-bottom:4px;
+      margin-bottom:2px;
     }
 
-    .winner-detail-sub{
+    .winner-sub{
       text-align:center;
-      font-size:11px;
-      color:var(--muted);
-      margin-bottom:10px;
-    }
-
-    .grid-meta{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:8px;
-      margin-bottom:12px;
-      font-size:11px;
-    }
-
-    .meta-item{
-      padding:7px 9px;
-      border-radius:12px;
-      background:rgba(15,23,42,0.85);
-      border:1px solid rgba(55,65,81,0.9);
-      display:flex;
-      flex-direction:column;
-      gap:3px;
-    }
-
-    .meta-label{
-      text-transform:uppercase;
-      letter-spacing:0.12em;
-      color:var(--muted);
-      font-size:10px;
-    }
-
-    .meta-value{
       font-size:12px;
-      font-weight:500;
+      color:var(--muted);
+      margin-bottom:8px;
     }
 
     .actions-row{
@@ -274,7 +219,7 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      margin-top:6px;
+      margin-top:10px;
     }
 
     .btn-main{
@@ -283,26 +228,24 @@
       align-items:center;
       justify-content:center;
       gap:8px;
-      padding:9px 12px;
+      padding:9px 14px;
       border-radius:999px;
       border:none;
       cursor:pointer;
-      font-size:12px;
+      font-size:13px;
       font-weight:600;
-      background:linear-gradient(135deg,#f97316,#facc15);
-      color:#0b1120;
-      box-shadow:0 12px 26px rgba(249,115,22,0.55);
+      background:linear-gradient(135deg,#f97316,#fbbf24);
+      color:#111827;
+      box-shadow:0 12px 24px rgba(249,115,22,0.5);
       transition:transform 0.12s ease,box-shadow 0.12s ease,filter 0.12s ease;
     }
-
-    .btn-main:hover{
+    .btn-main:hover:not(:disabled){
       transform:translateY(-1px);
       filter:brightness(1.03);
-      box-shadow:0 16px 32px rgba(249,115,22,0.65);
+      box-shadow:0 16px 32px rgba(249,115,22,0.6);
     }
-
     .btn-main:disabled{
-      opacity:0.6;
+      opacity:0.7;
       cursor:default;
       transform:none;
       box-shadow:none;
@@ -312,21 +255,18 @@
       font-size:11px;
       padding:7px 11px;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      background:rgba(15,23,42,0.9);
-      color:#e5e7eb;
+      border:1px solid rgba(148,163,184,0.9);
+      background:rgba(248,250,252,0.9);
+      color:var(--muted);
       cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
     }
 
     .mix-strip{
-      margin-top:10px;
+      margin-top:12px;
       height:40px;
       border-radius:999px;
-      background:radial-gradient(circle at 50% 0,rgba(148,163,184,0.28),rgba(15,23,42,1));
-      border:1px solid rgba(148,163,184,0.5);
+      background:linear-gradient(135deg,#f9fafb,#e5e7eb);
+      border:1px solid rgba(209,213,219,0.9);
       overflow:hidden;
       display:flex;
       align-items:center;
@@ -339,24 +279,31 @@
       flex:0 0 80px;
       height:26px;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,0.6);
-      background:rgba(15,23,42,0.92);
+      border:1px dashed rgba(148,163,184,0.9);
+      background:#fefce8;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:11px;
-      color:#e5e7eb;
-      opacity:0.7;
+      font-size:12px;
+      color:#92400e;
+      opacity:0.9;
     }
 
+    /* Strong visible shaking / shuffling for 5s when .mixing is applied */
     .mixing .mix-strip .ticket{
-      animation:mixTickets 600ms linear infinite;
+      animation:mixTickets 0.35s ease-in-out infinite alternate;
     }
 
     @keyframes mixTickets{
-      0%{ transform:translateX(0); opacity:0.9;}
-      50%{ transform:translateX(-18px); opacity:0.5;}
-      100%{ transform:translateX(0); opacity:0.9;}
+      0%{
+        transform:translateX(0) rotate(-2deg);
+      }
+      50%{
+        transform:translateX(-10px) rotate(3deg);
+      }
+      100%{
+        transform:translateX(10px) rotate(-3deg);
+      }
     }
 
     .mix-hint{
@@ -365,7 +312,7 @@
       font-size:10px;
       text-transform:uppercase;
       letter-spacing:0.16em;
-      color:#9ca3af;
+      color:var(--muted);
       display:flex;
       align-items:center;
       gap:4px;
@@ -375,209 +322,86 @@
       width:6px;
       height:6px;
       border-radius:999px;
-      background:#f97316;
+      background:var(--accent);
       box-shadow:0 0 10px rgba(249,115,22,0.8);
     }
 
-    /* Right column: winners history + info */
-    .side-panel{
-      border-radius:var(--radius-lg);
-      background:rgba(15,23,42,0.92);
-      border:1px solid rgba(55,65,81,0.9);
-      padding:14px 14px 13px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .side-title{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:0.16em;
-      color:var(--muted);
-      margin-bottom:2px;
-    }
-
-    .side-note{
-      font-size:11px;
-      color:var(--muted);
-    }
-
-    .winners-list{
-      margin-top:6px;
-      max-height:190px;
-      overflow:auto;
-      border-radius:14px;
-      border:1px solid rgba(55,65,81,0.8);
-      background:rgba(15,23,42,0.9);
-    }
-
-    .winner-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:7px 9px;
-      font-size:11px;
-      border-bottom:1px solid rgba(31,41,55,0.9);
-    }
-    .winner-row:last-child{
-      border-bottom:none;
-    }
-    .winner-row-main{
-      display:flex;
-      flex-direction:column;
-      gap:1px;
-    }
-    .winner-row-title{
-      font-weight:500;
-      font-size:11px;
-    }
-    .winner-row-sub{
-      font-size:10px;
-      color:var(--muted);
-    }
-    .winner-row-pill{
-      font-size:10px;
-      padding:3px 7px;
-      border-radius:999px;
-      background:rgba(30,64,175,0.3);
-      border:1px solid rgba(129,140,248,0.6);
-      color:#e5e7eb;
-    }
-
     .status-text{
+      margin-top:8px;
       font-size:11px;
       color:var(--muted);
-      margin-top:5px;
+      text-align:left;
     }
 
-    .status-text strong{
-      color:#bfdbfe;
+    @media (max-width:640px){
+      .frame{
+        padding:18px 16px 16px;
+        border-radius:24px;
+      }
+      .event-main{
+        font-size:16px;
+      }
+      .highlight-number div.value{
+        font-size:34px;
+      }
     }
-
-    .small-link{
-      font-size:10px;
-      color:#93c5fd;
-      text-decoration:underline;
-      cursor:pointer;
-    }
-
-    .no-winners{
-      padding:8px;
-      font-size:11px;
-      color:var(--muted);
-      text-align:center;
-    }
-
   </style>
 </head>
 <body>
 <div class="frame" id="frame">
   <div class="top-row">
-    <div class="badge-stack">
-      <div class="event-pill">
-        <span>Lokamania 5</span>
-        <span style="width:4px;height:4px;border-radius:999px;background:#f97316;"></span>
-        <span>Tombola live draw</span>
-      </div>
-      <div class="event-title">
-        <div class="logo-orb">L</div>
-        <div>
-          <div>Grand Tombola Winner</div>
-          <div class="event-sub">Randomly selected from event registrations</div>
-        </div>
+    <div class="event-block">
+      <div class="logo-orb">L</div>
+      <div>
+        <div class="event-main" id="eventTitle">Lokamania 5</div>
+        <div class="event-sub">Tombola live draw</div>
       </div>
     </div>
-    <div class="status-chip" id="connectionChip">
+    <div class="status-chip">
       <span class="status-dot"></span>
       <span id="connectionLabel">Connecting to Firebase…</span>
     </div>
   </div>
 
-  <div class="layout">
-    <!-- LEFT: main winner area -->
-    <div class="winner-card" id="winnerCard">
-      <div class="winner-header-line">
-        <div>
-          <div class="winner-label">Current winner</div>
-        </div>
-        <div class="winner-small-chip">
-          <span style="width:8px;height:8px;border-radius:999px;background:#f97316;"></span>
-          <span id="winnerChipText">No number selected yet</span>
-        </div>
-      </div>
+  <div class="winner-card" id="winnerCard">
+    <div class="winner-header-line">
+      <div class="winner-label">Current winner</div>
+      <div class="winner-chip" id="winnerChipText">No number selected yet</div>
+    </div>
 
-      <div class="highlight-number" id="winnerNumber">
-        <span>TOMBOLA</span>
-        — — — —
-      </div>
+    <div class="highlight-number" id="winnerNumber">
+      <span class="label">Tombola number</span>
+      <div class="value">— — — —</div>
+    </div>
 
-      <div class="winner-name" id="winnerName">No winner yet</div>
-      <div class="winner-detail-sub" id="winnerSub">
-        Press “Pick random winner” to start the live draw.
-      </div>
+    <div class="winner-name" id="winnerName">No winner yet</div>
+    <div class="winner-sub" id="winnerSub">
+      Press “Pick random winner” to start the tombola draw.
+    </div>
 
-      <div class="grid-meta">
-        <div class="meta-item">
-          <div class="meta-label">Phone</div>
-          <div class="meta-value" id="metaPhone">—</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">City</div>
-          <div class="meta-value" id="metaCity">—</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Age group</div>
-          <div class="meta-value" id="metaAge">—</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">First time?</div>
-          <div class="meta-value" id="metaFirstTime">—</div>
-        </div>
-      </div>
+    <div class="actions-row">
+      <button class="btn-main" id="btnPick">
+        🎟 Pick random winner
+      </button>
+      <button class="btn-secondary" id="btnResetView" type="button">
+        Reset view
+      </button>
+    </div>
 
-      <div class="actions-row">
-        <button class="btn-main" id="btnPick">
-          <span>🎟 Pick random winner</span>
-        </button>
-        <button class="btn-secondary" id="btnResetView" type="button">
-          Clear view
-        </button>
-      </div>
-
-      <div class="mix-strip">
-        <div class="ticket">#1043</div>
-        <div class="ticket">#1019</div>
-        <div class="ticket">#1120</div>
-        <div class="ticket">#1095</div>
-        <div class="ticket">#1188</div>
-        <div class="mix-hint">
-          <span class="mix-dot"></span>
-          <span id="mixHintText">Waiting for draw…</span>
-        </div>
-      </div>
-
-      <div class="status-text" id="statusText">
-        Make sure this page is visible on the LED / TV when you press “Pick random winner”.
+    <div class="mix-strip">
+      <div class="ticket">#1043</div>
+      <div class="ticket">#1019</div>
+      <div class="ticket">#1120</div>
+      <div class="ticket">#1095</div>
+      <div class="ticket">#1188</div>
+      <div class="mix-hint">
+        <span class="mix-dot"></span>
+        <span id="mixHintText">Waiting for draw…</span>
       </div>
     </div>
 
-    <!-- RIGHT: winners history + info -->
-    <div class="side-panel">
-      <div>
-        <div class="side-title">Winners history</div>
-        <div class="side-note">
-          Every time you pick a winner, they are marked in the database to avoid duplicates.
-        </div>
-      </div>
-
-      <div class="winners-list" id="winnersList">
-        <div class="no-winners">No winners yet for this event.</div>
-      </div>
-
-      <div class="status-text" id="metaStatus">
-        Using registrations from <strong>events/lokamania5/registrations</strong>.
-      </div>
+    <div class="status-text" id="statusText">
+      Show this screen on your TV/LED and press the button when you’re ready to pick a winner.
     </div>
   </div>
 </div>
@@ -588,7 +412,6 @@
     getDatabase,
     ref,
     get,
-    onValue,
     update
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
   import {
@@ -596,6 +419,10 @@
     signInAnonymously,
     onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // --------- EASY EDIT CONSTANTS ----------
+  const EVENT_ID   = "lokamania5";
+  const EVENT_NAME = "Lokamania 5";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
@@ -611,121 +438,58 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
-  const EVENT_ID = "lokamania5";
   const registrationsRef = ref(db, `events/${EVENT_ID}/registrations`);
-  const winnersRef = ref(db, `events/${EVENT_ID}/winners`);
   const rootRef = ref(db);
 
   const frameEl = document.getElementById("frame");
-  const connectionChip = document.getElementById("connectionChip");
   const connectionLabel = document.getElementById("connectionLabel");
-
   const winnerNumberEl = document.getElementById("winnerNumber");
   const winnerNameEl = document.getElementById("winnerName");
   const winnerSubEl = document.getElementById("winnerSub");
   const winnerChipTextEl = document.getElementById("winnerChipText");
-  const metaPhoneEl = document.getElementById("metaPhone");
-  const metaCityEl = document.getElementById("metaCity");
-  const metaAgeEl = document.getElementById("metaAge");
-  const metaFirstTimeEl = document.getElementById("metaFirstTime");
   const statusTextEl = document.getElementById("statusText");
   const mixHintTextEl = document.getElementById("mixHintText");
-  const winnersListEl = document.getElementById("winnersList");
-  const metaStatusEl = document.getElementById("metaStatus");
+  const eventTitleEl = document.getElementById("eventTitle");
 
   const btnPick = document.getElementById("btnPick");
   const btnResetView = document.getElementById("btnResetView");
 
-  let registrationsCache = [];
+  eventTitleEl.textContent = EVENT_NAME;
+
   let picking = false;
 
-  // ------------- AUTH -------------
+  // --------- AUTH ----------
   signInAnonymously(auth).catch(err => {
     console.error("Anon auth error", err);
     connectionLabel.textContent = "Auth error – check Firebase rules.";
-    connectionChip.style.background = "rgba(127,29,29,0.5)";
   });
 
   onAuthStateChanged(auth, (user) => {
     if(user){
       connectionLabel.textContent = "Connected · Ready to draw";
-      subscribeRegistrations();
-      subscribeWinners();
     }
   });
 
-  // ------------- SUBSCRIPTIONS -------------
-
-  function subscribeRegistrations(){
-    onValue(registrationsRef, (snap) => {
-      const data = snap.val() || {};
-      const list = Object.entries(data).map(([id,val]) => ({ id, ...val }));
-      registrationsCache = list;
-      metaStatusEl.innerHTML = `Loaded <strong>${list.length}</strong> registrations for this event.`;
-    }, err => {
-      console.error(err);
-      metaStatusEl.textContent = "Error reading registrations. Check rules / path.";
-    });
-  }
-
-  function subscribeWinners(){
-    onValue(winnersRef, (snap) => {
-      const data = snap.val() || {};
-      renderWinnersList(data);
-    }, err => {
-      console.error(err);
-    });
-  }
-
-  function renderWinnersList(winnersObj){
-    winnersListEl.innerHTML = "";
-    const entries = Object.entries(winnersObj).map(([id,val]) => ({ id, ...val }));
-    if(!entries.length){
-      winnersListEl.innerHTML = `<div class="no-winners">No winners yet for this event.</div>`;
-      return;
-    }
-
-    // newest first
-    entries.sort((a,b) => (b.pickedAt || 0) - (a.pickedAt || 0));
-
-    entries.forEach(w => {
-      const row = document.createElement("div");
-      row.className = "winner-row";
-      const pickedDate = w.pickedAt ? new Date(w.pickedAt).toLocaleTimeString() : "—";
-      row.innerHTML = `
-        <div class="winner-row-main">
-          <div class="winner-row-title">${w.name || "Unknown guest"}</div>
-          <div class="winner-row-sub">
-            #${w.tambolaNumber ?? "–"} · ${w.phone || ""} · ${pickedDate}
-          </div>
-        </div>
-        <div class="winner-row-pill">Winner</div>
-      `;
-      winnersListEl.appendChild(row);
-    });
-  }
-
-  // ------------- PICK WINNER -------------
-
+  // --------- PICK WINNER WITH 5s SHUFFLE ----------
   btnPick.addEventListener("click", async () => {
     if(picking) return;
     picking = true;
     btnPick.disabled = true;
+
+    statusTextEl.textContent = "Fetching entries and mixing tombola tickets…";
+    mixHintTextEl.textContent = "Mixing…";
     frameEl.classList.add("mixing");
 
-    statusTextEl.textContent = "Mixing tombola tickets and choosing a random winner…";
-    mixHintTextEl.textContent = "Mixing…";
-
     try{
-      // Always fetch latest from DB in case other devices updated winners
       const snap = await get(registrationsRef);
       const data = snap.val() || {};
       const list = Object.entries(data).map(([id,val]) => ({ id, ...val }));
 
-      // Filter to registrations that are not winners yet
+      // Only entries that have not won yet
       const eligible = list.filter(r => !r.winner);
+
       if(!eligible.length){
-        statusTextEl.textContent = "No more available tombola entries to pick. All registrations already have winners.";
+        statusTextEl.textContent = "No available tombola entries. All registrations already have a winner flag.";
         mixHintTextEl.textContent = "No entries";
         frameEl.classList.remove("mixing");
         picking = false;
@@ -733,83 +497,72 @@
         return;
       }
 
-      // Random pick
+      // Random selection (decided now, revealed after 5s)
       const idx = Math.floor(Math.random() * eligible.length);
       const winner = eligible[idx];
+
       const now = Date.now();
 
-      // Multi-path update: mark winner on registration + save in winners list
-      const updates = {};
-      updates[`events/${EVENT_ID}/registrations/${winner.id}/winner`] = true;
-      updates[`events/${EVENT_ID}/registrations/${winner.id}/winnerPickedAt`] = now;
-      updates[`events/${EVENT_ID}/winners/${winner.id}`] = {
-        tambolaNumber: winner.tambolaNumber ?? null,
-        name: winner.name || "",
-        phone: winner.phone || "",
-        city: winner.city || "",
-        ageGroup: winner.ageGroup || "",
-        firstTime: typeof winner.firstTime !== "undefined" ? winner.firstTime : (winner.isFirstTime ?? null),
-        createdAt: winner.createdAt || null,
-        pickedAt: now
-      };
+      // After 5 seconds of visible shake, apply DB update + show result
+      setTimeout(async () => {
+        try{
+          const updates = {};
+          updates[`events/${EVENT_ID}/registrations/${winner.id}/winner`] = true;
+          updates[`events/${EVENT_ID}/registrations/${winner.id}/winnerPickedAt`] = now;
+          updates[`events/${EVENT_ID}/winners/${winner.id}`] = {
+            tambolaNumber: winner.tambolaNumber ?? null,
+            name: winner.name || "",
+            phone: winner.phone || "",
+            createdAt: winner.createdAt || null,
+            pickedAt: now
+          };
 
-      await update(rootRef, updates);
+          await update(rootRef, updates);
 
-      // Display on screen
-      const tombolaNumber = winner.tambolaNumber ?? "— — — —";
+          const tombolaNumber = winner.tambolaNumber ?? "----";
 
-      winnerNumberEl.innerHTML = `
-        <span>TOMBOLA</span>
-        ${tombolaNumber}
-      `;
-      winnerNameEl.textContent = winner.name || "Unknown guest";
-      const shortPhone = winner.phone ? String(winner.phone) : "";
-      winnerSubEl.textContent = shortPhone
-        ? `Winner phone: ${shortPhone}`
-        : `Winner selected from valid tombola entries.`;
+          winnerNumberEl.innerHTML = `
+            <span class="label">Tombola number</span>
+            <div class="value">#${tombolaNumber}</div>
+          `;
+          winnerNameEl.textContent = winner.name || "Unknown guest";
+          winnerSubEl.textContent = "Announce this number and invite the guest to the registration desk.";
+          winnerChipTextEl.textContent = `Winner: #${tombolaNumber}`;
 
-      metaPhoneEl.textContent = shortPhone || "—";
-      metaCityEl.textContent = winner.city || "—";
-      metaAgeEl.textContent = winner.ageGroup || "—";
-
-      const ft = (typeof winner.firstTime !== "undefined") ? winner.firstTime : winner.isFirstTime;
-      if(ft === true) metaFirstTimeEl.textContent = "Yes · First time in Lokamania";
-      else if(ft === false) metaFirstTimeEl.textContent = "No · Returning visitor";
-      else metaFirstTimeEl.textContent = "—";
-
-      winnerChipTextEl.textContent = `Winner: #${tombolaNumber}`;
-      statusTextEl.textContent = "Winner selected. Announce the number and invite them to the registration desk.";
-      mixHintTextEl.textContent = "Winner locked";
-
-      // stop animation after a short delay
-      setTimeout(() => {
-        frameEl.classList.remove("mixing");
-      }, 600);
+          statusTextEl.textContent = "Winner selected. You can keep this on screen while the guest comes to claim the prize.";
+          mixHintTextEl.textContent = "Winner locked";
+        }catch(errInner){
+          console.error(errInner);
+          statusTextEl.textContent = "Error while saving winner to Firebase. Check console / rules.";
+          mixHintTextEl.textContent = "Error";
+        }finally{
+          frameEl.classList.remove("mixing");
+          picking = false;
+          btnPick.disabled = false;
+        }
+      }, 5000); // 5 seconds shuffle
 
     }catch(err){
       console.error(err);
-      statusTextEl.textContent = "Something went wrong while picking a winner. Check console / Firebase rules.";
+      statusTextEl.textContent = "Something went wrong while fetching entries. Check console / Firebase rules.";
       mixHintTextEl.textContent = "Error";
       frameEl.classList.remove("mixing");
+      picking = false;
+      btnPick.disabled = false;
     }
-
-    picking = false;
-    btnPick.disabled = false;
   });
 
   btnResetView.addEventListener("click", () => {
-    winnerNumberEl.innerHTML = `<span>TOMBOLA</span>— — — —`;
+    winnerNumberEl.innerHTML = `
+      <span class="label">Tombola number</span>
+      <div class="value">— — — —</div>
+    `;
     winnerNameEl.textContent = "No winner yet";
-    winnerSubEl.textContent = "Press “Pick random winner” to start the live draw.";
+    winnerSubEl.textContent = "Press “Pick random winner” to start the tombola draw.";
     winnerChipTextEl.textContent = "No number selected yet";
-
-    metaPhoneEl.textContent = "—";
-    metaCityEl.textContent = "—";
-    metaAgeEl.textContent = "—";
-    metaFirstTimeEl.textContent = "—";
-
-    statusTextEl.textContent = "Make sure this page is visible on the LED / TV when you press “Pick random winner”.";
+    statusTextEl.textContent = "Show this screen on your TV/LED and press the button when you’re ready to pick a winner.";
     mixHintTextEl.textContent = "Waiting for draw…";
+    frameEl.classList.remove("mixing");
   });
 </script>
 </body>

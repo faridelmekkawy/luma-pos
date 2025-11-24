@@ -857,6 +857,22 @@
             <span class="summary-label" id="summary-service-label">Service Fee (0%)</span>
             <span id="summary-service">0.00</span>
           </div>
+
+          <!-- Discount code input -->
+          <div class="summary-row">
+            <span class="summary-label">Discount code</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input id="discount-code-input" class="field-input-pos" style="max-width:130px;" placeholder="Code"/>
+              <button type="button" id="btn-apply-discount" class="btn btn-ghost btn-small">Apply</button>
+            </div>
+          </div>
+
+          <!-- Discount row -->
+          <div class="summary-row" id="discount-row" style="display:none;">
+            <span class="summary-label" id="discount-label">Discount</span>
+            <span id="summary-discount">-0.00</span>
+          </div>
+
           <div class="summary-row">
             <span class="summary-label" id="summary-total-label">Total</span>
             <span id="summary-total" class="summary-total">0.00</span>
@@ -1093,6 +1109,13 @@
   const returnFullRowEl = qs("#return-full-row");
   const btnReturnFull = qs("#btn-return-full");
 
+  // Discount DOM
+  const discountCodeInputEl = qs("#discount-code-input");
+  const btnApplyDiscount = qs("#btn-apply-discount");
+  const discountRowEl = qs("#discount-row");
+  const summaryDiscountEl = qs("#summary-discount");
+  const discountLabelEl = qs("#discount-label");
+
   // Offline DOM
   const offlineStatusEl = qs("#offline-status");
   const offlineQueueListEl = qs("#offline-queue-list");
@@ -1146,6 +1169,10 @@
   let taxPercent = 0;
   let servicePercent = 0;
 
+  // Discount state
+  let appliedDiscount = null; // { id, code, percent, scope }
+  let currentCustomerHasUsedDiscountBefore = false;
+
   // Offline orders queue
   let offlineOrders = [];
   const OFFLINE_KEY_PREFIX = "luma_pos_offline_orders";
@@ -1195,10 +1222,21 @@
     cartItems.forEach(item=>{
       subtotal += item.price * item.qty;
     });
-    const taxAmount = subtotal * (taxPercent/100);
-    const serviceAmount = subtotal * (servicePercent/100);
-    const total = subtotal + taxAmount + serviceAmount;
-    return { subtotal, taxAmount, serviceAmount, total };
+
+    // Discount applies only in sale mode
+    let discountAmount = 0;
+    let effectiveSubtotal = subtotal;
+
+    if(currentMode === "sale" && appliedDiscount && appliedDiscount.percent > 0 && subtotal > 0){
+      discountAmount = subtotal * (appliedDiscount.percent / 100);
+      if(discountAmount > subtotal) discountAmount = subtotal;
+      effectiveSubtotal = subtotal - discountAmount;
+    }
+
+    const taxAmount = effectiveSubtotal * (taxPercent/100);
+    const serviceAmount = effectiveSubtotal * (servicePercent/100);
+    const total = effectiveSubtotal + taxAmount + serviceAmount;
+    return { subtotal, discountAmount, taxAmount, serviceAmount, total };
   }
 
   function updateCartSummary(totals){
@@ -1218,6 +1256,13 @@
       summaryTaxEl.textContent = "0.00";
       summaryServiceEl.textContent = "0.00";
       summaryTotalEl.textContent = "0.00";
+
+      // reset discount
+      appliedDiscount = null;
+      discountRowEl.style.display = "none";
+      summaryDiscountEl.textContent = "-0.00";
+      if(discountCodeInputEl) discountCodeInputEl.value = "";
+
       updateCartSummary({subtotal:0,taxAmount:0,serviceAmount:0,total:0});
       return;
     }
@@ -1246,6 +1291,20 @@
     cartTbody.innerHTML = html;
 
     const totals = computeTotals();
+
+    // Discount row
+    if(currentMode === "sale" && appliedDiscount && totals.discountAmount > 0){
+      discountRowEl.style.display = "flex";
+      summaryDiscountEl.textContent = `-${totals.discountAmount.toFixed(2)}`;
+      const label = appliedDiscount.code
+        ? `Discount (${appliedDiscount.code} · ${appliedDiscount.percent}%)`
+        : `Discount (${appliedDiscount.percent}%)`;
+      discountLabelEl.textContent = label;
+    } else {
+      discountRowEl.style.display = "none";
+      summaryDiscountEl.textContent = "-0.00";
+    }
+
     summarySubtotalEl.textContent = totals.subtotal.toFixed(2);
     summaryTaxEl.textContent = totals.taxAmount.toFixed(2);
     summaryServiceEl.textContent = totals.serviceAmount.toFixed(2);
@@ -1309,100 +1368,98 @@
     }
     renderCart();
   }
-function getBaseStockForProduct(product){
-  // If we have variants, sum their stock fields
-  if (Array.isArray(product.variants) && product.variants.length){
-    let sum = 0;
-    product.variants.forEach(v => {
-      if (!v) return;
-      const q =
-        typeof v.stockQty === "number" ? v.stockQty :
-        (typeof v.quantity === "number" ? v.quantity :
-        (typeof v.qty === "number" ? v.qty :
-        (typeof v.stock === "number" ? v.stock : 0)));
-      sum += q;
-    });
-    return sum;
+
+  function getBaseStockForProduct(product){
+    // If we have variants, sum their stock fields
+    if (Array.isArray(product.variants) && product.variants.length){
+      let sum = 0;
+      product.variants.forEach(v => {
+        if (!v) return;
+        const q =
+          typeof v.stockQty === "number" ? v.stockQty :
+          (typeof v.quantity === "number" ? v.quantity :
+          (typeof v.qty === "number" ? v.qty :
+          (typeof v.stock === "number" ? v.stock : 0)));
+        sum += q;
+      });
+      return sum;
+    }
+
+    // Fallback: use product-level fields
+    if (typeof product.stockQty === "number") return product.stockQty;
+    if (typeof product.stock === "number")    return product.stock;
+    if (typeof product.quantity === "number") return product.quantity;
+    if (typeof product.qty === "number")      return product.qty;
+    return null;
   }
 
-  // Fallback: use product-level fields
-  if (typeof product.stockQty === "number") return product.stockQty;
-  if (typeof product.stock === "number")    return product.stock;
-  if (typeof product.quantity === "number") return product.quantity;
-  if (typeof product.qty === "number")      return product.qty;
-  return null;
-}
-
   function computeProductStockLeft(product){
-  const baseStock = getBaseStockForProduct(product);
-  if (typeof baseStock !== "number") return null;
+    const baseStock = getBaseStockForProduct(product);
+    if (typeof baseStock !== "number") return null;
 
-  const baseId = product.id;
-  const usedInCart = cartItems.reduce((sum, item) => {
-    const pid = item.baseId || item.id;
-    return pid === baseId ? sum + item.qty : sum;
-  }, 0);
+    const baseId = product.id;
+    const usedInCart = cartItems.reduce((sum, item) => {
+      const pid = item.baseId || item.id;
+      return pid === baseId ? sum + item.qty : sum;
+    }, 0);
 
-  const left = baseStock - usedInCart;
-  return left < 0 ? 0 : left;
-}
+    const left = baseStock - usedInCart;
+    return left < 0 ? 0 : left;
+  }
 
+  function buildFlatVariantsForProduct(product){
+    const flat = [];
+    const variants = product.variants;
+    if(!Array.isArray(variants)) return flat;
 
+    variants.forEach((v,vIndex)=>{
+      // Prefer the product-level variantGroup if group name is missing
+      let groupName = v.name || v.groupName || product.variantGroup || "";
 
-function buildFlatVariantsForProduct(product){
-  const flat = [];
-  const variants = product.variants;
-  if(!Array.isArray(variants)) return flat;
+      const labelsArr = Array.isArray(v.labels)
+        ? v.labels
+        : (Array.isArray(v.options) ? v.options : null);
 
-  variants.forEach((v,vIndex)=>{
-    // Prefer the product-level variantGroup if group name is missing
-    let groupName = v.name || v.groupName || product.variantGroup || "";
+      if(labelsArr){
+        labelsArr.forEach((lbl,lIndex)=>{
+          const labelName = typeof lbl === "string"
+            ? lbl
+            : (lbl.label || lbl.name || `Option ${lIndex+1}`);
 
-    const labelsArr = Array.isArray(v.labels)
-      ? v.labels
-      : (Array.isArray(v.options) ? v.options : null);
+          const qty =
+            typeof lbl.stockQty === "number" ? lbl.stockQty :
+            (typeof lbl.quantity === "number" ? lbl.quantity :
+            (typeof lbl.qty === "number" ? lbl.qty :
+            (typeof lbl.stock === "number" ? lbl.stock : null)));
 
-    if(labelsArr){
-      labelsArr.forEach((lbl,lIndex)=>{
-        const labelName = typeof lbl === "string"
-          ? lbl
-          : (lbl.label || lbl.name || `Option ${lIndex+1}`);
-
+          flat.push({
+            groupName,
+            labelName,
+            qty,
+            groupIndex:vIndex,
+            labelIndex:lIndex
+          });
+        });
+      }else{
+        const labelName = v.label || v.name || `Variant ${vIndex+1}`;
         const qty =
-          typeof lbl.stockQty === "number" ? lbl.stockQty :
-          (typeof lbl.quantity === "number" ? lbl.quantity :
-          (typeof lbl.qty === "number" ? lbl.qty :
-          (typeof lbl.stock === "number" ? lbl.stock : null)));
+          typeof v.stockQty === "number" ? v.stockQty :
+          (typeof v.quantity === "number" ? v.quantity :
+          (typeof v.qty === "number" ? v.qty :
+          (typeof v.stock === "number" ? v.stock : null)));
 
         flat.push({
           groupName,
           labelName,
           qty,
           groupIndex:vIndex,
-          labelIndex:lIndex
+          labelIndex:null
         });
-      });
-    }else{
-      const labelName = v.label || v.name || `Variant ${vIndex+1}`;
-      const qty =
-        typeof v.stockQty === "number" ? v.stockQty :
-        (typeof v.quantity === "number" ? v.quantity :
-        (typeof v.qty === "number" ? v.qty :
-        (typeof v.stock === "number" ? v.stock : null)));
+      }
+    });
 
-      flat.push({
-        groupName,
-        labelName,
-        qty,
-        groupIndex:vIndex,
-        labelIndex:null
-      });
-    }
-  });
-
-  return flat;
-}
-
+    return flat;
+  }
 
   async function loadBrandAndBranch(){
     const brandRef = doc(db,"brands",brandId);
@@ -1480,11 +1537,11 @@ function buildFlatVariantsForProduct(product){
       const p = d.data() || {};
       if(p.isActive === false) return;
       const rawStock =
-  typeof p.stockQty === "number" ? p.stockQty :
-  (typeof p.stock === "number" ? p.stock :
-  (typeof p.quantity === "number" ? p.quantity :
-  (typeof p.qty === "number" ? p.qty :
-  (typeof p.currentStock === "number" ? p.currentStock : null))));
+        typeof p.stockQty === "number" ? p.stockQty :
+        (typeof p.stock === "number" ? p.stock :
+        (typeof p.quantity === "number" ? p.quantity :
+        (typeof p.qty === "number" ? p.qty :
+        (typeof p.currentStock === "number" ? p.currentStock : null))));
 
       products.push({
         id:d.id,
@@ -1520,10 +1577,12 @@ function buildFlatVariantsForProduct(product){
       const variantsInfo = p.variants && p.variants.length
         ? ` • Variants: ${p.variants.map(v=>v.name || "").filter(Boolean).join(", ")}`
         : "";
-     const stockDisplay = computeProductStockLeft(p);
-const stockInfo = typeof stockDisplay === "number"
-  ? ` • Stock: ${stockDisplay} left`
-  : "";
+
+      const stockDisplay = computeProductStockLeft(p);
+      const stockInfo = typeof stockDisplay === "number"
+        ? ` • Stock: ${stockDisplay} left`
+        : "";
+
       const thumbInner = p.imageUrl
         ? `<img src="${p.imageUrl}" alt="${p.name}"/>`
         : (p.name ? p.name[0].toUpperCase() : "P");
@@ -1840,6 +1899,7 @@ const stockInfo = typeof stockDisplay === "number"
       `;
       div.addEventListener("click",()=>{
         currentCustomerId = c.id;
+        currentCustomerHasUsedDiscountBefore = !!data.hasUsedDiscountCode;
         checkoutNameEl.value = name || "";
         checkoutPhoneEl.value = phone || "";
         checkoutEmailEl.value = email || "";
@@ -1882,6 +1942,7 @@ const stockInfo = typeof stockDisplay === "number"
         updatedAt:serverTimestamp()
       },{ merge:true });
       currentCustomerId = found.id;
+      currentCustomerHasUsedDiscountBefore = !!found.data.hasUsedDiscountCode;
       const data = {
         name: name || found.data.name || null,
         phone: phone || found.data.phone || null,
@@ -1894,10 +1955,12 @@ const stockInfo = typeof stockDisplay === "number"
       name: name || null,
       phone: phone || null,
       email: email || null,
+      hasUsedDiscountCode:false,
       createdAt:serverTimestamp(),
       updatedAt:serverTimestamp()
     });
     currentCustomerId = newRef.id;
+    currentCustomerHasUsedDiscountBefore = false;
     return { id:newRef.id, data:{ name, phone, email } };
   }
 
@@ -1976,6 +2039,7 @@ const stockInfo = typeof stockDisplay === "number"
     checkoutCardTxnRowEl.style.display = pm === "card" ? "block" : "none";
 
     currentCustomerId = null;
+    currentCustomerHasUsedDiscountBefore = false;
     checkoutNameEl.value = "";
     checkoutPhoneEl.value = "";
     checkoutEmailEl.value = "";
@@ -2037,58 +2101,58 @@ const stockInfo = typeof stockDisplay === "number"
     }
 
     productModalVariantsEl.innerHTML = "";
-if(currentFlatVariants.length){
-  productModalVariantsRowEl.style.display = "flex";
-  const groupDiv = document.createElement("div");
-  groupDiv.className = "field-pos";
-  const labelDiv = document.createElement("div");
-  labelDiv.className = "field-label-pos";
-  labelDiv.textContent = "Variant";
-  const selectEl = document.createElement("select");
-  selectEl.className = "field-select-pos";
-  selectEl.id = "product-variant-select";
+    if(currentFlatVariants.length){
+      productModalVariantsRowEl.style.display = "flex";
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "field-pos";
+      const labelDiv = document.createElement("div");
+      labelDiv.className = "field-label-pos";
+      labelDiv.textContent = "Variant";
+      const selectEl = document.createElement("select");
+      selectEl.className = "field-select-pos";
+      selectEl.id = "product-variant-select";
 
-  currentFlatVariants.forEach((fv, idx)=>{
-    const optionEl = document.createElement("option");
-    optionEl.value = String(idx);
+      currentFlatVariants.forEach((fv, idx)=>{
+        const optionEl = document.createElement("option");
+        optionEl.value = String(idx);
 
-    const baseLabel = fv.groupName
-      ? `${fv.groupName} — ${fv.labelName}`
-      : fv.labelName;
+        const baseLabel = fv.groupName
+          ? `${fv.groupName} — ${fv.labelName}`
+          : fv.labelName;
 
-    // Compute how many of this variant are left after cart items
-    let rawQty = typeof fv.qty === "number" ? fv.qty : null;
-    let availableQty = rawQty;
+        // compute how many of this variant are left after cart items
+        let rawQty = typeof fv.qty === "number" ? fv.qty : null;
+        let availableQty = rawQty;
 
-    if(rawQty != null){
-      const usedInCartVariant = cartItems.reduce((sum,item)=>{
-        if((item.baseId || item.id) !== product.id) return sum;
-        if(!item.variantChoices || !item.variantChoices.length) return sum;
+        if(rawQty != null){
+          const usedInCartVariant = cartItems.reduce((sum,item)=>{
+            if((item.baseId || item.id) !== product.id) return sum;
+            if(!item.variantChoices || !item.variantChoices.length) return sum;
 
-        const vc = item.variantChoices[0];
-        const sameLabel = vc.choice === fv.labelName;
-        const sameGroup =
-          !fv.groupName || !vc.group
-            ? true
-            : (vc.group === fv.groupName);
+            const vc = item.variantChoices[0];
+            const sameLabel = vc.choice === fv.labelName;
+            const sameGroup =
+              !fv.groupName || !vc.group
+                ? true
+                : (vc.group === fv.groupName);
 
-        return (sameLabel && sameGroup) ? sum + item.qty : sum;
-      },0);
+            return (sameLabel && sameGroup) ? sum + item.qty : sum;
+          },0);
 
-      availableQty = Math.max(0, rawQty - usedInCartVariant);
+          availableQty = Math.max(0, rawQty - usedInCartVariant);
+        }
+
+        const qtySuffix = availableQty != null ? ` (${availableQty} left)` : "";
+        optionEl.textContent = baseLabel + qtySuffix;
+        selectEl.appendChild(optionEl);
+      });
+
+      groupDiv.appendChild(labelDiv);
+      groupDiv.appendChild(selectEl);
+      productModalVariantsEl.appendChild(groupDiv);
+    }else{
+      productModalVariantsRowEl.style.display = "none";
     }
-
-    const qtySuffix = availableQty != null ? ` (${availableQty} left)` : "";
-    optionEl.textContent = baseLabel + qtySuffix;
-    selectEl.appendChild(optionEl);
-  });
-
-  groupDiv.appendChild(labelDiv);
-  groupDiv.appendChild(selectEl);
-  productModalVariantsEl.appendChild(groupDiv);
-}else{
-  productModalVariantsRowEl.style.display = "none";
-}
     productModalQtyEl.value = "1";
     productModalEl.style.display = "flex";
     productModalQtyEl.focus();
@@ -2245,194 +2309,188 @@ if(currentFlatVariants.length){
     return item.variantMeta;
   }
 
- async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId){
-  const sign = mode === "return" ? 1 : -1; // sale reduces, return adds
+  async function adjustStockForOrder(cartItemsSource, mode, brandIdParam = brandId){
+    const sign = mode === "return" ? 1 : -1; // sale reduces, return adds
 
-  // Group items by product
-  const byProduct = new Map();
-  cartItemsSource.forEach(item=>{
-    const pid = item.baseId || item.id;
-    if(!pid) return;
-    if(!byProduct.has(pid)) byProduct.set(pid, []);
-    byProduct.get(pid).push(item);
-  });
+    // Group items by product
+    const byProduct = new Map();
+    cartItemsSource.forEach(item=>{
+      const pid = item.baseId || item.id;
+      if(!pid) return;
+      if(!byProduct.has(pid)) byProduct.set(pid, []);
+      byProduct.get(pid).push(item);
+    });
 
-  for(const [pid, items] of byProduct.entries()){
-    const productRef = doc(db,"brands",brandIdParam,"products",pid);
+    for(const [pid, items] of byProduct.entries()){
+      const productRef = doc(db,"brands",brandIdParam,"products",pid);
 
-    try{
-      await runTransaction(db, async (tx)=>{
-        const snap = await tx.get(productRef);
-        if(!snap.exists()) return;
+      try{
+        await runTransaction(db, async (tx)=>{
+          const snap = await tx.get(productRef);
+          if(!snap.exists()) return;
 
-        const data = snap.data() || {};
-        let variantsArr = Array.isArray(data.variants) ? [...data.variants] : null;
+          const data = snap.data() || {};
+          let variantsArr = Array.isArray(data.variants) ? [...data.variants] : null;
 
-        // Start baseStock from variants sum if we have per-variant stock
-        let baseStock;
-        if(variantsArr){
-          baseStock = variantsArr.reduce((sum,v)=>{
-            const vs =
-              typeof v.stockQty === "number" ? v.stockQty :
-              (typeof v.quantity === "number" ? v.quantity :
-              (typeof v.qty === "number" ? v.qty :
-              (typeof v.stock === "number" ? v.stock : 0)));
-            return sum + vs;
-          },0);
-        }else{
-          baseStock =
-            typeof data.stockQty === "number" ? data.stockQty :
-            (typeof data.stock === "number" ? data.stock :
-            (typeof data.quantity === "number" ? data.quantity :
-            (typeof data.qty === "number" ? data.qty : 0)));
-        }
+          // Start baseStock from variants sum if we have per-variant stock
+          let baseStock;
+          if(variantsArr){
+            baseStock = variantsArr.reduce((sum,v)=>{
+              const vs =
+                typeof v.stockQty === "number" ? v.stockQty :
+                (typeof v.quantity === "number" ? v.quantity :
+                (typeof v.qty === "number" ? v.qty :
+                (typeof v.stock === "number" ? v.stock : 0)));
+              return sum + vs;
+            },0);
+          }else{
+            baseStock =
+              typeof data.stockQty === "number" ? data.stockQty :
+              (typeof data.stock === "number" ? data.stock :
+              (typeof data.quantity === "number" ? data.quantity :
+              (typeof data.qty === "number" ? data.qty : 0)));
+          }
 
-               const readQty = (obj) =>
-          typeof obj.stockQty === "number" ? obj.stockQty :
-          typeof obj.quantity === "number" ? obj.quantity :
-          typeof obj.qty === "number" ? obj.qty :
-          typeof obj.stock === "number" ? obj.stock : 0;
+          const readQty = (obj) =>
+            typeof obj.stockQty === "number" ? obj.stockQty :
+            typeof obj.quantity === "number" ? obj.quantity :
+            typeof obj.qty === "number" ? obj.qty :
+            typeof obj.stock === "number" ? obj.stock : 0;
 
-        const writeQty = (obj, newVal) => ({
-          ...obj,
-          stockQty: newVal,
-          quantity: newVal,
-          qty: newVal,
-          stock: newVal
-        });
- // Apply each cart item
-      items.forEach(item => {
-        const delta = sign * item.qty;
-        baseStock = Math.max(0, baseStock + delta);
+          const writeQty = (obj, newVal) => ({
+            ...obj,
+            stockQty: newVal,
+            quantity: newVal,
+            qty: newVal,
+            stock: newVal
+          });
 
-        if (!variantsArr) return;
+          // Apply each cart item
+          items.forEach(item => {
+            const delta = sign * item.qty;
+            baseStock = Math.max(0, baseStock + delta);
 
-        // ✅ Prefer using variantMeta (groupIndex + labelIndex from POS modal)
-        if (item.variantMeta && typeof item.variantMeta.groupIndex === "number") {
-          const gi = item.variantMeta.groupIndex;
-          const li = item.variantMeta.labelIndex;
+            if (!variantsArr) return;
 
-          if (!variantsArr[gi]) return;
+            // Prefer using variantMeta
+            if (item.variantMeta && typeof item.variantMeta.groupIndex === "number") {
+              const gi = item.variantMeta.groupIndex;
+              const li = item.variantMeta.labelIndex;
 
-          const v = { ...variantsArr[gi] };
+              if (!variantsArr[gi]) return;
 
-          if (li != null) {
-            // label-level stock (variant has labels/options array)
-            let labelsArr = Array.isArray(v.labels) ? [...v.labels]
-              : (Array.isArray(v.options) ? [...v.options] : null);
+              const v = { ...variantsArr[gi] };
 
-            if (!labelsArr || !labelsArr[li]) {
-              variantsArr[gi] = v;
+              if (li != null) {
+                let labelsArr = Array.isArray(v.labels) ? [...v.labels]
+                  : (Array.isArray(v.options) ? [...v.options] : null);
+
+                if (!labelsArr || !labelsArr[li]) {
+                  variantsArr[gi] = v;
+                  return;
+                }
+
+                const lbl = labelsArr[li];
+                const currentVarStock = readQty(lbl);
+                const newVarStock = Math.max(0, currentVarStock + delta);
+
+                labelsArr[li] = writeQty(lbl, newVarStock);
+
+                if (Array.isArray(v.labels)) v.labels = labelsArr;
+                else v.options = labelsArr;
+
+                variantsArr[gi] = v;
+              } else {
+                const currentVarStock = readQty(v);
+                const newVarStock = Math.max(0, currentVarStock + delta);
+                variantsArr[gi] = writeQty(v, newVarStock);
+              }
+
               return;
             }
 
-            const lbl = labelsArr[li];
-            const currentVarStock = readQty(lbl);
-            const newVarStock = Math.max(0, currentVarStock + delta);
+            // Fallback: match using variantChoices
+            if (item.variantChoices && item.variantChoices.length) {
+              const choice = item.variantChoices[0].choice;
+              const group  = item.variantChoices[0].group || null;
 
-            labelsArr[li] = writeQty(lbl, newVarStock);
+              variantsArr = variantsArr.map(v => {
+                if (!v) return v;
 
-            if (Array.isArray(v.labels)) v.labels = labelsArr;
-            else v.options = labelsArr;
+                const labelsArr = Array.isArray(v.labels) ? v.labels
+                  : (Array.isArray(v.options) ? v.options : null);
 
-            variantsArr[gi] = v;
-          } else {
-            // variant-level stock only (no inner labels)
-            const currentVarStock = readQty(v);
-            const newVarStock = Math.max(0, currentVarStock + delta);
-            variantsArr[gi] = writeQty(v, newVarStock);
-          }
+                if (labelsArr) {
+                  const newLabels = labelsArr.map(lbl => {
+                    const lblName = (typeof lbl === "string"
+                      ? lbl
+                      : (lbl.label || lbl.name || ""));
 
-          return;
-        }
+                    const sameLabel = lblName === choice;
+                    const sameGroup = !group || !v.name
+                      ? true
+                      : (v.name === group);
 
-        // 🔁 Fallback: match using variantChoices (group + choice)
-        if (item.variantChoices && item.variantChoices.length) {
-          const choice = item.variantChoices[0].choice;
-          const group  = item.variantChoices[0].group || null;
+                    if (!sameLabel || !sameGroup) return lbl;
 
-          variantsArr = variantsArr.map(v => {
-            if (!v) return v;
+                    const currentVarStock = readQty(lbl);
+                    const newVarStock = Math.max(0, currentVarStock + delta);
+                    return writeQty(lbl, newVarStock);
+                  });
 
-            const labelsArr = Array.isArray(v.labels) ? v.labels
-              : (Array.isArray(v.options) ? v.options : null);
+                  if (Array.isArray(v.labels)) return { ...v, labels: newLabels };
+                  return { ...v, options: newLabels };
+                } else {
+                  const sameLabel = v.label === choice || v.name === choice;
+                  const sameGroup = !group || !v.groupName
+                    ? true
+                    : (v.groupName === group);
 
-            if (labelsArr) {
-              // label-level structure
-              const newLabels = labelsArr.map(lbl => {
-                const lblName = (typeof lbl === "string"
-                  ? lbl
-                  : (lbl.label || lbl.name || ""));
+                  if (!sameLabel || !sameGroup) return v;
 
-                const sameLabel = lblName === choice;
-                const sameGroup = !group || !v.name
-                  ? true
-                  : (v.name === group);
-
-                if (!sameLabel || !sameGroup) return lbl;
-
-                const currentVarStock = readQty(lbl);
-                const newVarStock = Math.max(0, currentVarStock + delta);
-                return writeQty(lbl, newVarStock);
+                  const currentVarStock = readQty(v);
+                  const newVarStock = Math.max(0, currentVarStock + delta);
+                  return writeQty(v, newVarStock);
+                }
               });
-
-              if (Array.isArray(v.labels)) return { ...v, labels: newLabels };
-              return { ...v, options: newLabels };
-            } else {
-              // flat variant: one object with label/qty
-              const sameLabel = v.label === choice || v.name === choice;
-              const sameGroup = !group || !v.groupName
-                ? true
-                : (v.groupName === group);
-
-              if (!sameLabel || !sameGroup) return v;
-
-              const currentVarStock = readQty(v);
-              const newVarStock = Math.max(0, currentVarStock + delta);
-              return writeQty(v, newVarStock);
             }
           });
+
+          const updateData = {
+            stockQty: baseStock,
+            stock: baseStock,
+            quantity: baseStock,
+            qty: baseStock
+          };
+          if(variantsArr) updateData.variants = variantsArr;
+
+          tx.set(productRef, updateData, { merge:true });
+        });
+
+        // Update local cache for this product (top-level stock only)
+        if(brandIdParam === brandId){
+          const idx = products.findIndex(p=>p.id === pid);
+          if(idx >= 0){
+            const p = products[idx];
+            const currentTop =
+              typeof p.stockQty === "number" ? p.stockQty :
+              (typeof p.stock === "number" ? p.stock :
+              (typeof p.quantity === "number" ? p.quantity :
+              (typeof p.qty === "number" ? p.qty : 0)));
+
+            const totalDelta = items.reduce((sum,i)=> sum + sign * i.qty, 0);
+            const newTop = Math.max(0, currentTop + totalDelta);
+            products[idx] = { ...p, stockQty:newTop, stock:newTop, quantity:newTop, qty:newTop };
+          }
         }
-      });
-
-
-        const updateData = {
-          stockQty: baseStock,
-          stock: baseStock,
-          quantity: baseStock,
-          qty: baseStock
-        };
-        if(variantsArr) updateData.variants = variantsArr;
-
-        tx.set(productRef, updateData, { merge:true });
-      });
-
-      // Update local cache for this product (top-level stock only)
-      if(brandIdParam === brandId){
-        const idx = products.findIndex(p=>p.id === pid);
-        if(idx >= 0){
-          const p = products[idx];
-          const currentTop =
-            typeof p.stockQty === "number" ? p.stockQty :
-            (typeof p.stock === "number" ? p.stock :
-            (typeof p.quantity === "number" ? p.quantity :
-            (typeof p.qty === "number" ? p.qty : 0)));
-
-          // We could recompute from Firestore but for UI it's enough to
-          // apply the same total delta we used above:
-          const totalDelta = items.reduce((sum,i)=> sum + sign * i.qty, 0);
-          const newTop = Math.max(0, currentTop + totalDelta);
-          products[idx] = { ...p, stockQty:newTop, stock:newTop, quantity:newTop, qty:newTop };
-        }
+      }catch(e){
+        console.warn("Failed to adjust stock for product", pid, e);
       }
-    }catch(e){
-      console.warn("Failed to adjust stock for product", pid, e);
     }
-  }
 
-  // Re-render list with updated product stock
-  renderProductsList(topSearchEl.value);
-}
+    // Re-render list with updated product stock
+    renderProductsList(topSearchEl.value);
+  }
 
   async function syncQueuedOrders(){
     if(!offlineOrders.length){
@@ -2585,6 +2643,78 @@ if(currentFlatVariants.length){
     }
   }
 
+  async function handleApplyDiscount(){
+    if(currentMode !== "sale"){
+      showGlobalAlert("Discount codes can only be applied in Sale mode.","error");
+      return;
+    }
+
+    const rawCode = (discountCodeInputEl?.value || "").trim().toUpperCase();
+
+    // Clear if empty
+    if(!rawCode){
+      if(appliedDiscount){
+        appliedDiscount = null;
+        discountRowEl.style.display = "none";
+        summaryDiscountEl.textContent = "-0.00";
+        showGlobalAlert("Discount removed.","info");
+        renderCart();
+      }else{
+        showGlobalAlert("Enter a discount code first.","error");
+      }
+      return;
+    }
+
+    if(cartItems.length === 0){
+      showGlobalAlert("Add items to the cart before applying a discount.","error");
+      return;
+    }
+
+    try{
+      const discountsCol = collection(db,"brands",brandId,"discounts");
+      const qDisc = query(discountsCol, where("code","==", rawCode), limit(1));
+      const snap = await getDocs(qDisc);
+
+      if(snap.empty){
+        showGlobalAlert(`No discount code "${rawCode}" found.`,"error");
+        return;
+      }
+
+      const d = snap.docs[0];
+      const data = d.data() || {};
+      const isActive = data.isActive !== false;
+      const percent = typeof data.percent === "number" ? data.percent : null;
+      const scope = data.scope || "store_and_online";
+
+      if(!isActive){
+        showGlobalAlert("This discount code is inactive.","error");
+        return;
+      }
+      if(!percent || percent <= 0){
+        showGlobalAlert("This discount code has no valid percentage.","error");
+        return;
+      }
+
+      if(scope === "online_only"){
+        showGlobalAlert("This discount code can only be used online, not at the POS.","error");
+        return;
+      }
+
+      appliedDiscount = {
+        id: d.id,
+        code: rawCode,
+        percent,
+        scope
+      };
+
+      showGlobalAlert(`Discount "${rawCode}" applied (${percent}%).`,"ok");
+      renderCart();
+    }catch(e){
+      console.error("Error applying discount code", e);
+      showGlobalAlert("Error applying discount code. Check console.","error");
+    }
+  }
+
   async function handlePlaceOrder(){
     if(cartItems.length === 0){
       showCheckoutAlert("Cart is empty.");
@@ -2614,6 +2744,7 @@ if(currentFlatVariants.length){
     const subtotalPositive = totals.subtotal;
     const taxAmount = totals.taxAmount;
     const serviceAmount = totals.serviceAmount;
+    const discountAmount = totals.discountAmount || 0;
     const paymentMethod = pm;
 
     btnCheckoutConfirm.disabled = true;
@@ -2622,6 +2753,21 @@ if(currentFlatVariants.length){
       const customerResult = await ensureCustomer();
       const customerId = customerResult.id;
       const customer = customerResult.data;
+      const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
+
+      // If this order uses a discount, mark customer
+      if(appliedDiscount && customerId){
+        try{
+          const custRef = doc(db,"brands",brandId,"customers",customerId);
+          await setDoc(custRef,{
+            hasUsedDiscountCode:true,
+            lastDiscountCodeUsed: appliedDiscount.code,
+            lastDiscountUsedAt: serverTimestamp()
+          },{ merge:true });
+        }catch(e){
+          console.warn("Failed to flag customer discount usage", e);
+        }
+      }
 
       const orderId = await generateOrderId();
       const now = new Date();
@@ -2660,6 +2806,10 @@ if(currentFlatVariants.length){
         taxAmount: sign * taxAmount,
         serviceAmount: sign * serviceAmount,
         total: sign * totalPositive,
+        discountPercent: appliedDiscount?.percent || 0,
+        discountAmount: sign * (discountAmount || 0),
+        discountCode: appliedDiscount?.code || null,
+        discountScope: appliedDiscount?.scope || null,
         items:itemsForDb,
         customerId:customerId || null,
         customerName:customer?.name || nameOrNull(checkoutNameEl.value),
@@ -2696,7 +2846,7 @@ if(currentFlatVariants.length){
         console.warn("Stock adjust failed",e);
       }
 
-      // Update original order refund status if online and this is a return
+      // Update original order refund status if this is a return
       if(currentMode==="return" && currentReturnOrderMeta?.orderDocId && navigator.onLine){
         await recomputeOriginalRefundStatus(
           currentReturnOrderMeta.orderId,
@@ -2734,7 +2884,18 @@ if(currentFlatVariants.length){
         paymentMethod,
         cardTransaction: paymentMethod === "card" ? cardTxn : null,
         isReturn: currentMode==="return",
-        originalOrderId: orderData.originalOrderId || null
+        originalOrderId: orderData.originalOrderId || null,
+
+        // Discount details for email template
+        discount: appliedDiscount ? {
+          code: appliedDiscount.code,
+          percent: appliedDiscount.percent,
+          scope: appliedDiscount.scope || "store_and_online",
+          amount: discountAmount
+        } : null,
+
+        // Whether to issue a new coupon in the email (your n8n logic)
+        shouldIssueNewCoupon: !customerHadUsedDiscountBefore
       };
 
       fetch(WEBHOOK_URL,{
@@ -2744,6 +2905,13 @@ if(currentFlatVariants.length){
       }).catch(err=>console.error("Webhook error",err));
 
       showGlobalAlert(`${currentMode==="return" ? "Return" : "Order"} ${orderId} created successfully.`,"ok");
+
+      // Reset discount for next order
+      appliedDiscount = null;
+      if(discountCodeInputEl) discountCodeInputEl.value = "";
+      discountRowEl.style.display = "none";
+      summaryDiscountEl.textContent = "-0.00";
+
       cartItems = [];
       renderCart();
       currentCustomerId = null;
@@ -2781,6 +2949,12 @@ if(currentFlatVariants.length){
   }
 
   function updateModeUI(){
+    // reset discount on mode change
+    appliedDiscount = null;
+    if(discountCodeInputEl) discountCodeInputEl.value = "";
+    discountRowEl.style.display = "none";
+    summaryDiscountEl.textContent = "-0.00";
+
     if(currentMode==="sale"){
       modeSaleBtn.classList.add("mode-pill-active");
       modeReturnBtn.classList.remove("mode-pill-active");
@@ -3087,6 +3261,15 @@ if(currentFlatVariants.length){
       }, qty);
 
       closeProductModal();
+    });
+
+    // Discount events
+    btnApplyDiscount.addEventListener("click", ()=>{ handleApplyDiscount(); });
+    discountCodeInputEl.addEventListener("keydown",(e)=>{
+      if(e.key === "Enter"){
+        e.preventDefault();
+        handleApplyDiscount();
+      }
     });
 
     window.addEventListener("online",()=>{

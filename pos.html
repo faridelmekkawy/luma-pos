@@ -1219,27 +1219,30 @@
     return "U";
   }
 
-  function computeTotals(){
-    let subtotal = 0;
-    cartItems.forEach(item=>{
-      subtotal += item.price * item.qty;
-    });
+ function computeTotals(){
+  let subtotal = 0;
+  cartItems.forEach(item=>{
+    subtotal += item.price * item.qty;
+  });
 
-    // Discount applies only in sale mode
-    let discountAmount = 0;
-    let effectiveSubtotal = subtotal;
+  // Discount can apply in both sale + return
+  // (for returns we reuse the discount of the original order so the refund
+  // matches what the customer actually paid)
+  let discountAmount = 0;
+  let effectiveSubtotal = subtotal;
 
-    if(currentMode === "sale" && appliedDiscount && appliedDiscount.percent > 0 && subtotal > 0){
-      discountAmount = subtotal * (appliedDiscount.percent / 100);
-      if(discountAmount > subtotal) discountAmount = subtotal;
-      effectiveSubtotal = subtotal - discountAmount;
-    }
-
-    const taxAmount = effectiveSubtotal * (taxPercent/100);
-    const serviceAmount = effectiveSubtotal * (servicePercent/100);
-    const total = effectiveSubtotal + taxAmount + serviceAmount;
-    return { subtotal, discountAmount, taxAmount, serviceAmount, total };
+  if(appliedDiscount && appliedDiscount.percent > 0 && subtotal > 0){
+    discountAmount = subtotal * (appliedDiscount.percent / 100);
+    if(discountAmount > subtotal) discountAmount = subtotal;
+    effectiveSubtotal = subtotal - discountAmount;
   }
+
+  const taxAmount = effectiveSubtotal * (taxPercent/100);
+  const serviceAmount = effectiveSubtotal * (servicePercent/100);
+  const total = effectiveSubtotal + taxAmount + serviceAmount;
+  return { subtotal, discountAmount, taxAmount, serviceAmount, total };
+}
+
 
   function updateCartSummary(totals){
     const totalItems = cartItems.reduce((sum,i)=>sum + i.qty,0);
@@ -1294,18 +1297,23 @@
 
     const totals = computeTotals();
 
-    // Discount row
-    if(currentMode === "sale" && appliedDiscount && totals.discountAmount > 0){
-      discountRowEl.style.display = "flex";
-      summaryDiscountEl.textContent = `-${totals.discountAmount.toFixed(2)}`;
-      const label = appliedDiscount.code
-        ? `Discount (${appliedDiscount.code} · ${appliedDiscount.percent}%)`
-        : `Discount (${appliedDiscount.percent}%)`;
-      discountLabelEl.textContent = label;
-    } else {
-      discountRowEl.style.display = "none";
-      summaryDiscountEl.textContent = "-0.00";
-    }
+    
+    // Discount row (also in return mode if original order had a discount)
+if(appliedDiscount && totals.discountAmount > 0){
+  discountRowEl.style.display = "flex";
+  summaryDiscountEl.textContent = `-${totals.discountAmount.toFixed(2)}`;
+
+  const labelPrefix = currentMode === "sale" ? "Discount" : "Original discount";
+  const label = appliedDiscount.code
+    ? `${labelPrefix} (${appliedDiscount.code} · ${appliedDiscount.percent}%)`
+    : `${labelPrefix} (${appliedDiscount.percent}%)`;
+
+  discountLabelEl.textContent = label;
+} else {
+  discountRowEl.style.display = "none";
+  summaryDiscountEl.textContent = "-0.00";
+}
+
 
     summarySubtotalEl.textContent = totals.subtotal.toFixed(2);
     summaryTaxEl.textContent = totals.taxAmount.toFixed(2);
@@ -1787,20 +1795,32 @@
       });
     });
 
-    if(!anyRemaining){
-      cartItems = [];
-      renderCart();
-      showGlobalAlert("This order is already fully refunded. No remaining quantity to return.","info");
-      codeInputEl.value = "";
-      codeInputEl.focus();
-      return;
-    }
+  if(!anyRemaining){
+  cartItems = [];
+  renderCart();
+  showGlobalAlert("This order is already fully refunded. No remaining quantity to return.","info");
+  codeInputEl.value = "";
+  codeInputEl.focus();
+  return;
+}
 
-    renderCart();
-    showGlobalAlert(`Loaded order ${originalOrderId} for return.`,`ok`);
-    codeInputEl.value = "";
-    codeInputEl.focus();
-  }
+// 🔹 NEW: reuse original discount on this order
+if (typeof data.discountPercent === "number" && data.discountPercent > 0) {
+  appliedDiscount = {
+    id: data.discountId || null,
+    code: (data.discountCode || "").toString().toUpperCase() || null,
+    percent: data.discountPercent,
+    scope: data.discountScope || "store_and_online"
+  };
+} else {
+  appliedDiscount = null;
+}
+
+renderCart();
+showGlobalAlert(`Loaded order ${originalOrderId} for return.`,`ok`);
+codeInputEl.value = "";
+codeInputEl.focus();
+
 
   async function findExistingCustomer(email,phone){
     const customersCol = collection(db,"brands",brandId,"customers");
@@ -2780,13 +2800,15 @@
     const customer = customerResult.data;
 
     // Use GLOBAL appliedDiscount (from discount logic)
-    const orderHasDiscount = !!appliedDiscount;
-    const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
+   const orderHasDiscount = !!appliedDiscount;
+const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
+const isReturnMode = currentMode === "return";
 
-    // Rule: send coupon only if:
-    //  - no discount on this order
-    //  - AND customer never had a discount/coupon before
-    const willIssueNewCoupon = !orderHasDiscount && !customerHadUsedDiscountBefore;
+const willIssueNewCoupon =
+  !isReturnMode &&              // never issue coupons for returns
+  !orderHasDiscount &&
+  !customerHadUsedDiscountBefore;
+
 
     // If we are issuing a new coupon, mark the customer in Firestore
     if(customerId && willIssueNewCoupon && navigator.onLine){

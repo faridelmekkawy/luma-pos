@@ -391,6 +391,12 @@
       padding:16px 0;
     }
 
+    .chart-canvas{
+      width:100%;
+      max-width:100%;
+      height:190px;
+    }
+
     @media (max-width:960px){
       .shell{flex-direction:column;}
       .sidebar{
@@ -413,7 +419,7 @@
         <div class="brand-logo">L</div>
         <div>
           <div class="brand-main">Lokamania 5</div>
-          <div class="brand-sub">Guest insights · Tambola</div>
+          <div class="brand-sub">Guest insights · Tombola</div>
         </div>
       </div>
     </div>
@@ -471,7 +477,7 @@
           <div class="card-header">
             <div>
               <div class="card-title">Total registrations</div>
-              <div class="card-sub">All unique tambola entries for Lokamania 5</div>
+              <div class="card-sub">All unique tombola entries for Lokamania 5</div>
             </div>
           </div>
           <div class="kpi-value" id="kpiTotal">–</div>
@@ -482,10 +488,10 @@
           <div class="card-header">
             <div>
               <div class="card-title">Unique contacts</div>
-              <div class="card-sub">Phones &amp; emails (no duplicates)</div>
+              <div class="card-sub">Phones &amp; emails (same guest counted once)</div>
             </div>
           </div>
-          <div class="kpi-value" id="kpiUniquePhones">–</div>
+          <div class="kpi-value" id="kpiUniqueContacts">–</div>
           <div class="kpi-label">
             Phones: <span id="kpiPhonesInline">–</span> · Emails: <span id="kpiEmailsInline">–</span>
           </div>
@@ -500,6 +506,49 @@
           </div>
           <div class="kpi-value" id="kpiPeakHour">–</div>
           <div class="kpi-label" id="kpiPeakHourDetail">Waiting for data…</div>
+        </div>
+
+        <!-- Charts row 1 -->
+        <div class="card" style="grid-column:span 6;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Gender &amp; first-time</div>
+              <div class="card-sub">Split of visitors by gender and whether it’s their first Lokamania</div>
+            </div>
+          </div>
+          <canvas id="genderChart" class="chart-canvas"></canvas>
+        </div>
+
+        <div class="card" style="grid-column:span 6;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Registrations timeline</div>
+              <div class="card-sub">Number of registrations per hour (based on createdAt)</div>
+            </div>
+          </div>
+          <canvas id="hourlyChart" class="chart-canvas"></canvas>
+        </div>
+
+        <!-- Charts row 2 -->
+        <div class="card" style="grid-column:span 6;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Age groups</div>
+              <div class="card-sub">Distribution of visitors by age group</div>
+            </div>
+          </div>
+          <canvas id="ageChart" class="chart-canvas"></canvas>
+        </div>
+
+        <div class="card" style="grid-column:span 6;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Shopping focus &amp; discovery</div>
+              <div class="card-sub">What they’re here to buy · How they heard about Lokamania</div>
+            </div>
+          </div>
+          <canvas id="shoppingChart" class="chart-canvas" style="margin-bottom:10px;"></canvas>
+          <canvas id="heardChart" class="chart-canvas"></canvas>
         </div>
 
         <!-- Registrations list -->
@@ -524,7 +573,7 @@
               <thead>
               <tr>
                 <th>#</th>
-                <th>Tambola</th>
+                <th>Tombola</th>
                 <th>Name</th>
                 <th>Phone</th>
                 <th>Email</th>
@@ -602,7 +651,7 @@
         <div class="tab-pane" id="eventTab">
           <div class="field-grid">
             <div class="field" style="grid-column:span 4;">
-              <label for="tambolaStart">Tambola start number</label>
+              <label for="tambolaStart">Tombola start number</label>
               <input id="tambolaStart" class="input" type="number" min="1">
               <div class="small-note">First ticket number for Lokamania 5 (e.g. 1001).</div>
             </div>
@@ -628,6 +677,9 @@
   </main>
 </div>
 
+<!-- Chart.js for analytics visualisations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script type="module">
   // ---------------- FIREBASE INIT ----------------
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -646,29 +698,26 @@
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   const firebaseConfig = {
-  apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
-  authDomain: "events-339ce.firebaseapp.com",
-  projectId: "events-339ce",
-  storageBucket: "events-339ce.firebasestorage.app",
-  messagingSenderId: "175601544315",
-  appId: "1:175601544315:web:00c94b4affa972b3a286de",
-databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.app"
-
-};
-
+    apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
+    authDomain: "events-339ce.firebaseapp.com",
+    projectId: "events-339ce",
+    storageBucket: "events-339ce.firebasestorage.app",
+    messagingSenderId: "175601544315",
+    appId: "1:175601544315:web:00c94b4affa972b3a286de",
+    databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.app"
+  };
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const auth = getAuth(app);
 
   const EVENT_ID = "lokamania5";
-  const eventBaseRef = ref(db, `events/${EVENT_ID}`);
   const registrationsRef = ref(db, `events/${EVENT_ID}/registrations`);
   const settingsRef = ref(db, `events/${EVENT_ID}/settings`);
 
   const connectionStatusEl = document.getElementById("connectionStatus");
   const kpiTotalEl = document.getElementById("kpiTotal");
-  const kpiUniquePhonesEl = document.getElementById("kpiUniquePhones");
+  const kpiUniqueContactsEl = document.getElementById("kpiUniqueContacts");
   const kpiPhonesInlineEl = document.getElementById("kpiPhonesInline");
   const kpiEmailsInlineEl = document.getElementById("kpiEmailsInline");
   const kpiPeakHourEl = document.getElementById("kpiPeakHour");
@@ -728,9 +777,9 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
     tambolaLast: 1000,
     winnerLink: "",
     ballotMessageTemplate:
-      "Hey {name}! 🎪 Thanks for registering at Lokamania 5. Your tambola number is #{number}. Keep this message safe – we’ll use this number when we announce the winner later today.",
+      "Hey {name}! 🎪 Thanks for registering at Lokamania 5. Your tombola number is #{number}. Keep this message safe – we’ll use this number when we announce the winner later today.",
     winnerMessageTemplate:
-      "Hey {name}! 🎉 Your tambola number #{number} has been selected as a winner at Lokamania 5. Please head to the registration desk to claim your prize.",
+      "Hey {name}! 🎉 Your tombola number #{number} has been selected as a winner at Lokamania 5. Please head to the registration desk to claim your prize.",
     fields: {
       name:           { label: "Full name",                               required: true,  enabled: true,  order: 1 },
       phone:          { label: "Phone number (WhatsApp)",                 required: true,  enabled: true,  order: 2 },
@@ -741,16 +790,19 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
       schoolOrCollege:{ label: "School / College name",                   required: false, enabled: true,  order: 7 },
       favoriteBrand:  { label: "Favorite brand",                          required: false, enabled: true,  order: 8 },
       favoriteItem:   { label: "Favorite clothing item",                  required: false, enabled: true,  order: 9 },
-      brandsNextTime: { label: "Brands you'd love to see next time",     required: false, enabled: true,  order:10 },
-      heardAbout:     { label: "How did you hear about Lokamania?",      required: false, enabled: true,  order:11 },
-      firstTime:      { label: "Is it your first time in Lokamania?",    required: true,  enabled: true,  order:12 },
+      brandsNextTime: { label: "Brands you'd love to see next time",      required: false, enabled: true,  order:10 },
+      heardAbout:     { label: "How did you hear about Lokamania?",       required: false, enabled: true,  order:11 },
+      firstTime:      { label: "Is it your first time in Lokamania?",     required: true,  enabled: true,  order:12 },
       budgetRange:    { label: "Estimated budget today",                 required: false, enabled: true,  order:13 },
-      shoppingFocus:  { label: "What are you mainly shopping for today?",required: false, enabled: true,  order:14 }
+      shoppingFocus:  { label: "What are you mainly shopping for today?", required: false, enabled: true,  order:14 }
     }
   };
 
   let settingsCache = null;
   let registrationsCache = [];
+
+  // Chart.js instances
+  let genderChart, ageChart, heardChart, shoppingChart, hourlyChart;
 
   // ---------------- AUTH + INIT -----------------
   signInAnonymously(auth).catch(err => {
@@ -768,18 +820,14 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
   });
 
   async function ensureDefaultSettings(){
-    // If event/settings does not exist, create default structure
     const snap = await get(settingsRef);
     if(!snap.exists()){
       await set(settingsRef, DEFAULT_SETTINGS);
     }else{
-      // Merge new defaults with existing (in case we add new fields later)
       const existing = snap.val() || {};
       const merged = structuredClone(DEFAULT_SETTINGS);
-
       Object.assign(merged, existing);
       merged.fields = { ...DEFAULT_SETTINGS.fields, ...(existing.fields || {}) };
-
       await set(settingsRef, merged);
     }
   }
@@ -808,16 +856,13 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
       const val = snap.val() || DEFAULT_SETTINGS;
       settingsCache = val;
 
-      // Fields
       const fields = { ...DEFAULT_SETTINGS.fields, ...(val.fields || {}) };
       settingsCache.fields = fields;
       renderFieldsSettings(fields);
 
-      // Messages
       ballotMessageEl.value = val.ballotMessageTemplate || DEFAULT_SETTINGS.ballotMessageTemplate;
       winnerMessageEl.value = val.winnerMessageTemplate || DEFAULT_SETTINGS.winnerMessageTemplate;
 
-      // Event config
       tambolaStartEl.value = val.tambolaStart ?? DEFAULT_SETTINGS.tambolaStart;
       tambolaLastEl.value  = val.tambolaLast ?? DEFAULT_SETTINGS.tambolaLast;
       winnerLinkInputEl.value = val.winnerLink || "";
@@ -836,7 +881,6 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
   btnSaveSettings.addEventListener("click", async () => {
     if(!settingsCache) return;
 
-    // collect fields
     const newFields = { ...settingsCache.fields };
     Object.keys(newFields).forEach(key => {
       const labelInput = fieldsContainerEl.querySelector(`[data-field-label="${key}"]`);
@@ -898,7 +942,6 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
       return;
     }
 
-    // Sort by createdAt desc if present
     list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
 
     list.forEach((reg, idx) => {
@@ -934,10 +977,23 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
 
     const phoneSet = new Set();
     const emailSet = new Set();
-    const hourCount = {}; // "19" -> count
+    const contactSet = new Set();
+    const hourCount = {};
+
     list.forEach(reg => {
-      if(reg.phone) phoneSet.add(String(reg.phone).trim());
-      if(reg.email) emailSet.add(String(reg.email).trim().toLowerCase());
+      const phone = reg.phone ? String(reg.phone).trim() : "";
+      const email = reg.email ? String(reg.email).trim().toLowerCase() : "";
+
+      if(phone) phoneSet.add(phone);
+      if(email) emailSet.add(email);
+
+      // Unique contacts: one per person (prefer phone, else email)
+      if(phone){
+        contactSet.add("p:" + phone);
+      }else if(email){
+        contactSet.add("e:" + email);
+      }
+
       if(reg.createdAt){
         const d = new Date(reg.createdAt);
         if(!isNaN(d)){
@@ -947,7 +1003,7 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
       }
     });
 
-    kpiUniquePhonesEl.textContent = String(phoneSet.size + emailSet.size);
+    kpiUniqueContactsEl.textContent = String(contactSet.size);
     kpiPhonesInlineEl.textContent = `${phoneSet.size} phones`;
     kpiEmailsInlineEl.textContent = `${emailSet.size} emails`;
 
@@ -966,6 +1022,227 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
       const label = `${String(bestHour).padStart(2,"0")}:00–${String((bestHour+1)%24).padStart(2,"0")}:00`;
       kpiPeakHourEl.textContent = label;
       kpiPeakHourDetailEl.textContent = `${bestCount} registrations in that hour.`;
+    }
+
+    updateCharts(list, hourCount);
+  }
+
+  // ---------------- CHARTS -----------------
+  function updateCharts(list, hourCount){
+    if(!window.Chart) return; // safety
+
+    // Gender + first-time
+    const genderCounts = { female:0, male:0, prefer_not:0, other:0 };
+    const firstTimeCounts = { first:0, returning:0 };
+
+    list.forEach(reg => {
+      const g = (reg.gender || "").toLowerCase();
+      if(g.includes("female")) genderCounts.female++;
+      else if(g.includes("male")) genderCounts.male++;
+      else if(g) genderCounts.other++;
+      else genderCounts.prefer_not++;
+
+      const ft = (typeof reg.firstTime !== "undefined") ? reg.firstTime : reg.isFirstTime;
+      if(ft === true) firstTimeCounts.first++;
+      else if(ft === false) firstTimeCounts.returning++;
+    });
+
+    const genderLabels = ["Female","Male","Prefer not / other"];
+    const genderData = [
+      genderCounts.female,
+      genderCounts.male,
+      genderCounts.prefer_not + genderCounts.other
+    ];
+
+    const firstLabels = ["First time","Returning"];
+    const firstData = [firstTimeCounts.first, firstTimeCounts.returning];
+
+    const genderCtx = document.getElementById("genderChart").getContext("2d");
+    if(!genderChart){
+      genderChart = new Chart(genderCtx, {
+        type: "doughnut",
+        data: {
+          labels: genderLabels,
+          datasets: [{
+            data: genderData,
+            backgroundColor: ["#f97316","#0f766e","#e5e7eb"]
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position:"bottom", labels:{ boxWidth:12,font:{size:11} } },
+            title: {
+              display:true,
+              text:`First time vs returning — ${firstData[0]} / ${firstData[1]}`,
+              font:{size:11,weight:"600"}
+            }
+          },
+          cutout:"55%"
+        }
+      });
+    }else{
+      genderChart.data.labels = genderLabels;
+      genderChart.data.datasets[0].data = genderData;
+      genderChart.options.plugins.title.text = `First time vs returning — ${firstData[0]} / ${firstData[1]}`;
+      genderChart.update();
+    }
+
+    // Age groups
+    const ageBuckets = ["13-17","18-24","25-34","35-44","45+"];
+    const ageCounts = { "13-17":0,"18-24":0,"25-34":0,"35-44":0,"45+":0 };
+    list.forEach(reg => {
+      const a = reg.ageGroup || "";
+      if(ageCounts[a] !== undefined) ageCounts[a]++;
+    });
+    const ageData = ageBuckets.map(k => ageCounts[k]);
+    const ageCtx = document.getElementById("ageChart").getContext("2d");
+    if(!ageChart){
+      ageChart = new Chart(ageCtx, {
+        type:"bar",
+        data:{
+          labels:ageBuckets,
+          datasets:[{
+            label:"Registrations",
+            data:ageData,
+            backgroundColor:"#0f766e"
+          }]
+        },
+        options:{
+          scales:{
+            x:{ ticks:{font:{size:11}} },
+            y:{ beginAtZero:true, ticks:{stepSize:1,font:{size:11}} }
+          },
+          plugins:{
+            legend:{display:false}
+          }
+        }
+      });
+    }else{
+      ageChart.data.labels = ageBuckets;
+      ageChart.data.datasets[0].data = ageData;
+      ageChart.update();
+    }
+
+    // How did you hear about Lokamania?
+    const heardBuckets = ["instagram","tiktok","friend","influencer","previous_lokamania","other",""];
+    const heardCounts = { instagram:0,tiktok:0,friend:0,influencer:0,previous_lokamania:0,other:0,"":0 };
+    list.forEach(reg => {
+      const h = (reg.heardAbout || "").toLowerCase();
+      if(heardCounts[h] !== undefined) heardCounts[h]++;
+      else heardCounts.other++;
+    });
+    const heardLabels = ["Instagram","TikTok","Friend","Influencer","Previous Lokamania","Other/empty"];
+    const heardData = [
+      heardCounts.instagram,
+      heardCounts.tiktok,
+      heardCounts.friend,
+      heardCounts.influencer,
+      heardCounts.previous_lokamania,
+      heardCounts.other + heardCounts[""]
+    ];
+    const heardCtx = document.getElementById("heardChart").getContext("2d");
+    if(!heardChart){
+      heardChart = new Chart(heardCtx, {
+        type:"pie",
+        data:{
+          labels:heardLabels,
+          datasets:[{
+            data:heardData,
+            backgroundColor:["#0f766e","#f97316","#22c55e","#3b82f6","#eab308","#e5e7eb"]
+          }]
+        },
+        options:{
+          plugins:{
+            legend:{ position:"bottom", labels:{boxWidth:10,font:{size:10}} }
+          }
+        }
+      });
+    }else{
+      heardChart.data.labels = heardLabels;
+      heardChart.data.datasets[0].data = heardData;
+      heardChart.update();
+    }
+
+    // Shopping focus
+    const shoppingCounts = { clothes:0,accessories:0,bags:0,shoes:0,jewelry:0,beauty:0,other:0 };
+    list.forEach(reg => {
+      const focus = (reg.shoppingFocus || "").split(",").map(s=>s.trim().toLowerCase()).filter(Boolean);
+      focus.forEach(f => {
+        if(shoppingCounts[f] !== undefined) shoppingCounts[f]++;
+        else shoppingCounts.other++;
+      });
+    });
+    const shoppingLabels = ["Clothes","Accessories","Bags","Shoes","Jewelry","Beauty","Other"];
+    const shoppingData = [
+      shoppingCounts.clothes,
+      shoppingCounts.accessories,
+      shoppingCounts.bags,
+      shoppingCounts.shoes,
+      shoppingCounts.jewelry,
+      shoppingCounts.beauty,
+      shoppingCounts.other
+    ];
+    const shoppingCtx = document.getElementById("shoppingChart").getContext("2d");
+    if(!shoppingChart){
+      shoppingChart = new Chart(shoppingCtx, {
+        type:"bar",
+        data:{
+          labels:shoppingLabels,
+          datasets:[{
+            label:"Mainly shopping for",
+            data:shoppingData,
+            backgroundColor:"#f97316"
+          }]
+        },
+        options:{
+          scales:{
+            x:{ ticks:{font:{size:10}} },
+            y:{ beginAtZero:true, ticks:{stepSize:1,font:{size:10}} }
+          },
+          plugins:{
+            legend:{display:false}
+          }
+        }
+      });
+    }else{
+      shoppingChart.data.labels = shoppingLabels;
+      shoppingChart.data.datasets[0].data = shoppingData;
+      shoppingChart.update();
+    }
+
+    // Registrations timeline (per hour)
+    const hours = Array.from({length:24},(_,i)=>i);
+    const hourlyData = hours.map(h => hourCount[h] || 0);
+    const hourlyCtx = document.getElementById("hourlyChart").getContext("2d");
+    if(!hourlyChart){
+      hourlyChart = new Chart(hourlyCtx, {
+        type:"line",
+        data:{
+          labels: hours.map(h => String(h).padStart(2,"0")+":00"),
+          datasets:[{
+            label:"Registrations per hour",
+            data:hourlyData,
+            borderColor:"#0f766e",
+            backgroundColor:"rgba(15,118,110,0.1)",
+            tension:0.3,
+            fill:true,
+            pointRadius:2
+          }]
+        },
+        options:{
+          scales:{
+            x:{ ticks:{maxTicksLimit:8,font:{size:10}} },
+            y:{ beginAtZero:true, ticks:{stepSize:1,font:{size:10}} }
+          },
+          plugins:{
+            legend:{display:false}
+          }
+        }
+      });
+    }else{
+      hourlyChart.data.labels = hours.map(h => String(h).padStart(2,"0")+":00");
+      hourlyChart.data.datasets[0].data = hourlyData;
+      hourlyChart.update();
     }
   }
 
@@ -993,7 +1270,7 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
     }
     const rows = [];
     const header = [
-      "id","tambolaNumber","name","phone","email","gender","city","ageGroup",
+      "id","tombolaNumber","name","phone","email","gender","city","ageGroup",
       "schoolOrCollege","favoriteBrand","favoriteItem","brandsNextTime",
       "heardAbout","firstTime","budgetRange","shoppingFocus","filledBy","createdAt"
     ];
@@ -1046,3 +1323,4 @@ databaseURL: "https://events-339ce-default-rtdb.europe-west1.firebasedatabase.ap
 </script>
 </body>
 </html>
+

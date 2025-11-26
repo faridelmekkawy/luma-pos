@@ -1837,7 +1837,7 @@ renderCart();
 showGlobalAlert(`Loaded order ${originalOrderId} for return.`,`ok`);
 codeInputEl.value = "";
 codeInputEl.focus();
-
+  }
 
   async function findExistingCustomer(email,phone){
     const customersCol = collection(db,"brands",brandId,"customers");

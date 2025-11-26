@@ -1789,7 +1789,13 @@ if(appliedDiscount && totals.discountAmount > 0){
       orderId:originalOrderId,
       data
     };
-
+// 💡 Update VAT / Service labels in the UI for this order
+if (typeof data.taxPercent === "number") {
+  summaryTaxLabelEl.textContent = `VAT (${data.taxPercent}%)`;
+}
+if (typeof data.servicePercent === "number") {
+  summaryServiceLabelEl.textContent = `Service Fee (${data.servicePercent}%)`;
+}
     const items = Array.isArray(data.items) ? data.items : [];
     cartItems = [];
     let anyRemaining = false;
@@ -2619,11 +2625,11 @@ codeInputEl.focus();
           isReturn: o.mode==="return",
           originalOrderId: o.originalOrderMeta?.orderId || null,
           originalOrderDocId: o.originalOrderMeta?.orderDocId || null,
-          originalPaymentMethod: o.originalOrderMeta?.data?.paymentMethod || null
-            cashierId: o.posUser?.id || null,
-  cashierUsername: o.posUser?.username || null,
-  cashierDisplayName: o.posUser?.displayName || null,
-  cashierRole: o.posUser?.role || null
+         originalPaymentMethod: o.originalOrderMeta?.data?.paymentMethod || null,
+cashierId: o.posUser?.id || null,
+cashierUsername: o.posUser?.username || null,
+cashierDisplayName: o.posUser?.displayName || null,
+cashierRole: o.posUser?.role || null
 
         };
 
@@ -2985,7 +2991,7 @@ const baseOrderData = {
       } : null,
 
       // 👉 what n8n/email should use for issuing a coupon
-      shouldIssueNewCoupon: willIssueNewCoupon
+      shouldIssueNewCoupon: willIssueNewCoupon,
         refundAmount: currentMode === "return" ? totalPositive : 0
 
     };

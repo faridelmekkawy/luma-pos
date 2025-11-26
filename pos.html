@@ -1219,15 +1219,12 @@
     return "U";
   }
 
- function computeTotals(){
+function computeTotals(){
   let subtotal = 0;
   cartItems.forEach(item=>{
     subtotal += item.price * item.qty;
   });
 
-  // Discount can apply in both sale + return
-  // (for returns we reuse the discount of the original order so the refund
-  // matches what the customer actually paid)
   let discountAmount = 0;
   let effectiveSubtotal = subtotal;
 
@@ -1237,18 +1234,44 @@
     effectiveSubtotal = subtotal - discountAmount;
   }
 
-  const taxAmount = effectiveSubtotal * (taxPercent/100);
-  const serviceAmount = effectiveSubtotal * (servicePercent/100);
+  // 👉 Use original order's tax/service for RETURNS
+  let effectiveTaxPercent = taxPercent;
+  let effectiveServicePercent = servicePercent;
+
+  if(currentMode === "return" && currentReturnOrderMeta && currentReturnOrderMeta.data){
+    const od = currentReturnOrderMeta.data;
+    if (typeof od.taxPercent === "number") {
+      effectiveTaxPercent = od.taxPercent;
+    }
+    if (typeof od.servicePercent === "number") {
+      effectiveServicePercent = od.servicePercent;
+    }
+  }
+
+  const taxAmount = effectiveSubtotal * (effectiveTaxPercent/100);
+  const serviceAmount = effectiveSubtotal * (effectiveServicePercent/100);
   const total = effectiveSubtotal + taxAmount + serviceAmount;
+
   return { subtotal, discountAmount, taxAmount, serviceAmount, total };
 }
-
 
   function updateCartSummary(totals){
     const totalItems = cartItems.reduce((sum,i)=>sum + i.qty,0);
     cartSummaryCountEl.textContent = totalItems === 1 ? "1 item" : `${totalItems} items`;
     cartSummaryTotalEl.textContent = totals.total.toFixed(2);
   }
+// Show original VAT / Service % in the UI for this return
+if (currentReturnOrderMeta && currentReturnOrderMeta.data) {
+  const od = currentReturnOrderMeta.data;
+
+  if (typeof od.taxPercent === "number") {
+    summaryTaxLabelEl.textContent = `VAT (${od.taxPercent}%)`;
+  }
+
+  if (typeof od.servicePercent === "number") {
+    summaryServiceLabelEl.textContent = `Service Fee (${od.servicePercent}%)`;
+  }
+}
 
   function renderCart(){
     if(cartItems.length === 0){
@@ -2295,10 +2318,11 @@ codeInputEl.focus();
       branchName: branchData?.name || null,
       brandLogoUrl: brandData?.logoUrl || brandData?.logo || null,
       posUser:{
-        username:posUser?.username || null,
-        displayName:posUser?.displayName || null,
-        role:posUser?.role || null
-      },
+  id: posUser?.id || null,
+  username: posUser?.username || null,
+  displayName: posUser?.displayName || null,
+  role: posUser?.role || null
+},
       originalOrderMeta: originalOrderMeta || null,
       createdAtLocal:(new Date()).toISOString()
     };
@@ -2596,6 +2620,11 @@ codeInputEl.focus();
           originalOrderId: o.originalOrderMeta?.orderId || null,
           originalOrderDocId: o.originalOrderMeta?.orderDocId || null,
           originalPaymentMethod: o.originalOrderMeta?.data?.paymentMethod || null
+            cashierId: o.posUser?.id || null,
+  cashierUsername: o.posUser?.username || null,
+  cashierDisplayName: o.posUser?.displayName || null,
+  cashierRole: o.posUser?.role || null
+
         };
 
         await setDoc(orderRef,orderData);
@@ -2800,14 +2829,15 @@ codeInputEl.focus();
     const customer = customerResult.data;
 
     // Use GLOBAL appliedDiscount (from discount logic)
-   const orderHasDiscount = !!appliedDiscount;
-const customerHadUsedDiscountBefore = currentCustomerHasUsedDiscountBefore === true;
+const orderHasDiscount = !!appliedDiscount;
 const isReturnMode = currentMode === "return";
 
+// 👉 New rule:
+// - Not a return
+// - No discount was applied on THIS order
 const willIssueNewCoupon =
-  !isReturnMode &&              // never issue coupons for returns
-  !orderHasDiscount &&
-  !customerHadUsedDiscountBefore;
+  !isReturnMode &&
+  !orderHasDiscount;
 
 
     // If we are issuing a new coupon, mark the customer in Firestore
@@ -2848,30 +2878,37 @@ const willIssueNewCoupon =
 
     const sign = currentMode==="return" ? -1 : 1;
 
-    const baseOrderData = {
-      orderId,
-      createdAt:serverTimestamp(),
-      createdAtLocal:now.toISOString(),
-      paymentMethod,
-      subtotal: sign * subtotalPositive,
-      taxPercent,
-      servicePercent,
-      taxAmount: sign * taxAmount,
-      serviceAmount: sign * serviceAmount,
-      total: sign * totalPositive,
-      discountPercent: appliedDiscount?.percent || 0,
-      discountAmount: sign * (discountAmount || 0),
-      discountCode: appliedDiscount?.code || null,
-      discountScope: appliedDiscount?.scope || null,
-      items:itemsForDb,
-      customerId:customerId || null,
-      customerName:customer?.name || nameOrNull(checkoutNameEl.value),
-      customerPhone:customer?.phone || phoneOrNull(checkoutPhoneEl.value),
-      customerEmail:customer?.email || emailOrNull(checkoutEmailEl.value),
-      cardTransaction: paymentMethod === "card" ? cardTxn : null,
-      brandId,
-      branchId
-    };
+const baseOrderData = {
+  orderId,
+  createdAt: serverTimestamp(),
+  createdAtLocal: now.toISOString(),
+  paymentMethod,
+  subtotal: sign * subtotalPositive,
+  taxPercent,
+  servicePercent,
+  taxAmount: sign * taxAmount,
+  serviceAmount: sign * serviceAmount,
+  total: sign * totalPositive,
+  discountPercent: appliedDiscount?.percent || 0,
+  discountAmount: sign * (discountAmount || 0),
+  discountCode: appliedDiscount?.code || null,
+  discountScope: appliedDiscount?.scope || null,
+  items: itemsForDb,
+  customerId: customerId || null,
+  customerName: customer?.name || nameOrNull(checkoutNameEl.value),
+  customerPhone: customer?.phone || phoneOrNull(checkoutPhoneEl.value),
+  customerEmail: customer?.email || emailOrNull(checkoutEmailEl.value),
+  cardTransaction: paymentMethod === "card" ? cardTxn : null,
+  brandId,
+  branchId,
+
+  // 👇 ADD THESE 4 LINES
+  cashierId: posUser?.id || null,
+  cashierUsername: posUser?.username || null,
+  cashierDisplayName: posUser?.displayName || null,
+  cashierRole: posUser?.role || null
+};
+
 
     const orderData = currentMode==="return"
       ? {
@@ -2949,6 +2986,8 @@ const willIssueNewCoupon =
 
       // 👉 what n8n/email should use for issuing a coupon
       shouldIssueNewCoupon: willIssueNewCoupon
+        refundAmount: currentMode === "return" ? totalPositive : 0
+
     };
 
     console.log("POS → Webhook payload:", payload);

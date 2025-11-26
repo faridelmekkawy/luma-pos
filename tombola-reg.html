@@ -111,30 +111,25 @@
       justify-content:space-between;
       gap:12px;
     }
-   .logo-badge{
-  width:180px;
-  height:60px;
-  border-radius:16px;
-  background:#020617;          /* dark base behind banner */
+  .logo-badge{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:#0f172a; /* dark navy background */
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 14px 30px rgba(15,23,42,0.6);
   overflow:hidden;
-  position:relative;
-}
-
-/* remove the “5” overlay completely */
-.logo-badge::after{
-  content:none;
+  box-shadow:0 12px 30px rgba(15,23,42,0.5);
 }
 
 .logo-image{
-  width:100%;
-  height:auto;
-  object-fit:contain;          /* show whole logo, no crop */
-  border-radius:inherit;
+  width:80%;
+  height:80%;
+  object-fit:contain;    /* ← show full logo */
+  border-radius:50%;     /* keep circle */
 }
+
 
     .hero-title-block{
       display:flex;

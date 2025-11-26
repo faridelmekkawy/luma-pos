@@ -681,6 +681,7 @@
                 <!-- Filled by JS -->
               </div>
             </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
               <!-- WhatsApp option removed as requested -->
               <button id="btn-save-receipt-settings" class="btn btn-primary">Save</button>
@@ -902,138 +903,124 @@
       }
     });
 
-    /* CREATE BRAND (fixed) */
-    createForm.addEventListener("submit", async e => {
-      e.preventDefault();
-      clearAuthAlert();
+    /* /* CREATE BRAND */
+createForm.addEventListener("submit", async e => {
+  e.preventDefault();
+  clearAuthAlert();
 
-      const brandName = qs("#brand-name").value.trim();
-      const brandCountry = qs("#brand-country").value.trim();
-      const ownerName = qs("#owner-name").value.trim();
-      const email = qs("#owner-email").value.trim();
-      const pw = qs("#owner-password").value;
+  const brandName = qs("#brand-name").value.trim();
+  const brandCountry = qs("#brand-country").value.trim();
+  const ownerName = qs("#owner-name").value.trim();
+  const email = qs("#owner-email").value.trim();
+  const pw = qs("#owner-password").value;
 
-      if (!brandName || !ownerName || !email || !pw) {
-        showAuthAlert("Fill all required fields.");
-        return;
-      }
-      if (pw.length < 6) {
-        showAuthAlert("Password must be at least 6 characters.");
-        return;
-      }
+  if (!brandName || !ownerName || !email || !pw) {
+    showAuthAlert("Fill all required fields.");
+    return;
+  }
+  if (pw.length < 6) {
+    showAuthAlert("Password must be at least 6 characters.");
+    return;
+  }
 
-      try {
-               await loadBrand();
-        await loadBranches();
-        await loadProducts();
-        listenToProductsRealtime();
-        await loadStaff();
-        await loadCustomers();
-        await loadOrders();
-        listenToOrdersRealtime();
+  try {
+    // 🚨 important: block onAuthStateChanged while we create everything
+    isBrandCreationInProgress = true;
 
-        updateDashboardUI();
-        renderProductsTable();
-        renderBranchesTable();
-        renderStaffTable();
-        renderCustomersTable();
-        renderOrdersTable();
-        renderRecentOrdersTable();
-        buildCashierAnalytics();
-const staffStats = buildCashierAnalytics();
+    // 1) create auth user (logs them in)
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    const user = cred.user;
+    await updateProfile(user, { displayName: ownerName });
+
+    // 2) create brand
+    const brandRef = await addDoc(collection(db, "brands"), {
+      name: brandName,
+      country: brandCountry || null,
+      ownerUserId: user.uid,
+      ownerEmail: email,
+      status: "active",
+      vat: 0,
+      serviceFee: 0,
+      sendEmail: false,
+      createdAt: serverTimestamp()
+    });
+
+    // remember brandId for the rest of the script
+    brandId = brandRef.id;
+
+    // 3) userBrands link
+    await setDoc(doc(db, "userBrands", user.uid), {
+      primaryBrandId: brandRef.id,
+      brandIds: [brandRef.id]
+    });
+
+    // 4) top-level users doc
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      name: ownerName,
+      email,
+      primaryBrandId: brandRef.id,
+      role: "brand_owner",
+      createdAt: serverTimestamp()
+    });
+
+    // 5) first branch
+    const mainBranchRef = await addDoc(collection(brandRef, "branches"), {
+      name: "Main Branch",
+      code: "MAIN",
+      isActive: true,
+      createdAt: serverTimestamp()
+    });
+
+    // 6) staff record for the owner
+    await setDoc(doc(brandRef, "staff", user.uid), {
+      userId: user.uid,
+      name: ownerName,
+      email,
+      role: "brand_owner",
+      isActive: true,
+      branchId: mainBranchRef.id,
+      createdAt: serverTimestamp()
+    });
+
+    // 7) load all data for this new brand
+    await loadBrand();
+    await loadBranches();
+    await loadProducts();
+    listenToProductsRealtime();
+    await loadStaff();
+    await loadCustomers();
+    await loadOrders();
+    await loadDiscounts();
+    listenToOrdersRealtime();
+
+    updateDashboardUI();
+    renderProductsTable();
+    renderBranchesTable();
+    renderStaffTable();
+    renderCustomersTable();
+    const staffStats = buildCashierAnalytics();
 renderTopStaff(staffStats);
 
- // 1) create auth user (this logs them in)
-             isBrandCreationInProgress = true;
+    renderOrdersTable();
+    renderRecentOrdersTable();
+    renderDiscounts();
 
-        const cred = await createUserWithEmailAndPassword(auth, email, pw);
-        const user = cred.user;
-        await updateProfile(user, { displayName: ownerName });
+    // cashier analytics + top staff widget
+    const staffStats = buildCashierAnalytics();
+    renderTopStaff(staffStats);
 
-        // 2) create brand
-        const brandRef = await addDoc(collection(db, "brands"), {
-          name: brandName,
-          country: brandCountry || null,
-          ownerUserId: user.uid,
-          ownerEmail: email,
-          status: "active",
-          vat: 0,
-          serviceFee: 0,
-          sendEmail: false,
-          createdAt: serverTimestamp()
-        });
+    showApp();
+  } catch (err) {
+    console.error(err);
+    let msg = "Failed to create brand.";
+    if (err.code === "auth/email-already-in-use") msg = "Email already in use.";
+    showAuthAlert(msg);
+  } finally {
+    isBrandCreationInProgress = false;
+  }
+});
 
-        // 3) userBrands link
-        await setDoc(doc(db, "userBrands", user.uid), {
-          primaryBrandId: brandRef.id,
-          brandIds: [brandRef.id]
-        });
-
-        // 4) top-level users doc
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          name: ownerName,
-          email,
-          primaryBrandId: brandRef.id,
-          role: "brand_owner",
-          createdAt: serverTimestamp()
-        });
-
-        // 5) first branch
-        const mainBranchRef = await addDoc(collection(brandRef, "branches"), {
-          name: "Main Branch",
-          code: "MAIN",
-          isActive: true,
-          createdAt: serverTimestamp()
-        });
-
-        // 6) staff record
-        await setDoc(doc(brandRef, "staff", user.uid), {
-          userId: user.uid,
-          name: ownerName,
-          email,
-          role: "brand_owner",
-          isActive: true,
-          branchId: mainBranchRef.id,
-          createdAt: serverTimestamp()
-        });
-
-        // onAuthStateChanged will now load this brand and show dashboard
-                brandId = brandRef.id;
-
-        // Load data for the new brand and show dashboard
-        await loadBrand();
-        await loadBranches();
-        await loadProducts();
-        listenToProductsRealtime();
-        await loadStaff();
-        await loadCustomers();
-        await loadOrders();
-        await loadDiscounts();
-
-        listenToOrdersRealtime();
-
-        updateDashboardUI();
-        renderProductsTable();
-        renderBranchesTable();
-        renderStaffTable();
-        renderCustomersTable();
-        renderOrdersTable();
-        renderRecentOrdersTable();
-        renderDiscounts();
-
-
-        isBrandCreationInProgress = false;
-        showApp();
-
-      } catch (err) {
-        console.error(err);
-        let msg = "Failed to create brand.";
-        if (err.code === "auth/email-already-in-use") msg = "Email already in use.";
-        showAuthAlert(msg);
-        isBrandCreationInProgress = false;
-      }
-    });
 
     /* AUTH STATE */
     onAuthStateChanged(auth, async user => {
@@ -1099,7 +1086,7 @@ renderTopStaff(staffStats);
         renderOrdersTable();
         renderRecentOrdersTable();
         renderDiscounts();
-
+        
         showApp();
         
       } catch (err) {
@@ -1329,6 +1316,8 @@ renderTopStaff(staffStats);
         renderOrdersTable();
         renderRecentOrdersTable();
         renderCustomersTable();
+         const staffStats = buildCashierAnalytics();
+        renderTopStaff(staffStats);
       });
     }
 
@@ -1706,6 +1695,139 @@ renderTopStaff(staffStats);
     qs("#search-branches").addEventListener("input", renderBranchesTable);
     qs("#sort-branches").addEventListener("change", renderBranchesTable);
 
+   /* BUILD CASHIER ANALYTICS (GLOBAL) */
+function buildCashierAnalytics() {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const todayOrders = ordersList.filter(o =>
+    o.createdAt &&
+    typeof o.createdAt.toDate === "function" &&
+    o.createdAt.toDate() >= todayStart &&
+    o.createdAt.toDate() <= todayEnd
+  );
+
+  const byCashier = {};
+  const paymentStats = {};
+  const returnsByCashier = {};
+
+  todayOrders.forEach(o => {
+    const cid = o.cashierId || "unknown";
+    const cname = o.cashierName || "Unknown";
+
+    if (!byCashier[cid]) {
+      byCashier[cid] = { name: cname, orders: 0, returns: 0, net: 0 };
+    }
+
+    const amount = Number(o.total || 0);
+    const isReturn = (o.type === "return") || (o.isReturn === true);
+
+    if (isReturn) {
+      byCashier[cid].returns++;
+      byCashier[cid].net -= Math.abs(amount);
+
+      if (!returnsByCashier[cid]) {
+        returnsByCashier[cid] = { name: cname, count: 0 };
+      }
+      returnsByCashier[cid].count++;
+    } else {
+      byCashier[cid].orders++;
+      byCashier[cid].net += amount;
+    }
+
+    const pm = o.paymentMethod || "other";
+    if (!paymentStats[pm]) paymentStats[pm] = 0;
+    if (!isReturn) paymentStats[pm] += Math.max(amount, 0);
+  });
+
+  renderCashierPerformance(byCashier);
+  renderCashierReturns(returnsByCashier);
+  renderCashierPaymentChart(paymentStats);
+
+  return byCashier;
+}
+
+/* RENDER CASHIER TABLES */
+function renderCashierPerformance(map) {
+  const el = qs("#cashier-performance-table");
+  if (!el) return;
+
+  const rows = Object.values(map)
+    .sort((a, b) => b.net - a.net)
+    .map(c => `
+      <tr>
+        <td>${c.name}</td>
+        <td>${c.orders}</td>
+        <td>${c.returns}</td>
+        <td>${c.net.toFixed(2)}</td>
+      </tr>
+    `).join("");
+
+  el.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Cashier</th>
+          <th>Orders</th>
+          <th>Returns</th>
+          <th>Net Sales</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function renderCashierReturns(map) {
+  const el = qs("#cashier-returns-table");
+  if (!el) return;
+
+  const rows = Object.values(map)
+    .map(c => `
+      <tr>
+        <td>${c.name}</td>
+        <td>${c.count}</td>
+      </tr>
+    `).join("");
+
+  el.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Cashier</th>
+          <th>Returns</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+/* PAYMENT PIE CHART */
+let cashierPaymentChart = null;
+function renderCashierPaymentChart(stats) {
+  const ctx = qs("#cashier-payment-chart");
+  if (!ctx) return;
+
+  const labels = Object.keys(stats);
+  const data = Object.values(stats);
+
+  if (cashierPaymentChart) cashierPaymentChart.destroy();
+
+  cashierPaymentChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels,
+      datasets: [{ data }]
+    },
+    options: {
+      plugins: { legend: { position: "bottom" } }
+    }
+  });
+}
+
     /* STAFF ANALYTICS & TABLE */
     function renderStaffAnalytics() {
       const total = staffUsers.length;
@@ -1739,9 +1861,10 @@ renderTopStaff(staffStats);
         return true;
       });
 
-      rows.sort((a, b) => {
+            rows.sort((a, b) => {
         const userA = (a.username || "").toLowerCase();
         const userB = (b.username || "").toLowerCase();
+
         switch (sortVal) {
           case "username-asc":
             return userA.localeCompare(userB);
@@ -1754,62 +1877,7 @@ renderTopStaff(staffStats);
           default:
             return 0;
         }
-        /* BUILD CASHIER ANALYTICS */
-function buildCashierAnalytics() {
-  const todayStart = new Date();
-  todayStart.setHours(0,0,0,0);
-  const todayEnd = new Date();
-  todayEnd.setHours(23,59,59,999);
-
-  const todayOrders = ordersList.filter(o =>
-    o.createdAt &&
-    o.createdAt.toDate() >= todayStart &&
-    o.createdAt.toDate() <= todayEnd
-  );
-
-  const byCashier = {};
-  const paymentStats = {};
-  const returnsByCashier = {};
-
-  todayOrders.forEach(o => {
-    const cid = o.cashierId || "unknown";
-    const cname = o.cashierName || "Unknown";
-
-    if (!byCashier[cid]) {
-      byCashier[cid] = { name: cname, orders: 0, returns: 0, net: 0 };
-    }
-
-    const amount = Number(o.total || 0);
-    const isReturn = o.isReturn === true;
-
-    if (isReturn) {
-      byCashier[cid].returns++;
-      byCashier[cid].net -= Math.abs(amount);
-
-      // Return summary
-      if (!returnsByCashier[cid]) {
-        returnsByCashier[cid] = { name: cname, count: 0 };
-      }
-      returnsByCashier[cid].count++;
-
-    } else {
-      byCashier[cid].orders++;
-      byCashier[cid].net += amount;
-    }
-
-    // payment method stats
-    const pm = o.paymentMethod || "other";
-    if (!paymentStats[pm]) paymentStats[pm] = 0;
-    if (!isReturn) paymentStats[pm] += Math.max(amount, 0);
-  });
-
-  renderCashierPerformance(byCashier);
-  renderCashierReturns(returnsByCashier);
-  renderCashierPaymentChart(paymentStats);
-
-  // Return byCashier so dashboard can use it
-  return byCashier;
-}
+      });
 
 /* RENDER CASHIER TABLE */
 function renderCashierPerformance(map) {
@@ -2214,6 +2282,9 @@ function renderCashierPaymentChart(stats) {
 
       await loadDiscounts();
       renderDiscounts();
+      const staffStats = buildCashierAnalytics();
+renderTopStaff(staffStats);
+
     }
     async function toggleDiscountActive(id) {
       const disc = discounts.find(d => d.id === id);
@@ -2701,7 +2772,7 @@ function renderCashierPaymentChart(stats) {
       qs("#btn-save-staff").addEventListener("click", saveStaff);
     });
 
-    async function saveStaff() {
+        async function saveStaff() {
       const username = qs("#s-username").value.trim();
       const pin = qs("#s-pin").value.trim();
       const display = qs("#s-display").value.trim();
@@ -2711,18 +2782,6 @@ function renderCashierPaymentChart(stats) {
         alert("Username and PIN required.");
         return;
       }
-function renderTopStaff(byCashier) {
-  const el = qs("#top-staff-today");
-  if (!el) return;
-
-  const list = Object.values(byCashier)
-    .sort((a,b) => b.net - a.net)
-    .slice(0,3)
-    .map(c => `${c.name}: ${c.net.toFixed(2)} EGP`)
-    .join("<br>");
-
-  el.innerHTML = list || "No sales yet today";
-}
 
       await addDoc(collection(db, "posUsers"), {
         username,

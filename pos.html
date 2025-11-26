@@ -1260,18 +1260,6 @@ function computeTotals(){
     cartSummaryCountEl.textContent = totalItems === 1 ? "1 item" : `${totalItems} items`;
     cartSummaryTotalEl.textContent = totals.total.toFixed(2);
   }
-// Show original VAT / Service % in the UI for this return
-if (currentReturnOrderMeta && currentReturnOrderMeta.data) {
-  const od = currentReturnOrderMeta.data;
-
-  if (typeof od.taxPercent === "number") {
-    summaryTaxLabelEl.textContent = `VAT (${od.taxPercent}%)`;
-  }
-
-  if (typeof od.servicePercent === "number") {
-    summaryServiceLabelEl.textContent = `Service Fee (${od.servicePercent}%)`;
-  }
-}
 
   function renderCart(){
     if(cartItems.length === 0){
@@ -2602,36 +2590,36 @@ codeInputEl.focus();
 
         const sign = o.mode==="return" ? -1 : 1;
         const orderData = {
-          orderId:o.orderId,
-          createdAt:serverTimestamp(),
-          createdAtLocal:o.createdAtLocal || (new Date()).toISOString(),
-          paymentMethod:o.paymentMethod,
-          subtotal: sign * (o.subtotalPositive || o.totalPositive),
-          taxPercent: o.taxPercent ?? 0,
-          servicePercent: o.servicePercent ?? 0,
-          taxAmount: sign * (o.taxAmount ?? 0),
-          serviceAmount: sign * (o.serviceAmount ?? 0),
-          total: sign * o.totalPositive,
-          items:itemsForDb,
-          customerId:null,
-          customerName:o.name || null,
-          customerPhone:o.phone || null,
-          customerEmail:o.email || null,
-          cardTransaction: o.paymentMethod==="card" ? (o.cardTxn || null) : null,
-          brandId:o.brandId,
-          branchId:o.branchId,
-          status: o.mode==="return" ? "return" : "normal",
-          type: o.mode==="return" ? "return" : "sale",
-          isReturn: o.mode==="return",
-          originalOrderId: o.originalOrderMeta?.orderId || null,
-          originalOrderDocId: o.originalOrderMeta?.orderDocId || null,
-         originalPaymentMethod: o.originalOrderMeta?.data?.paymentMethod || null,
-cashierId: o.posUser?.id || null,
-cashierUsername: o.posUser?.username || null,
-cashierDisplayName: o.posUser?.displayName || null,
-cashierRole: o.posUser?.role || null
+  orderId: o.orderId,
+  createdAt: serverTimestamp(),
+  createdAtLocal: o.createdAtLocal || (new Date()).toISOString(),
+  paymentMethod: o.paymentMethod,
+  subtotal: sign * (o.subtotalPositive || o.totalPositive),
+  taxPercent: o.taxPercent ?? 0,
+  servicePercent: o.servicePercent ?? 0,
+  taxAmount: sign * (o.taxAmount ?? 0),
+  serviceAmount: sign * (o.serviceAmount ?? 0),
+  total: sign * o.totalPositive,
+  items: itemsForDb,
+  customerId: null,
+  customerName: o.name || null,
+  customerPhone: o.phone || null,
+  customerEmail: o.email || null,
+  cardTransaction: o.paymentMethod === "card" ? (o.cardTxn || null) : null,
+  brandId: o.brandId,
+  branchId: o.branchId,
+  status: o.mode === "return" ? "return" : "normal",
+  type: o.mode === "return" ? "return" : "sale",
+  isReturn: o.mode === "return",
+  originalOrderId: o.originalOrderMeta?.orderId || null,
+  originalOrderDocId: o.originalOrderMeta?.orderDocId || null,
+  originalPaymentMethod: o.originalOrderMeta?.data?.paymentMethod || null,
+  cashierId: o.posUser?.id || null,
+  cashierUsername: o.posUser?.username || null,
+  cashierDisplayName: o.posUser?.displayName || null,
+  cashierRole: o.posUser?.role || null
+};
 
-        };
 
         await setDoc(orderRef,orderData);
 

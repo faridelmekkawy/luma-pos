@@ -682,6 +682,7 @@
               </div>
             </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
               <!-- WhatsApp option removed as requested -->
               <button id="btn-save-receipt-settings" class="btn btn-primary">Save</button>
@@ -708,8 +709,6 @@
     import {
       getStorage, ref, uploadBytes, getDownloadURL
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-    import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
-
     /* FIREBASE CONFIG */
     const firebaseConfig = {
       apiKey:"AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",

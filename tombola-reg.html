@@ -111,27 +111,30 @@
       justify-content:space-between;
       gap:12px;
     }
-    .logo-badge{
-      width:56px;height:56px;
-      border-radius:999px;
-      background:conic-gradient(from 210deg,#f97316,#0f766e,#ef4444,#f97316);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#fefce8;
-      font-weight:800;
-      font-size:16px;
-      box-shadow:0 14px 30px rgba(15,23,42,0.6);
-      position:relative;
-      overflow:hidden;
-    }
-    /* Add your Firebase Storage logo URL in the src below (.logo-image) */
-    .logo-image{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      border-radius:inherit;
-    }
+   .logo-badge{
+  width:180px;
+  height:60px;
+  border-radius:16px;
+  background:#020617;          /* dark base behind banner */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 14px 30px rgba(15,23,42,0.6);
+  overflow:hidden;
+  position:relative;
+}
+
+/* remove the “5” overlay completely */
+.logo-badge::after{
+  content:none;
+}
+
+.logo-image{
+  width:100%;
+  height:auto;
+  object-fit:contain;          /* show whole logo, no crop */
+  border-radius:inherit;
+}
 
     .hero-title-block{
       display:flex;

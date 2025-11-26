@@ -1690,10 +1690,8 @@ createForm.addEventListener("submit", async e => {
 
     qs("#search-branches").addEventListener("input", renderBranchesTable);
     qs("#sort-branches").addEventListener("change", renderBranchesTable);
-
-   /* BUILD CASHIER ANALYTICS (GLOBAL) */
-function buildCashierAnalytics() {
-  function renderTopStaff(map) {
+/* TOP STAFF CARD */
+function renderTopStaff(map) {
   const el = qs("#top-staff-today");
   if (!el) return;
 
@@ -1706,13 +1704,15 @@ function buildCashierAnalytics() {
     return;
   }
 
-  // Top 3 cashiers
   const top3 = list.slice(0, 3);
   el.innerHTML = top3
     .map((c, idx) => `${idx + 1}. ${c.name} — ${c.net.toFixed(2)}`)
     .join("<br>");
 }
 
+   /* BUILD CASHIER ANALYTICS (GLOBAL) */
+/* BUILD CASHIER ANALYTICS (GLOBAL) */
+function buildCashierAnalytics() {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
@@ -1762,9 +1762,11 @@ function buildCashierAnalytics() {
   renderCashierReturns(returnsByCashier);
   renderCashierPaymentChart(paymentStats);
 
+  // update the dashboard card
+  renderTopStaff(byCashier);
+
   return byCashier;
 }
-
 /* RENDER CASHIER TABLES */
 function renderCashierPerformance(map) {
   const el = qs("#cashier-performance-table");

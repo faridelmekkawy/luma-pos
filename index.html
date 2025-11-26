@@ -997,16 +997,12 @@ createForm.addEventListener("submit", async e => {
     updateDashboardUI();
     renderProductsTable();
     renderBranchesTable();
-    renderStaffTable();
+        renderStaffTable();
     renderCustomersTable();
-    const staffStats = buildCashierAnalytics();
-renderTopStaff(staffStats);
-
     renderOrdersTable();
     renderRecentOrdersTable();
     renderDiscounts();
 
-    // cashier analytics + top staff widget
     const staffStats = buildCashierAnalytics();
     renderTopStaff(staffStats);
 
@@ -1697,6 +1693,26 @@ renderTopStaff(staffStats);
 
    /* BUILD CASHIER ANALYTICS (GLOBAL) */
 function buildCashierAnalytics() {
+  function renderTopStaff(map) {
+  const el = qs("#top-staff-today");
+  if (!el) return;
+
+  const list = Object.values(map)
+    .filter(c => c.net !== 0 || c.orders !== 0 || c.returns !== 0)
+    .sort((a, b) => b.net - a.net);
+
+  if (!list.length) {
+    el.textContent = "No sales yet today.";
+    return;
+  }
+
+  // Top 3 cashiers
+  const top3 = list.slice(0, 3);
+  el.innerHTML = top3
+    .map((c, idx) => `${idx + 1}. ${c.name} — ${c.net.toFixed(2)}`)
+    .join("<br>");
+}
+
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
@@ -1878,86 +1894,6 @@ function renderCashierPaymentChart(stats) {
             return 0;
         }
       });
-
-/* RENDER CASHIER TABLE */
-function renderCashierPerformance(map) {
-  const el = qs("#cashier-performance-table");
-  if (!el) return;
-
-  const rows = Object.values(map)
-    .sort((a,b) => b.net - a.net)
-    .map(c => `
-      <tr>
-        <td>${c.name}</td>
-        <td>${c.orders}</td>
-        <td>${c.returns}</td>
-        <td>${c.net.toFixed(2)}</td>
-      </tr>
-    `).join("");
-
-  el.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Cashier</th>
-          <th>Orders</th>
-          <th>Returns</th>
-          <th>Net Sales</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
-
-/* RENDER RETURNS TABLE */
-function renderCashierReturns(map) {
-  const el = qs("#cashier-returns-table");
-  if (!el) return;
-
-  const rows = Object.values(map)
-    .map(c => `
-      <tr>
-        <td>${c.name}</td>
-        <td>${c.count}</td>
-      </tr>
-    `).join("");
-
-  el.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Cashier</th>
-          <th>Returns</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
-
-/* PAYMENT PIE CHART */
-let cashierPaymentChart = null;
-function renderCashierPaymentChart(stats) {
-  const ctx = qs("#cashier-payment-chart");
-  if (!ctx) return;
-
-  const labels = Object.keys(stats);
-  const data = Object.values(stats);
-
-  if (cashierPaymentChart) cashierPaymentChart.destroy();
-
-  cashierPaymentChart = new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels,
-      datasets: [{ data }]
-    },
-    options: {
-      plugins: { legend: { position: "bottom" } }
-    }
-  });
-}
 
       });
 

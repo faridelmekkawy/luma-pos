@@ -28,7 +28,11 @@
     body{
       font-family:"Montserrat",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
       min-height:100vh;
-      background:#e5e7eb;
+      background:
+        radial-gradient(circle at 10% 0%,rgba(248,250,252,0.9),rgba(248,250,252,0) 40%),
+        radial-gradient(circle at 90% 0%,rgba(254,243,199,0.9),rgba(254,243,199,0) 50%),
+        radial-gradient(circle at 0% 100%,rgba(191,219,254,0.85),rgba(191,219,254,0) 55%),
+        #e5e7eb;
       color:var(--ink);
       display:flex;
       align-items:center;
@@ -65,9 +69,10 @@
       display:flex;
       align-items:center;
       gap:14px;
+      flex-wrap:wrap;
     }
 
-    /* NEW CIRCLE LOGO */
+    /* Circle logo */
     .logo-badge{
       width:90px;
       height:90px;
@@ -78,6 +83,7 @@
       justify-content:center;
       overflow:hidden;
       box-shadow:0 10px 25px rgba(0,0,0,0.4);
+      flex-shrink:0;
     }
     .logo-image{
       width:100%;
@@ -114,6 +120,7 @@
       width:6px;height:6px;border-radius:50%;
       background:linear-gradient(135deg,#f97316,#facc15);
       margin-top:4px;
+      flex-shrink:0;
     }
 
     .hero-footer-row{
@@ -121,6 +128,8 @@
       align-items:center;
       justify-content:space-between;
       font-size:12px;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
     .hero-tag{
@@ -130,22 +139,31 @@
       background:rgba(255,255,255,0.12);
     }
 
-    /* Form */
+    /* Form card */
     .form-card{
       background:#ffffffee;
       border-radius:var(--radius-lg);
       box-shadow:var(--shadow-md);
       padding:20px;
       position:relative;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
     }
 
     .form-title{
       font-size:18px;
       font-weight:700;
+      margin-bottom:4px;
+    }
+    .form-subtitle{
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:10px;
     }
 
     form{
-      margin-top:14px;
+      margin-top:6px;
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -162,6 +180,7 @@
       font-weight:600;
       text-transform:uppercase;
       color:var(--muted);
+      letter-spacing:0.08em;
     }
 
     .input, select{
@@ -169,11 +188,13 @@
       border:1px solid #e5e7eb;
       padding:7px 9px;
       font-size:13px;
-      background:#f9fafb;
+      background:var(--panel-soft);
+      font-family:inherit;
     }
 
     .radio-row{
       display:flex;
+      flex-wrap:wrap;
       gap:8px;
     }
     .chip-option{
@@ -182,8 +203,9 @@
       gap:4px;
       padding:6px 9px;
       border-radius:999px;
-      background:white;
-      border:1px solid #ddd;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      font-size:11px;
     }
 
     .error-text{
@@ -193,6 +215,7 @@
     }
 
     .btn-primary{
+      margin-top:4px;
       padding:9px 14px;
       border-radius:999px;
       background:radial-gradient(circle,#facc15,#f97316 50%,#ef4444);
@@ -200,6 +223,8 @@
       font-weight:600;
       cursor:pointer;
       border:none;
+      font-size:13px;
+      align-self:flex-start;
     }
 
     /* Success */
@@ -224,6 +249,38 @@
       margin:8px 0;
     }
 
+    /* MOBILE RESPONSIVE */
+    @media (max-width:900px){
+      body{
+        padding:14px 10px;
+      }
+      .shell{
+        grid-template-columns:minmax(0,1fr);
+        max-width:540px;
+      }
+      .hero{
+        order:-1;
+      }
+    }
+
+    @media (max-width:540px){
+      .hero{
+        padding:18px 16px;
+      }
+      .form-card{
+        padding:16px 14px 18px;
+      }
+      .hero-title{
+        font-size:18px;
+      }
+      .form-title{
+        font-size:16px;
+      }
+      .logo-badge{
+        width:72px;
+        height:72px;
+      }
+    }
   </style>
 </head>
 
@@ -235,7 +292,11 @@
     <div>
       <div class="hero-header">
         <div class="logo-badge">
-          <img src="__YOUR_FIREBASE_LOGO_URL__" class="logo-image">
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/events-339ce.firebasestorage.app/o/lokamania%205%20logo.png?alt=media&token=49f14bf3-b113-4653-84a6-3857275ad410"
+            alt="Lokamania logo"
+            class="logo-image"
+          >
         </div>
 
         <div>
@@ -262,7 +323,7 @@
 
     <div class="hero-footer-row">
       <span>Lokamania 5 — Registration</span>
-      <div style="display:flex; gap:6px;">
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
         <span class="hero-tag">Local brands</span>
         <span class="hero-tag">Streetwear & lifestyle</span>
         <span class="hero-tag">Community</span>
@@ -273,6 +334,8 @@
   <!-- Form -->
   <section class="form-card" id="formCard">
     <div class="form-title">Register to get your raffle number</div>
+    <div class="form-subtitle">One quick step · we’ll email you your unique raffle number.</div>
+
     <form id="registrationForm" novalidate>
 
       <div class="field-group">
@@ -329,7 +392,7 @@
       <h2 style="margin-bottom:6px;">You’re in!</h2>
       <div>Your raffle number is:</div>
       <div class="success-number" id="successNumber"></div>
-      <p style="font-size:13px; max-width:240px;">
+      <p style="font-size:13px; max-width:260px;">
         Your raffle number has been saved and sent to your email.
       </p>
       <button class="btn-primary" id="successCloseBtn">Done</button>
@@ -358,7 +421,7 @@
     databaseURL:"https://events-339ce-default-rtdb.europe-west1.firebasedatabase.app"
   };
 
-  const LOGO_URL = "__YOUR_FIREBASE_LOGO_URL__";
+  const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/events-339ce.firebasestorage.app/o/lokamania%205%20logo.png?alt=media&token=49f14bf3-b113-4653-84a6-3857275ad410";
   const EVENT_ID = "lokamania5";
   const WEBHOOK_URL = "https://automation.evu.business/webhook/a25f6f37-cbb0-4bb8-9d3a-161bcef4ab9c";
 
@@ -369,7 +432,7 @@
   const registrationsRef = ref(db, `events/${EVENT_ID}/registrations`);
   const raffleLastRef = ref(db, `events/${EVENT_ID}/raffleLast`);
 
-  signInAnonymously(auth);
+  signInAnonymously(auth).catch(console.error);
 
   async function nextRaffleNumber(){
     const result = await runTransaction(raffleLastRef, current => {
@@ -390,22 +453,31 @@
     const fav = e.target.favoriteBrand.value.trim();
 
     let ok = true;
+    function err(id,msg){
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = "block";
+      ok = false;
+    }
+    document.querySelectorAll(".error-text").forEach(x=>{x.style.display="none";});
 
-    function err(id,msg){ document.getElementById(id).style.display="block"; document.getElementById(id).textContent=msg; ok=false; }
-    document.querySelectorAll(".error-text").forEach(x=>x.style.display="none");
-
-    if(!name) err("err-name","Required");
-    if(!phone || phone.length<8) err("err-phone","Invalid");
-    if(!email || !email.includes("@")) err("err-email","Invalid");
-    if(!gender) err("err-gender","Required");
-    if(!age) err("err-age","Required");
+    if(!name) err("err-name","This field is required.");
+    if(!phone || phone.replace(/\s+/g,"").length<8) err("err-phone","Please enter a valid phone.");
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err("err-email","Please enter a valid email.");
+    if(!gender) err("err-gender","Please choose an option.");
+    if(!age) err("err-age","Please select your age group.");
 
     if(!ok) return;
 
     const raffleNumber = await nextRaffleNumber();
 
     const payload = {
-      name, phone, email, gender, ageGroup:age, favoriteBrand:fav,
+      name,
+      phone,
+      email,
+      gender,
+      ageGroup: age,
+      favoriteBrand: fav,
       raffleNumber,
       createdAt: Date.now(),
       logoUrl: LOGO_URL
@@ -421,9 +493,9 @@
         eventId:EVENT_ID,
         raffleNumber,
         logoUrl: LOGO_URL,
-        data:payload
+        data: payload
       })
-    });
+    }).catch(console.warn);
 
     document.getElementById("successNumber").textContent = "#" + raffleNumber;
     document.getElementById("successPanel").classList.add("visible");

@@ -2912,7 +2912,7 @@ const baseOrderData = {
   cashierId: posUser?.id || null,
   cashierUsername: posUser?.username || null,
   cashierDisplayName: posUser?.displayName || null,
-  cashierRole: posUser?.role || null
+  cashierRole: posUser?.role || null,
 };
 
 
@@ -2983,19 +2983,17 @@ const baseOrderData = {
       isReturn: currentMode==="return",
       originalOrderId: orderData.originalOrderId || null,
 
-      discount: appliedDiscount ? {
-        code: appliedDiscount.code,
-        percent: appliedDiscount.percent,
-        scope: appliedDiscount.scope || "store_and_online",
-        amount: discountAmount
-      } : null,
+     discount: appliedDiscount ? {
+    code: appliedDiscount.code,
+    percent: appliedDiscount.percent,
+    scope: appliedDiscount.scope || "store_and_online",
+    amount: discountAmount
+  } : null,
 
-      // 👉 what n8n/email should use for issuing a coupon
-      shouldIssueNewCoupon: willIssueNewCoupon,
-        refundAmount: currentMode === "return" ? totalPositive : 0,
-
-    };
-
+  // 👉 what n8n/email should use for issuing a coupon
+  shouldIssueNewCoupon: willIssueNewCoupon,
+  refundAmount: currentMode === "return" ? totalPositive : 0
+};
     console.log("POS → Webhook payload:", payload);
 
     fetch(WEBHOOK_URL,{

@@ -1279,7 +1279,7 @@ function computeTotals(){
   if (currentMode === "return" && currentReturnOrderMeta && currentReturnOrderMeta.data) {
     const od = currentReturnOrderMeta.data;
 
-    // Tax / service effective %
+    // Tax / service effective %: prefer order's saved values, fallback to current brand/branch
     let effectiveTaxPercent = taxPercent;
     let effectiveServicePercent = servicePercent;
     if (typeof od.taxPercent === "number") {
@@ -1304,10 +1304,12 @@ function computeTotals(){
     const divider = 1 + (effectiveTaxPercent / 100) + (effectiveServicePercent / 100);
     let orderNetSubtotal = divider > 0 ? (paidTotal / divider) : paidTotal;
 
-    // Overall discount on the original sale (BOGO + discount codes)
+    // Guard: never exceed original full subtotal
     if (orderNetSubtotal > orderFullSubtotal) {
       orderNetSubtotal = orderFullSubtotal;
     }
+
+    // Overall discount on the original sale (BOGO + discount codes)
     const overallDiscountAbs = Math.max(0, orderFullSubtotal - orderNetSubtotal);
 
     // How big is THIS refund compared to the original order (using full prices)
@@ -1322,15 +1324,42 @@ function computeTotals(){
     const total = effectiveSubtotal + taxAmount + serviceAmount;
 
     return {
-      subtotal,                // full prices of returned items
+      subtotal,                 // full prices of returned items
       subtotalAfterBogo: subtotal, // not used in return mode
-      bogoDiscount: refundDiscount, // "order discount" for this refund
-      discountAmount: 0,       // we don't re-apply code % in return mode
+      bogoDiscount: refundDiscount, // "order discount" portion
+      discountAmount: 0,        // we don't re-apply code % in return mode
       taxAmount,
       serviceAmount,
       total
     };
   }
+
+  // 🔹 SALE MODE — BOGO + discount code
+  // First apply BOGO (if active)
+  const { bogoDiscount } = computeBogoDiscountForSaleMode();
+  const subtotalAfterBogo = subtotal - (bogoDiscount || 0);
+
+  // Then apply discount code on top of BOGO
+  let effectiveSubtotal = subtotalAfterBogo;
+  let discountAmount = 0;
+  if (appliedDiscount && appliedDiscount.percent > 0 && effectiveSubtotal > 0) {
+    discountAmount = (effectiveSubtotal * appliedDiscount.percent) / 100;
+    effectiveSubtotal -= discountAmount;
+  }
+
+  const taxAmount = effectiveSubtotal * (taxPercent / 100);
+  const serviceAmount = effectiveSubtotal * (servicePercent / 100);
+  const total = effectiveSubtotal + taxAmount + serviceAmount;
+
+  return {
+    subtotal,
+    subtotalAfterBogo,
+    bogoDiscount: bogoDiscount || 0,
+    discountAmount,
+    taxAmount,
+    serviceAmount,
+    total
+  };
 }
   function updateCartSummary(totals){
     const totalItems = cartItems.reduce((sum,i)=>sum + i.qty,0);

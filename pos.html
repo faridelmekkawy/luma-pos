@@ -1409,8 +1409,12 @@ if (bogoRowEl) {
 
 
     // Discount row (also in return mode if original order had a discount)
-if (currentMode === "sale" &&
-    appliedDiscount && appliedDiscount.percent > 0 && effectiveSubtotal > 0){
+if (
+  currentMode === "sale" &&
+  appliedDiscount &&
+  appliedDiscount.percent > 0 &&
+  totals.subtotalAfterBogo > 0   // or totals.subtotal if you prefer
+){
   discountRowEl.style.display = "flex";
   summaryDiscountEl.textContent = `-${totals.discountAmount.toFixed(2)}`;
 

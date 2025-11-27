@@ -857,7 +857,11 @@
             <span class="summary-label" id="summary-service-label">Service Fee (0%)</span>
             <span id="summary-service">0.00</span>
           </div>
-
+<!-- 🔹 NEW: BOGO row -->
+<div class="summary-row" id="bogo-row" style="display:none;">
+  <span class="summary-label" id="bogo-label">BOGO</span>
+  <span id="summary-bogo">-0.00</span>
+</div>
           <!-- Discount code input -->
           <div class="summary-row">
             <span class="summary-label">Discount code</span>
@@ -1116,6 +1120,12 @@
   const summaryDiscountEl = qs("#summary-discount");
   const discountLabelEl = qs("#discount-label");
 
+    // BOGO DOM
+const bogoRowEl = qs("#bogo-row");
+const summaryBogoEl = qs("#summary-bogo");
+const bogoLabelEl = qs("#bogo-label");
+
+
   // Offline DOM
   const offlineStatusEl = qs("#offline-status");
   const offlineQueueListEl = qs("#offline-queue-list");
@@ -1171,6 +1181,9 @@
   let taxPercent = 0;
   let servicePercent = 0;
 
+    let bogoActive = false;
+let bogoName = "";
+
   // Discount state
   let appliedDiscount = null; // { id, code, percent, scope }
   let currentCustomerHasUsedDiscountBefore = false;
@@ -1218,6 +1231,43 @@
     }
     return "U";
   }
+function computeBogoDiscountForSaleMode(){
+  // Only for sale mode and when brand enabled BOGO
+  if (!bogoActive || currentMode !== "sale") {
+    return { bogoDiscount: 0, pairs: [] };
+  }
+
+  const flat = [];
+
+  // Flatten cart: each unit as a separate entry
+  cartItems.forEach((item, cartIndex) => {
+    for (let i = 0; i < item.qty; i++) {
+      flat.push({
+        cartIndex,
+        price: item.price,
+      });
+    }
+  });
+
+  if (flat.length < 2) {
+    return { bogoDiscount: 0, pairs: [] };
+  }
+
+  // Sort high → low, so higher one is paid, cheaper is free
+  flat.sort((a, b) => b.price - a.price);
+
+  let discount = 0;
+  const pairs = [];
+
+  for (let i = 0; i + 1 < flat.length; i += 2) {
+    const paid = flat[i];
+    const free = flat[i + 1]; // lower price
+    discount += free.price;
+    pairs.push({ paid, free });
+  }
+
+  return { bogoDiscount: discount, pairs };
+}
 
 function computeTotals(){
   let subtotal = 0;
@@ -1225,13 +1275,26 @@ function computeTotals(){
     subtotal += item.price * item.qty;
   });
 
-  let discountAmount = 0;
-  let effectiveSubtotal = subtotal;
+  // 🔹 Step 1: BOGO discount (only in SALE mode)
+  let bogoDiscount = 0;
+  let subtotalAfterBogo = subtotal;
 
-  if(appliedDiscount && appliedDiscount.percent > 0 && subtotal > 0){
-    discountAmount = subtotal * (appliedDiscount.percent / 100);
-    if(discountAmount > subtotal) discountAmount = subtotal;
-    effectiveSubtotal = subtotal - discountAmount;
+  if (currentMode === "sale") {
+    const bogoRes = computeBogoDiscountForSaleMode();
+    bogoDiscount = bogoRes.bogoDiscount || 0;
+
+    if (bogoDiscount > subtotal) bogoDiscount = subtotal;
+    subtotalAfterBogo = subtotal - bogoDiscount;
+  }
+
+  // 🔹 Step 2: Code-based percentage discount (on top of BOGO)
+  let discountAmount = 0;
+  let effectiveSubtotal = subtotalAfterBogo;
+
+  if(appliedDiscount && appliedDiscount.percent > 0 && effectiveSubtotal > 0){
+    discountAmount = effectiveSubtotal * (appliedDiscount.percent / 100);
+    if(discountAmount > effectiveSubtotal) discountAmount = effectiveSubtotal;
+    effectiveSubtotal = effectiveSubtotal - discountAmount;
   }
 
   // 👉 Use original order's tax/service for RETURNS
@@ -1252,7 +1315,15 @@ function computeTotals(){
   const serviceAmount = effectiveSubtotal * (effectiveServicePercent/100);
   const total = effectiveSubtotal + taxAmount + serviceAmount;
 
-  return { subtotal, discountAmount, taxAmount, serviceAmount, total };
+  return {
+    subtotal,             // before BOGO
+    subtotalAfterBogo,    // after BOGO, before code discount
+    bogoDiscount,
+    discountAmount,
+    taxAmount,
+    serviceAmount,
+    total
+  };
 }
 
   function updateCartSummary(totals){
@@ -1278,7 +1349,11 @@ function computeTotals(){
       discountRowEl.style.display = "none";
       summaryDiscountEl.textContent = "-0.00";
       if(discountCodeInputEl) discountCodeInputEl.value = "";
-
+// 🔹 reset BOGO row
+  if (bogoRowEl) {
+    bogoRowEl.style.display = "none";
+    summaryBogoEl.textContent = "-0.00";
+  }
       updateCartSummary({subtotal:0,taxAmount:0,serviceAmount:0,total:0});
       return;
     }
@@ -1308,7 +1383,18 @@ function computeTotals(){
 
     const totals = computeTotals();
 
-    
+    // 🔹 BOGO row (only in SALE mode when discount > 0)
+if (bogoRowEl) {
+  if (bogoActive && currentMode === "sale" && totals.bogoDiscount > 0) {
+    bogoRowEl.style.display = "flex";
+    summaryBogoEl.textContent = `-${totals.bogoDiscount.toFixed(2)}`;
+    bogoLabelEl.textContent = bogoName ? `BOGO (${bogoName})` : "BOGO";
+  } else {
+    bogoRowEl.style.display = "none";
+    summaryBogoEl.textContent = "-0.00";
+  }
+}
+
     // Discount row (also in return mode if original order had a discount)
 if(appliedDiscount && totals.discountAmount > 0){
   discountRowEl.style.display = "flex";
@@ -1543,6 +1629,9 @@ if(appliedDiscount && totals.discountAmount > 0){
       brandServiceFee != null ? brandServiceFee :
       branchService != null ? branchService :
       brandService != null ? brandService : 0;
+// 🔹 BOGO from brand
+bogoActive = brandData.bogoActive === true;
+bogoName   = brandData.bogoName || "Buy 1 Get 1 Free";
 
     summaryTaxLabelEl.textContent = `VAT (${taxPercent || 0}%)`;
     summaryServiceLabelEl.textContent = `Service Fee (${servicePercent || 0}%)`;
@@ -2814,6 +2903,8 @@ codeInputEl.focus();
   const serviceAmount = totals.serviceAmount;
   const discountAmount = totals.discountAmount || 0;
   const paymentMethod = pm;
+const bogoDiscount = totals.bogoDiscount || 0;
+const subtotalAfterBogo = totals.subtotalAfterBogo || subtotalPositive;
 
   btnCheckoutConfirm.disabled = true;
   btnCheckoutConfirm.textContent = "Placing…";
@@ -2895,12 +2986,19 @@ const baseOrderData = {
   cardTransaction: paymentMethod === "card" ? cardTxn : null,
   brandId,
   branchId,
+  // 🔹 BOGO fields
+  bogoActiveAtSale: currentMode === "sale" ? bogoActive : false,
+  bogoDiscount: sign * bogoDiscount,
+  subtotalBeforeBogo: sign * subtotalPositive,
+  subtotalAfterBogo: sign * subtotalAfterBogo,
+  promotionType: (currentMode === "sale" && bogoActive && bogoDiscount > 0) ? "BOGO" : null,
 
   // 👇 ADD THESE 4 LINES
   cashierId: posUser?.id || null,
   cashierUsername: posUser?.username || null,
   cashierDisplayName: posUser?.displayName || null,
   cashierRole: posUser?.role || null,
+  
 };
 
 
@@ -3041,6 +3139,12 @@ const baseOrderData = {
     if(discountCodeInputEl) discountCodeInputEl.value = "";
     discountRowEl.style.display = "none";
     summaryDiscountEl.textContent = "-0.00";
+    // reset BOGO on mode change
+if (bogoRowEl) {
+  bogoRowEl.style.display = "none";
+  summaryBogoEl.textContent = "-0.00";
+}
+
 
     if(currentMode==="sale"){
       modeSaleBtn.classList.add("mode-pill-active");

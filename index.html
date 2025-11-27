@@ -2085,75 +2085,89 @@ function renderCashierPaymentChart(stats) {
     }
 
     function renderOrdersTable() {
-      renderOrdersAnalytics();
-      const term = qs("#search-orders").value.trim().toLowerCase();
-      const branchFilter = globalBranchSelect.value;
-      const sortVal = (qs("#sort-orders")?.value) || "date-desc";
+  renderOrdersAnalytics();
+  const term = qs("#search-orders").value.trim().toLowerCase();
+  const branchFilter = globalBranchSelect.value;
+  const sortVal = (qs("#sort-orders")?.value) || "date-desc";
 
-      let rows = ordersList.filter(o => {
-        if (branchFilter !== "global" && o.branchId !== branchFilter) return false;
-        if (!term) return true;
-        const label = `${o.id || ""} ${o.orderId || ""} ${o.customerName || ""}`.toLowerCase();
-        return label.includes(term);
-      });
+  let rows = ordersList.filter(o => {
+    if (branchFilter !== "global" && o.branchId !== branchFilter) return false;
+    if (!term) return true;
+    const label = `${o.id || ""} ${o.orderId || ""} ${o.customerName || ""}`.toLowerCase();
+    return label.includes(term);
+  });
 
-      rows.sort((a, b) => {
-        const da = orderDate(a) || "";
-        const db = orderDate(b) || "";
-        const ta = Number(a.total) || 0;
-        const tb = Number(b.total) || 0;
-        switch (sortVal) {
-          case "date-asc":
-            return da.localeCompare(db);
-          case "date-desc":
-            return db.localeCompare(da);
-          case "total-asc":
-            return ta - tb;
-          case "total-desc":
-            return tb - ta;
-          default:
-            return 0;
-        }
-      });
-
-      if (rows.length === 0) {
-        ordersTable.innerHTML = `<div class="table-empty">No orders yet.</div>`;
-        return;
-      }
-
-      let html = `
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Date</th>
-              <th>Branch</th>
-              <th>Customer</th>
-              <th>Total</th>
-              <th>Payment</th>
-              <th>Type</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      rows.forEach(o => {
-        html += `
-          <tr>
-            <td>${o.orderId || o.id}</td>
-            <td>${orderDate(o) || ""}</td>
-            <td>${o.branchName || ""}</td>
-            <td>${o.customerName || ""}</td>
-            <td>${o.total ?? ""}</td>
-            <td>${o.paymentMethod || ""}</td>
-            <td>${o.type || "sale"}</td>
-            <td>${o.status || "normal"}</td>
-          </tr>
-        `;
-      });
-      html += `</tbody></table>`;
-      ordersTable.innerHTML = html;
+  rows.sort((a, b) => {
+    const da = orderDate(a) || "";
+    const db = orderDate(b) || "";
+    const ta = Number(a.total) || 0;
+    const tb = Number(b.total) || 0;
+    switch (sortVal) {
+      case "date-asc":
+        return da.localeCompare(db);
+      case "date-desc":
+        return db.localeCompare(da);
+      case "total-asc":
+        return ta - tb;
+      case "total-desc":
+        return tb - ta;
+      default:
+        return 0;
     }
+  });
+
+  if (rows.length === 0) {
+    ordersTable.innerHTML = `<div class="table-empty">No orders yet.</div>`;
+    return;
+  }
+
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Branch</th>
+          <th>Customer</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  rows.forEach(o => {
+    html += `
+      <tr>
+        <td>${o.orderId || o.id}</td>
+        <td>${orderDate(o) || ""}</td>
+        <td>${o.branchName || ""}</td>
+        <td>${o.customerName || ""}</td>
+        <td>${o.total ?? ""}</td>
+        <td>${o.paymentMethod || ""}</td>
+        <td>${o.type || "sale"}</td>
+        <td>${o.status || "normal"}</td>
+        <td>
+          <button class="btn btn-ghost" data-order-id="${o.id}">
+            View
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+  html += `</tbody></table>`;
+  ordersTable.innerHTML = html;
+
+  // 🔗 Attach click handlers to "View" buttons
+  ordersTable.querySelectorAll("[data-order-id]").forEach(btn => {
+    const id = btn.getAttribute("data-order-id");
+    btn.addEventListener("click", () => showOrderDetails(id));
+  });
+}
+
+
 
     qs("#search-orders").addEventListener("input", renderOrdersTable);
     qs("#sort-orders").addEventListener("change", renderOrdersTable);
@@ -2221,6 +2235,156 @@ function renderCashierPaymentChart(stats) {
 renderTopStaff(staffStats);
 
     }
+    function showOrderDetails(orderDocId) {
+  const o = ordersList.find(x => x.id === orderDocId);
+  if (!o) {
+    alert("Order not found.");
+    return;
+  }
+
+  const safe = v => (v === undefined || v === null ? "" : v);
+  const dateText = orderDate(o) || "";
+
+  // ------------------------------------------------------------
+  // 🔥 ITEMS — EXACT MATCH TO YOUR REAL FIRESTORE STRUCTURE
+  // ------------------------------------------------------------
+  let itemsHtml = "";
+
+  if (!Array.isArray(o.items) || o.items.length === 0) {
+    itemsHtml = `
+      <div class="field-hint" style="margin-top:6px;">
+        No items found in this order.
+      </div>
+    `;
+  } else {
+    const rows = o.items.map(it => {
+      const name = safe(it.name);
+      const sku = safe(it.code);
+      const qty = Number(it.qty) || 1;
+      const unit = Number(it.price) || 0;
+      const lineTotal = Number(it.lineTotal) || (unit * qty);
+
+      return `
+        <tr>
+          <td>${name}</td>
+          <td>${sku}</td>
+          <td>${qty}</td>
+          <td>${unit.toFixed(2)}</td>
+          <td>${lineTotal.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    itemsHtml = `
+      <div class="table-wrapper" style="margin-top:8px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Code</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // ------------------------------------------------------------
+  // 🔥 TOTALS, DISCOUNT, etc.
+  // ------------------------------------------------------------
+  const discountCode = safe(o.discountCode || o.discount_code);
+  const discountAmount = Number(o.discountAmount ?? o.discount ?? 0);
+  const subtotal = Number(o.subtotal ?? 0);
+  const tax = Number(o.taxAmount ?? o.tax ?? 0);
+  const service = Number(o.serviceAmount ?? o.serviceFee ?? 0);
+  const total = Number(o.total ?? 0);
+
+  // cashier
+  const cashier = o.cashierName || o.cashierId || "";
+
+  // ------------------------------------------------------------
+  // 🔥 BUILD MODAL
+  // ------------------------------------------------------------
+  openModal(`
+    <div class="modal-title">Order Details</div>
+
+    <div class="field">
+      <div class="field-label">Order ID</div>
+      <div>${safe(o.orderId || o.id)}</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Date</div>
+      <div>${dateText}</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Branch</div>
+      <div>${safe(o.branchName)}</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Customer</div>
+      <div>${safe(o.customerName)} ${o.customerPhone ? " — " + o.customerPhone : ""}</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Cashier</div>
+      <div>${cashier || "—"}</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Payment</div>
+      <div>${safe(o.paymentMethod)}</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Type</div>
+      <div>${safe(o.type || "sale")}</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Status</div>
+      <div>${safe(o.status || "normal")}</div>
+    </div>
+
+    ${discountCode ? `
+      <div class="field">
+        <div class="field-label">Discount Code</div>
+        <div>${discountCode} ${discountAmount ? `(-${discountAmount.toFixed(2)})` : ""}</div>
+      </div>
+    ` : ""}
+
+    <div class="field">
+      <div class="field-label">Totals</div>
+      <div style="font-size:12px;">
+        Subtotal: ${subtotal.toFixed(2)}<br>
+        VAT / Tax: ${tax.toFixed(2)}<br>
+        Service: ${service.toFixed(2)}<br>
+        ${discountAmount ? `Discount: -${discountAmount.toFixed(2)}<br>` : ""}
+        <strong>Total: ${total.toFixed(2)}</strong>
+      </div>
+    </div>
+
+    <hr style="margin:10px 0;border:none;border-top:1px solid #e5e7eb;"/>
+
+    <div class="field">
+      <div class="field-label">Items</div>
+      ${itemsHtml}
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
     async function toggleDiscountActive(id) {
       const disc = discounts.find(d => d.id === id);
       if (!disc) return;

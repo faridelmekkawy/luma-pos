@@ -1275,56 +1275,62 @@ function computeTotals(){
     subtotal += item.price * item.qty;
   });
 
-  // 🔹 Step 1: BOGO discount (only in SALE mode)
-  let bogoDiscount = 0;
-  let subtotalAfterBogo = subtotal;
-
-  if (currentMode === "sale") {
-    const bogoRes = computeBogoDiscountForSaleMode();
-    bogoDiscount = bogoRes.bogoDiscount || 0;
-
-    if (bogoDiscount > subtotal) bogoDiscount = subtotal;
-    subtotalAfterBogo = subtotal - bogoDiscount;
-  }
-
-  // 🔹 Step 2: Code-based percentage discount (on top of BOGO)
-  let discountAmount = 0;
-  let effectiveSubtotal = subtotalAfterBogo;
-
-  if(appliedDiscount && appliedDiscount.percent > 0 && effectiveSubtotal > 0){
-    discountAmount = effectiveSubtotal * (appliedDiscount.percent / 100);
-    if(discountAmount > effectiveSubtotal) discountAmount = effectiveSubtotal;
-    effectiveSubtotal = effectiveSubtotal - discountAmount;
-  }
-
-  // 👉 Use original order's tax/service for RETURNS
-  let effectiveTaxPercent = taxPercent;
-  let effectiveServicePercent = servicePercent;
-
-  if(currentMode === "return" && currentReturnOrderMeta && currentReturnOrderMeta.data){
+  // 🔹 RETURN MODE — refund must match what customer actually paid
+  if (currentMode === "return" && currentReturnOrderMeta && currentReturnOrderMeta.data) {
     const od = currentReturnOrderMeta.data;
+
+    // Tax / service effective %
+    let effectiveTaxPercent = taxPercent;
+    let effectiveServicePercent = servicePercent;
     if (typeof od.taxPercent === "number") {
       effectiveTaxPercent = od.taxPercent;
     }
     if (typeof od.servicePercent === "number") {
       effectiveServicePercent = od.servicePercent;
     }
+
+    // Full subtotal of the ORIGINAL order (before any discounts)
+    const originalItems = Array.isArray(od.items) ? od.items : [];
+    const orderFullSubtotal = originalItems.reduce((sum, it) => {
+      const price = typeof it.price === "number" ? it.price : 0;
+      const q = typeof it.qty === "number" ? Math.abs(it.qty) : 1;
+      return sum + price * q;
+    }, 0);
+
+    // What the customer actually PAID on that invoice (including tax/service)
+    const paidTotal = Math.abs(typeof od.total === "number" ? od.total : 0);
+
+    // Net subtotal that tax/service were applied on
+    const divider = 1 + (effectiveTaxPercent / 100) + (effectiveServicePercent / 100);
+    let orderNetSubtotal = divider > 0 ? (paidTotal / divider) : paidTotal;
+
+    // Overall discount on the original sale (BOGO + discount codes)
+    if (orderNetSubtotal > orderFullSubtotal) {
+      orderNetSubtotal = orderFullSubtotal;
+    }
+    const overallDiscountAbs = Math.max(0, orderFullSubtotal - orderNetSubtotal);
+
+    // How big is THIS refund compared to the original order (using full prices)
+    const portion = orderFullSubtotal > 0 ? (subtotal / orderFullSubtotal) : 0;
+
+    // Discount that belongs to this refund
+    const refundDiscount = overallDiscountAbs * portion;
+
+    const effectiveSubtotal = subtotal - refundDiscount;
+    const taxAmount = effectiveSubtotal * (effectiveTaxPercent / 100);
+    const serviceAmount = effectiveSubtotal * (effectiveServicePercent / 100);
+    const total = effectiveSubtotal + taxAmount + serviceAmount;
+
+    return {
+      subtotal,                // full prices of returned items
+      subtotalAfterBogo: subtotal, // not used in return mode
+      bogoDiscount: refundDiscount, // "order discount" for this refund
+      discountAmount: 0,       // we don't re-apply code % in return mode
+      taxAmount,
+      serviceAmount,
+      total
+    };
   }
-
-  const taxAmount = effectiveSubtotal * (effectiveTaxPercent/100);
-  const serviceAmount = effectiveSubtotal * (effectiveServicePercent/100);
-  const total = effectiveSubtotal + taxAmount + serviceAmount;
-
-  return {
-    subtotal,             // before BOGO
-    subtotalAfterBogo,    // after BOGO, before code discount
-    bogoDiscount,
-    discountAmount,
-    taxAmount,
-    serviceAmount,
-    total
-  };
-}
 
   function updateCartSummary(totals){
     const totalItems = cartItems.reduce((sum,i)=>sum + i.qty,0);
@@ -1383,20 +1389,28 @@ function computeTotals(){
 
     const totals = computeTotals();
 
-    // 🔹 BOGO row (only in SALE mode when discount > 0)
+  // 🔹 Order discount / BOGO row (sale + return)
 if (bogoRowEl) {
-  if (bogoActive && currentMode === "sale" && totals.bogoDiscount > 0) {
+  if (totals.bogoDiscount > 0) {
     bogoRowEl.style.display = "flex";
     summaryBogoEl.textContent = `-${totals.bogoDiscount.toFixed(2)}`;
-    bogoLabelEl.textContent = bogoName ? `BOGO (${bogoName})` : "BOGO";
+
+    if (currentMode === "sale") {
+      bogoLabelEl.textContent = bogoName ? `BOGO (${bogoName})` : "BOGO";
+    } else {
+      // In return mode this is the portion of the original discount
+      bogoLabelEl.textContent = "Order discount";
+    }
   } else {
     bogoRowEl.style.display = "none";
     summaryBogoEl.textContent = "-0.00";
   }
 }
 
+
     // Discount row (also in return mode if original order had a discount)
-if(appliedDiscount && totals.discountAmount > 0){
+if (currentMode === "sale" &&
+    appliedDiscount && appliedDiscount.percent > 0 && effectiveSubtotal > 0){
   discountRowEl.style.display = "flex";
   summaryDiscountEl.textContent = `-${totals.discountAmount.toFixed(2)}`;
 

@@ -1331,7 +1331,7 @@ function computeTotals(){
       total
     };
   }
-
+}
   function updateCartSummary(totals){
     const totalItems = cartItems.reduce((sum,i)=>sum + i.qty,0);
     cartSummaryCountEl.textContent = totalItems === 1 ? "1 item" : `${totalItems} items`;

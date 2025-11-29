@@ -76,17 +76,23 @@
     }
 
     .logo-orb{
-      width:42px;
-      height:42px;
+      width:70px;
+      height:70px;
       border-radius:999px;
-      background:conic-gradient(from 220deg,#f97316,#0f766e,#38bdf8,#f97316);
+      background:#000;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-weight:800;
-      font-size:18px;
-      color:#fff;
-      box-shadow:0 10px 24px rgba(249,115,22,0.55);
+      overflow:hidden;
+      box-shadow:0 12px 26px rgba(0,0,0,0.45);
+      flex-shrink:0;
+    }
+
+    .logo-orb img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
     }
 
     .event-main{
@@ -289,7 +295,7 @@
       opacity:0.9;
     }
 
-    /* Strong visible shaking / shuffling for 5s when .mixing is applied */
+    /* Strong visible shaking / shuffling when .mixing is applied */
     .mixing .mix-strip .ticket{
       animation:mixTickets 0.35s ease-in-out infinite alternate;
     }
@@ -351,7 +357,12 @@
 <div class="frame" id="frame">
   <div class="top-row">
     <div class="event-block">
-      <div class="logo-orb">L</div>
+      <div class="logo-orb">
+        <img
+          src="https://firebasestorage.googleapis.com/v0/b/events-339ce.firebasestorage.app/o/lokamania%205%20logo.png?alt=media&token=49f14bf3-b113-4653-84a6-3857275ad410"
+          alt="Lokamania 5 logo"
+        />
+      </div>
       <div>
         <div class="event-main" id="eventTitle">Lokamania 5</div>
         <div class="event-sub">Tombola live draw</div>
@@ -359,7 +370,7 @@
     </div>
     <div class="status-chip">
       <span class="status-dot"></span>
-      <span id="connectionLabel">Connecting to Firebase…</span>
+      <span id="connectionLabel">Connecting to Firebase...</span>
     </div>
   </div>
 
@@ -376,7 +387,7 @@
 
     <div class="winner-name" id="winnerName">No winner yet</div>
     <div class="winner-sub" id="winnerSub">
-      Press “Pick random winner” to start the tombola draw.
+      Press "Pick random winner" to start the tombola draw.
     </div>
 
     <div class="actions-row">
@@ -396,7 +407,7 @@
       <div class="ticket">#1188</div>
       <div class="mix-hint">
         <span class="mix-dot"></span>
-        <span id="mixHintText">Waiting for draw…</span>
+        <span id="mixHintText">Waiting for draw...</span>
       </div>
     </div>
 
@@ -424,15 +435,11 @@
   const EVENT_ID   = "lokamania5";
   const EVENT_NAME = "Lokamania 5";
 
-  // 🔶 OPTIONAL: put your event logo URL here
-  // If left as empty string, it will show the "L" initial instead.
-  const EVENT_LOGO_URL = ""; // e.g. "https://.../lokamania-logo.png"
-
-  // 🔶 OPTIONAL: MANUAL WINNER OVERRIDE
-  // Set MANUAL_WINNER_ENABLED = true and put the *raffleNumber* you want to win.
+  // OPTIONAL: MANUAL WINNER OVERRIDE
+  // Set MANUAL_WINNER_ENABLED = true and put the raffleNumber you want to win.
   // (It must match the "raffleNumber" stored in registration entries in RTDB)
-  const MANUAL_WINNER_ENABLED = false;
-  const MANUAL_WINNER_RAFFLE = null; // e.g. 1234;
+  const MANUAL_WINNER_ENABLED = true;
+  const MANUAL_WINNER_RAFFLE = 1191; // e.g. 1234
 
   const firebaseConfig = {
     apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
@@ -448,7 +455,7 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
-  const registrationsRef = ref(db, `events/${EVENT_ID}/registrations`);
+  const registrationsRef = ref(db, "events/" + EVENT_ID + "/registrations");
   const rootRef = ref(db);
 
   const frameEl = document.getElementById("frame");
@@ -464,51 +471,47 @@
   const btnPick = document.getElementById("btnPick");
   const btnResetView = document.getElementById("btnResetView");
 
-  const eventLogoImg = document.getElementById("eventLogoImg");
-  const logoInitialEl = document.getElementById("logoInitial");
-
   eventTitleEl.textContent = EVENT_NAME;
-
-  // Apply event logo if provided
-  if (EVENT_LOGO_URL && eventLogoImg && logoInitialEl) {
-    eventLogoImg.src = EVENT_LOGO_URL;
-    eventLogoImg.style.display = "block";
-    logoInitialEl.style.display = "none";
-  }
 
   let picking = false;
 
   // --------- AUTH ----------
-  signInAnonymously(auth).catch(err => {
+  signInAnonymously(auth).catch(function(err) {
     console.error("Anon auth error", err);
     connectionLabel.textContent = "Auth error – check Firebase rules.";
   });
 
-  onAuthStateChanged(auth, (user) => {
-    if(user){
+  onAuthStateChanged(auth, function(user) {
+    if (user) {
       connectionLabel.textContent = "Connected · Ready to draw";
     }
   });
 
   // --------- PICK WINNER WITH 5s SHUFFLE ----------
-  btnPick.addEventListener("click", async () => {
-    if(picking) return;
+  btnPick.addEventListener("click", async function() {
+    if (picking) return;
     picking = true;
     btnPick.disabled = true;
 
-    statusTextEl.textContent = "Fetching entries and mixing tombola tickets…";
-    mixHintTextEl.textContent = "Mixing…";
+    statusTextEl.textContent = "Fetching entries and mixing tombola tickets...";
+    mixHintTextEl.textContent = "Mixing...";
     frameEl.classList.add("mixing");
 
-    try{
+    try {
       const snap = await get(registrationsRef);
       const data = snap.val() || {};
-      const list = Object.entries(data).map(([id,val]) => ({ id, ...val }));
+      const list = Object.entries(data).map(function(pair) {
+        const id = pair[0];
+        const val = pair[1];
+        return Object.assign({ id: id }, val);
+      });
 
       // Only entries that have not won yet
-      const eligible = list.filter(r => !r.winner);
+      const eligible = list.filter(function(r) {
+        return !r.winner;
+      });
 
-      if(!eligible.length){
+      if (!eligible.length) {
         statusTextEl.textContent = "No available tombola entries. All registrations already have a winner flag.";
         mixHintTextEl.textContent = "No entries";
         frameEl.classList.remove("mixing");
@@ -522,9 +525,9 @@
 
       if (MANUAL_WINNER_ENABLED && MANUAL_WINNER_RAFFLE != null) {
         const manualStr = String(MANUAL_WINNER_RAFFLE);
-        winner = eligible.find(r => {
-          const rNum = r.raffleNumber ?? null;
-          if (rNum == null) return false;
+        winner = eligible.find(function(r) {
+          const rNum = (typeof r.raffleNumber !== "undefined" && r.raffleNumber !== null) ? r.raffleNumber : null;
+          if (rNum === null) return false;
           return String(rNum) === manualStr;
         });
 
@@ -542,13 +545,13 @@
       const now = Date.now();
 
       // After 5 seconds of visible shake, apply DB update + show result
-      setTimeout(async () => {
-        try{
+      setTimeout(async function() {
+        try {
           const updates = {};
-          updates[`events/${EVENT_ID}/registrations/${winner.id}/winner`] = true;
-          updates[`events/${EVENT_ID}/registrations/${winner.id}/winnerPickedAt`] = now;
-          updates[`events/${EVENT_ID}/winners/${winner.id}`] = {
-            raffleNumber: winner.raffleNumber ?? null,
+          updates["events/" + EVENT_ID + "/registrations/" + winner.id + "/winner"] = true;
+          updates["events/" + EVENT_ID + "/registrations/" + winner.id + "/winnerPickedAt"] = now;
+          updates["events/" + EVENT_ID + "/winners/" + winner.id] = {
+            raffleNumber: (typeof winner.raffleNumber !== "undefined" ? winner.raffleNumber : null),
             name: winner.name || "",
             phone: winner.phone || "",
             createdAt: winner.createdAt || null,
@@ -557,30 +560,32 @@
 
           await update(rootRef, updates);
 
-          const raffleNumber = winner.raffleNumber ?? "----";
+          const raffleNumber = (typeof winner.raffleNumber !== "undefined" && winner.raffleNumber !== null)
+            ? winner.raffleNumber
+            : "----";
 
-          winnerNumberEl.innerHTML = `
-            <span class="label">Tombola number</span>
-            <div class="value">#${raffleNumber}</div>
-          `;
+          winnerNumberEl.innerHTML =
+            '<span class="label">Tombola number</span>' +
+            '<div class="value">#' + raffleNumber + '</div>';
+
           winnerNameEl.textContent = winner.name || "Unknown guest";
           winnerSubEl.textContent = "Announce this number and invite the guest to the registration desk.";
-          winnerChipTextEl.textContent = \`Winner: #\${raffleNumber}\`;
+          winnerChipTextEl.textContent = "Winner: #" + raffleNumber;
 
           statusTextEl.textContent = "Winner selected. You can keep this on screen while the guest comes to claim the prize.";
           mixHintTextEl.textContent = "Winner locked";
-        }catch(errInner){
+        } catch (errInner) {
           console.error(errInner);
           statusTextEl.textContent = "Error while saving winner to Firebase. Check console / rules.";
           mixHintTextEl.textContent = "Error";
-        }finally{
+        } finally {
           frameEl.classList.remove("mixing");
           picking = false;
           btnPick.disabled = false;
         }
       }, 5000); // 5 seconds shuffle
 
-    }catch(err){
+    } catch (err) {
       console.error(err);
       statusTextEl.textContent = "Something went wrong while fetching entries. Check console / Firebase rules.";
       mixHintTextEl.textContent = "Error";
@@ -590,18 +595,19 @@
     }
   });
 
-  btnResetView.addEventListener("click", () => {
-    winnerNumberEl.innerHTML = `
-      <span class="label">Tombola number</span>
-      <div class="value">— — — —</div>
-    `;
+  btnResetView.addEventListener("click", function() {
+    winnerNumberEl.innerHTML =
+      '<span class="label">Tombola number</span>' +
+      '<div class="value">— — — —</div>';
+
     winnerNameEl.textContent = "No winner yet";
-    winnerSubEl.textContent = "Press “Pick random winner” to start the tombola draw.";
+    winnerSubEl.textContent = "Press \"Pick random winner\" to start the tombola draw.";
     winnerChipTextEl.textContent = "No number selected yet";
     statusTextEl.textContent = "Show this screen on your TV/LED and press the button when you’re ready to pick a winner.";
-    mixHintTextEl.textContent = "Waiting for draw…";
+    mixHintTextEl.textContent = "Waiting for draw...";
     frameEl.classList.remove("mixing");
   });
 </script>
 </body>
 </html>
+

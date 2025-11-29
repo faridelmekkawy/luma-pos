@@ -669,12 +669,13 @@
   const db = getDatabase(app);
   const auth = getAuth(app);
 
-  const EVENT_ID = "lokamania5";
+ const EVENT_ID = "lokamania5";
 
-  // paths: lokamania5/...
-  const registrationsRef = ref(db, `${EVENT_ID}/registrations`);
-  const settingsRef      = ref(db, `${EVENT_ID}/settings`);
-  const raffleLastRef    = ref(db, `${EVENT_ID}/raffleLast`);
+// ✅ correct – matches your DB: events/lokamania5/...
+const registrationsRef = ref(db, `events/${EVENT_ID}/registrations`);
+const settingsRef      = ref(db, `events/${EVENT_ID}/settings`);
+const raffleLastRef    = ref(db, `events/${EVENT_ID}/raffleLast`);
+
 
   const connectionStatusEl = document.getElementById("connectionStatus");
   const kpiTotalEl = document.getElementById("kpiTotal");

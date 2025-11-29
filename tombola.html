@@ -251,7 +251,7 @@
       width:100%;
       border-collapse:collapse;
       font-size:12px;
-      min-width:820px;
+      min-width:720px;
     }
     th,td{
       padding:8px 10px;
@@ -371,7 +371,7 @@
     .chart-canvas{
       width:100%;
       max-width:100%;
-      height:50; /* smaller charts */
+      height:220px;
     }
 
     @media (max-width:960px){
@@ -417,7 +417,6 @@
     <div>
       <div class="nav-section-title">Winner</div>
       <div class="nav-list">
-        <!-- CHANGE this link later to your real winner page URL -->
         <a id="winnerLink" href="#" class="nav-item" style="text-decoration:none;">
           <span>Open winner screen</span>
           <span class="nav-pill">Link spot</span>
@@ -454,11 +453,11 @@
           <div class="card-header">
             <div>
               <div class="card-title">Total registrations</div>
-              <div class="card-sub">All unique tombola entries for Lokamania 5</div>
+              <div class="card-sub">All tombola entries for Lokamania 5</div>
             </div>
           </div>
           <div class="kpi-value" id="kpiTotal">–</div>
-          <div class="kpi-label">Including guests + usher-filled</div>
+          <div class="kpi-label">Guests + usher-filled</div>
         </div>
 
         <div class="card" style="grid-column:span 4;">
@@ -477,36 +476,25 @@
         <div class="card" style="grid-column:span 4;">
           <div class="card-header">
             <div>
-              <div class="card-title">Peak registration hour</div>
-              <div class="card-sub">Highest traffic window (by created time)</div>
+              <div class="card-title">Top favourite brand</div>
+              <div class="card-sub">Based on “Favorite brand” in the form</div>
             </div>
           </div>
-          <div class="kpi-value" id="kpiPeakHour">–</div>
-          <div class="kpi-label" id="kpiPeakHourDetail">Waiting for data…</div>
+          <div class="kpi-value" id="kpiTopBrand">–</div>
+          <div class="kpi-label" id="kpiTopBrandDetail">Waiting for data…</div>
         </div>
 
-        <!-- Charts row 1 -->
+        <!-- Charts -->
         <div class="card" style="grid-column:span 6;">
           <div class="card-header">
             <div>
-              <div class="card-title">Gender &amp; first-time</div>
-              <div class="card-sub">Split of visitors by gender and whether it’s their first Lokamania</div>
+              <div class="card-title">Gender split</div>
+              <div class="card-sub">Based only on gender answers</div>
             </div>
           </div>
           <canvas id="genderChart" class="chart-canvas"></canvas>
         </div>
 
-        <div class="card" style="grid-column:span 6;">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Registrations timeline</div>
-              <div class="card-sub">Number of registrations per hour (based on createdAt)</div>
-            </div>
-          </div>
-          <canvas id="hourlyChart" class="chart-canvas"></canvas>
-        </div>
-
-        <!-- Charts row 2 -->
         <div class="card" style="grid-column:span 6;">
           <div class="card-header">
             <div>
@@ -517,15 +505,14 @@
           <canvas id="ageChart" class="chart-canvas"></canvas>
         </div>
 
-        <div class="card" style="grid-column:span 6;">
+        <div class="card" style="grid-column:span 12;">
           <div class="card-header">
             <div>
-              <div class="card-title">Shopping focus &amp; discovery</div>
-              <div class="card-sub">What they’re here to buy · How they heard about Lokamania</div>
+              <div class="card-title">Favourite brands</div>
+              <div class="card-sub">Top brands selected in “Favorite brand”</div>
             </div>
           </div>
-          <canvas id="shoppingChart" class="chart-canvas" style="margin-bottom:10px;"></canvas>
-          <canvas id="heardChart" class="chart-canvas"></canvas>
+          <canvas id="favBrandChart" class="chart-canvas"></canvas>
         </div>
 
         <!-- Registrations list -->
@@ -533,12 +520,12 @@
           <div class="card-header">
             <div>
               <div class="card-title">Registrations list</div>
-              <div class="card-sub">Real-time data from RTDB · events/lokamania5/registrations</div>
+              <div class="card-sub">Real-time data from RTDB · lokamania5/registrations</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
               <input id="guestSearch" class="input" type="text"
-                     placeholder="Search name, phone, email, city or brand…"
-                     style="min-width:200px;">
+                     placeholder="Search raffle no., name, phone, email, brand…"
+                     style="min-width:220px;">
               <button class="btn outline" id="btnRefresh">⟳ Refresh</button>
               <button class="btn" id="btnExportCsv">⬇ Export CSV</button>
             </div>
@@ -549,29 +536,24 @@
               <thead>
               <tr>
                 <th>#</th>
-                <th>Tombola</th>
+                <th>Raffle no.</th>
                 <th>Name</th>
                 <th>Phone</th>
                 <th>Email</th>
-                <th>City</th>
-                <th>Age</th>
-                <th>First time?</th>
+                <th>Gender</th>
+                <th>Age group</th>
                 <th>Fav brand</th>
-                <th>Brand wants next time</th>
-                <th>Heard via</th>
-                <th>Filled by</th>
-                <th>Created at</th>
               </tr>
               </thead>
               <tbody id="registrationsBody">
-              <tr><td colspan="13" class="empty-state">No registrations yet.</td></tr>
+              <tr><td colspan="8" class="empty-state">No registrations yet.</td></tr>
               </tbody>
             </table>
           </div>
 
           <div class="status-bar">
             <span id="tableStatus">Listening for updates…</span>
-            <span class="small-note">CSV includes all fields: name, phone, email, gender, city, age group, school/college, favorite brand + item, brands-to-see-next, first-time, budget, shopping-focus, etc.</span>
+            <span class="small-note">CSV includes: id, raffle number, name, phone, email, gender, age group, favorite brand, createdAt.</span>
           </div>
         </div>
       </div>
@@ -597,7 +579,7 @@
         <!-- Fields tab -->
         <div class="tab-pane active" id="fieldsTab">
           <p class="small-note">
-            Toggle which fields appear on the registration form and edit their labels. “Required” means the guest cannot submit without filling it.
+            Fields below control only: name, phone, email, gender, age group, favorite brand.
           </p>
           <div id="fieldsContainer" style="margin-top:10px;border-top:1px solid #e5e7eb;padding-top:6px;"></div>
         </div>
@@ -635,7 +617,7 @@
             <div class="field" style="grid-column:span 4;">
               <label for="tambolaLast">Last used number</label>
               <input id="tambolaLast" class="input" type="number" min="0" disabled>
-              <div class="small-note">Read-only. Updated by registration system when people sign up.</div>
+              <div class="small-note">Read-only. Mirrored from <code>raffleLast</code> in RTDB.</div>
             </div>
             <div class="field" style="grid-column:span 4;">
               <label>Winner screen link</label>
@@ -647,7 +629,7 @@
 
         <div class="status-bar">
           <span id="settingsStatus">Loading settings…</span>
-          <span class="small-note">All settings are stored under <code>events/lokamania5/settings</code> in RTDB.</span>
+          <span class="small-note">All settings are stored under <code>lokamania5/settings</code> in RTDB.</span>
         </div>
       </div>
     </section>
@@ -688,16 +670,20 @@
   const auth = getAuth(app);
 
   const EVENT_ID = "lokamania5";
-  const registrationsRef = ref(db, `events/${EVENT_ID}/registrations`);
-  const settingsRef = ref(db, `events/${EVENT_ID}/settings`);
+
+  // paths: lokamania5/...
+  const registrationsRef = ref(db, `${EVENT_ID}/registrations`);
+  const settingsRef      = ref(db, `${EVENT_ID}/settings`);
+  const raffleLastRef    = ref(db, `${EVENT_ID}/raffleLast`);
 
   const connectionStatusEl = document.getElementById("connectionStatus");
   const kpiTotalEl = document.getElementById("kpiTotal");
   const kpiUniqueContactsEl = document.getElementById("kpiUniqueContacts");
   const kpiPhonesInlineEl = document.getElementById("kpiPhonesInline");
   const kpiEmailsInlineEl = document.getElementById("kpiEmailsInline");
-  const kpiPeakHourEl = document.getElementById("kpiPeakHour");
-  const kpiPeakHourDetailEl = document.getElementById("kpiPeakHourDetail");
+  const kpiTopBrandEl = document.getElementById("kpiTopBrand");
+  const kpiTopBrandDetailEl = document.getElementById("kpiTopBrandDetail");
+
   const registrationsBodyEl = document.getElementById("registrationsBody");
   const tableStatusEl = document.getElementById("tableStatus");
   const winnerLinkSidebarEl = document.getElementById("winnerLink");
@@ -746,6 +732,7 @@
     });
   });
 
+  // ONLY the fields you care about
   const DEFAULT_SETTINGS = {
     tambolaStart: 1001,
     tambolaLast: 1000,
@@ -755,27 +742,19 @@
     winnerMessageTemplate:
       "Hey {name}! 🎉 Your tombola number #{number} has been selected as a winner at Lokamania 5. Please head to the registration desk to claim your prize.",
     fields: {
-      name:           { label: "Full name",                               required: true,  enabled: true,  order: 1 },
-      phone:          { label: "Phone number (WhatsApp)",                 required: true,  enabled: true,  order: 2 },
-      email:          { label: "Email",                                   required: true,  enabled: true,  order: 3 },
-      gender:         { label: "Gender",                                  required: true,  enabled: true,  order: 4 },
-      city:           { label: "City",                                    required: true,  enabled: true,  order: 5 },
-      ageGroup:       { label: "Age group",                               required: true,  enabled: true,  order: 6 },
-      schoolOrCollege:{ label: "School / College name",                   required: false, enabled: true,  order: 7 },
-      favoriteBrand:  { label: "Favorite brand",                          required: false, enabled: true,  order: 8 },
-      favoriteItem:   { label: "Favorite clothing item",                  required: false, enabled: true,  order: 9 },
-      brandsNextTime: { label: "Brands you'd love to see next time",      required: false, enabled: true,  order:10 },
-      heardAbout:     { label: "How did you hear about Lokamania?",       required: false, enabled: true,  order:11 },
-      firstTime:      { label: "Is it your first time in Lokamania?",     required: true,  enabled: true,  order:12 },
-      budgetRange:    { label: "Estimated budget today",                  required: false, enabled: true,  order:13 },
-      shoppingFocus:  { label: "What are you mainly shopping for today?", required: false, enabled: true,  order:14 }
+      name:          { label: "Full name",               required: true,  enabled: true,  order: 1 },
+      phone:         { label: "Phone number (WhatsApp)", required: true,  enabled: true,  order: 2 },
+      email:         { label: "Email",                   required: true,  enabled: true,  order: 3 },
+      gender:        { label: "Gender",                  required: true,  enabled: true,  order: 4 },
+      ageGroup:      { label: "Age group",               required: true,  enabled: true,  order: 5 },
+      favoriteBrand: { label: "Favorite brand",          required: false, enabled: true,  order: 6 }
     }
   };
 
   let settingsCache = null;
   let registrationsCache = [];
 
-  let genderChart, ageChart, heardChart, shoppingChart, hourlyChart;
+  let genderChart, ageChart, favBrandChart;
 
   signInAnonymously(auth).catch(err => {
     console.error("Anon auth error", err);
@@ -845,6 +824,15 @@
         winnerLinkSidebarEl.querySelector(".nav-pill").textContent = "Link spot";
       }
 
+      // read raffleLast into the "Last used number" field
+      get(raffleLastRef).then(rSnap => {
+        if (rSnap.exists()) {
+          tambolaLastEl.value = rSnap.val();
+        }
+      }).catch(err => {
+        console.warn("Error reading raffleLast", err);
+      });
+
       settingsStatusEl.textContent = "Settings loaded.";
     });
   }
@@ -907,34 +895,25 @@
   function renderRegistrationsTable(list){
     registrationsBodyEl.innerHTML = "";
     if(!list.length){
-      registrationsBodyEl.innerHTML = `<tr><td colspan="13" class="empty-state">No registrations yet.</td></tr>`;
+      registrationsBodyEl.innerHTML = `<tr><td colspan="8" class="empty-state">No registrations yet.</td></tr>`;
       tableStatusEl.textContent = "Waiting for first registration…";
       return;
     }
 
+    // order newest first using createdAt if present
     list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
 
     list.forEach((reg, idx) => {
       const tr = document.createElement("tr");
-      const created = reg.createdAt ? new Date(reg.createdAt).toLocaleString() : "—";
-      const firstTime = typeof reg.firstTime !== "undefined"
-        ? (reg.firstTime ? "Yes" : "No")
-        : (reg.isFirstTime ? "Yes" : (reg.isFirstTime === false ? "No" : "—"));
-
       tr.innerHTML = `
         <td>${idx+1}</td>
-        <td>${reg.tambolaNumber ?? "–"}</td>
+        <td>${reg.tambolaNumber ?? reg.raffleNumber ?? "–"}</td>
         <td>${reg.name ?? "–"}</td>
         <td>${reg.phone ?? "–"}</td>
         <td>${reg.email ?? "–"}</td>
-        <td>${reg.city ?? "–"}</td>
+        <td>${reg.gender ?? "–"}</td>
         <td>${reg.ageGroup ?? "–"}</td>
-        <td>${firstTime}</td>
         <td>${reg.favoriteBrand ?? "–"}</td>
-        <td>${reg.brandsNextTime ?? "–"}</td>
-        <td>${reg.heardAbout ?? "–"}</td>
-        <td>${reg.filledBy ?? "guest"}</td>
-        <td>${created}</td>
       `;
       registrationsBodyEl.appendChild(tr);
     });
@@ -949,7 +928,8 @@
     const phoneSet = new Set();
     const emailSet = new Set();
     const contactSet = new Set();
-    const hourCount = {};
+
+    const brandCounts = {};
 
     list.forEach(reg => {
       const phone = reg.phone ? String(reg.phone).trim() : "";
@@ -964,12 +944,9 @@
         contactSet.add("e:" + email);
       }
 
-      if(reg.createdAt){
-        const d = new Date(reg.createdAt);
-        if(!isNaN(d)){
-          const h = d.getHours();
-          hourCount[h] = (hourCount[h] || 0) + 1;
-        }
+      const b = (reg.favoriteBrand || "").trim();
+      if(b){
+        brandCounts[b] = (brandCounts[b] || 0) + 1;
       }
     });
 
@@ -977,53 +954,38 @@
     kpiPhonesInlineEl.textContent = `${phoneSet.size} phones`;
     kpiEmailsInlineEl.textContent = `${emailSet.size} emails`;
 
-    if(Object.keys(hourCount).length === 0){
-      kpiPeakHourEl.textContent = "–";
-      kpiPeakHourDetailEl.textContent = "Need registrations with createdAt to compute peak hour.";
+    if(Object.keys(brandCounts).length === 0){
+      kpiTopBrandEl.textContent = "–";
+      kpiTopBrandDetailEl.textContent = "No favorite brand data yet.";
     }else{
-      let bestHour = null;
-      let bestCount = -1;
-      for(const h in hourCount){
-        if(hourCount[h] > bestCount){
-          bestCount = hourCount[h];
-          bestHour = Number(h);
-        }
-      }
-      const label = `${String(bestHour).padStart(2,"0")}:00–${String((bestHour+1)%24).padStart(2,"0")}:00`;
-      kpiPeakHourEl.textContent = label;
-      kpiPeakHourDetailEl.textContent = `${bestCount} registrations in that hour.`;
+      const top = Object.entries(brandCounts).sort((a,b)=>b[1]-a[1])[0];
+      kpiTopBrandEl.textContent = top[0];
+      kpiTopBrandDetailEl.textContent = `${top[1]} votes for this brand.`;
     }
 
-    updateCharts(list, hourCount);
+    updateCharts(list, brandCounts);
   }
 
-  function updateCharts(list, hourCount){
+  function updateCharts(list, brandCounts){
     if(!window.Chart) return;
 
-    const genderCounts = { female:0, male:0, prefer_not:0, other:0 };
-    const firstTimeCounts = { first:0, returning:0 };
+    // ---- Gender chart ----
+    const genderCounts = { female:0, male:0, other:0, empty:0 };
 
     list.forEach(reg => {
       const g = (reg.gender || "").toLowerCase();
       if(g.includes("female")) genderCounts.female++;
       else if(g.includes("male")) genderCounts.male++;
       else if(g) genderCounts.other++;
-      else genderCounts.prefer_not++;
-
-      const ft = (typeof reg.firstTime !== "undefined") ? reg.firstTime : reg.isFirstTime;
-      if(ft === true) firstTimeCounts.first++;
-      else if(ft === false) firstTimeCounts.returning++;
+      else genderCounts.empty++;
     });
 
-    const genderLabels = ["Female","Male","Prefer not / other"];
+    const genderLabels = ["Female","Male","Other/unspecified"];
     const genderData = [
       genderCounts.female,
       genderCounts.male,
-      genderCounts.prefer_not + genderCounts.other
+      genderCounts.other + genderCounts.empty
     ];
-
-    const firstLabels = ["First time","Returning"];
-    const firstData = [firstTimeCounts.first, firstTimeCounts.returning];
 
     const genderCtx = document.getElementById("genderChart").getContext("2d");
     if(!genderChart){
@@ -1038,12 +1000,7 @@
         },
         options: {
           plugins: {
-            legend: { position:"bottom", labels:{ boxWidth:12,font:{size:11} } },
-            title: {
-              display:true,
-              text:`First time vs returning — ${firstData[0]} / ${firstData[1]}`,
-              font:{size:11,weight:"600"}
-            }
+            legend: { position:"bottom", labels:{ boxWidth:12,font:{size:11} } }
           },
           cutout:"55%"
         }
@@ -1051,16 +1008,24 @@
     }else{
       genderChart.data.labels = genderLabels;
       genderChart.data.datasets[0].data = genderData;
-      genderChart.options.plugins.title.text = `First time vs returning — ${firstData[0]} / ${firstData[1]}`;
       genderChart.update();
     }
 
-    const ageBuckets = ["13-17","18-24","25-34","35-44","45+"];
-    const ageCounts = { "13-17":0,"18-24":0,"25-34":0,"35-44":0,"45+":0 };
+    // ---- Age groups chart ----
+    const ageBuckets = ["13-17","18-24","25-34","35-44","45+","Other/empty"];
+    const ageCounts = {
+      "13-17":0,"18-24":0,"25-34":0,"35-44":0,"45+":0,"Other/empty":0
+    };
+
     list.forEach(reg => {
-      const a = reg.ageGroup || "";
-      if(ageCounts[a] !== undefined) ageCounts[a]++;
+      const a = (reg.ageGroup || "").trim();
+      if(ageCounts[a] !== undefined){
+        ageCounts[a]++;
+      }else{
+        ageCounts["Other/empty"]++;
+      }
     });
+
     const ageData = ageBuckets.map(k => ageCounts[k]);
     const ageCtx = document.getElementById("ageChart").getContext("2d");
     if(!ageChart){
@@ -1090,72 +1055,21 @@
       ageChart.update();
     }
 
-    const heardBuckets = ["instagram","tiktok","friend","influencer","previous_lokamania","other",""];
-    const heardCounts = { instagram:0,tiktok:0,friend:0,influencer:0,previous_lokamania:0,other:0,"":0 };
-    list.forEach(reg => {
-      const h = (reg.heardAbout || "").toLowerCase();
-      if(heardCounts[h] !== undefined) heardCounts[h]++;
-      else heardCounts.other++;
-    });
-    const heardLabels = ["Instagram","TikTok","Friend","Influencer","Previous Lokamania","Other/empty"];
-    const heardData = [
-      heardCounts.instagram,
-      heardCounts.tiktok,
-      heardCounts.friend,
-      heardCounts.influencer,
-      heardCounts.previous_lokamania,
-      heardCounts.other + heardCounts[""]
-    ];
-    const heardCtx = document.getElementById("heardChart").getContext("2d");
-    if(!heardChart){
-      heardChart = new Chart(heardCtx, {
-        type:"pie",
-        data:{
-          labels:heardLabels,
-          datasets:[{
-            data:heardData,
-            backgroundColor:["#0f766e","#f97316","#22c55e","#3b82f6","#eab308","#e5e7eb"]
-          }]
-        },
-        options:{
-          plugins:{
-            legend:{ position:"bottom", labels:{boxWidth:10,font:{size:10}} }
-          }
-        }
-      });
-    }else{
-      heardChart.data.labels = heardLabels;
-      heardChart.data.datasets[0].data = heardData;
-      heardChart.update();
-    }
+    // ---- Favorite brand chart ----
+    const brandEntries = Object.entries(brandCounts).sort((a,b)=>b[1]-a[1]);
+    const topBrands = brandEntries.slice(0,10);
+    const brandLabels = topBrands.map(b => b[0]);
+    const brandData = topBrands.map(b => b[1]);
 
-    const shoppingCounts = { clothes:0,accessories:0,bags:0,shoes:0,jewelry:0,beauty:0,other:0 };
-    list.forEach(reg => {
-      const focus = (reg.shoppingFocus || "").split(",").map(s=>s.trim().toLowerCase()).filter(Boolean);
-      focus.forEach(f => {
-        if(shoppingCounts[f] !== undefined) shoppingCounts[f]++;
-        else shoppingCounts.other++;
-      });
-    });
-    const shoppingLabels = ["Clothes","Accessories","Bags","Shoes","Jewelry","Beauty","Other"];
-    const shoppingData = [
-      shoppingCounts.clothes,
-      shoppingCounts.accessories,
-      shoppingCounts.bags,
-      shoppingCounts.shoes,
-      shoppingCounts.jewelry,
-      shoppingCounts.beauty,
-      shoppingCounts.other
-    ];
-    const shoppingCtx = document.getElementById("shoppingChart").getContext("2d");
-    if(!shoppingChart){
-      shoppingChart = new Chart(shoppingCtx, {
+    const favBrandCtx = document.getElementById("favBrandChart").getContext("2d");
+    if(!favBrandChart){
+      favBrandChart = new Chart(favBrandCtx, {
         type:"bar",
         data:{
-          labels:shoppingLabels,
+          labels:brandLabels,
           datasets:[{
-            label:"Mainly shopping for",
-            data:shoppingData,
+            label:"Favourite brand votes",
+            data:brandData,
             backgroundColor:"#f97316"
           }]
         },
@@ -1170,47 +1084,13 @@
         }
       });
     }else{
-      shoppingChart.data.labels = shoppingLabels;
-      shoppingChart.data.datasets[0].data = shoppingData;
-      shoppingChart.update();
-    }
-
-    const hours = Array.from({length:24},(_,i)=>i);
-    const hourlyData = hours.map(h => hourCount[h] || 0);
-    const hourlyCtx = document.getElementById("hourlyChart").getContext("2d");
-    if(!hourlyChart){
-      hourlyChart = new Chart(hourlyCtx, {
-        type:"line",
-        data:{
-          labels: hours.map(h => String(h).padStart(2,"0")+":00"),
-          datasets:[{
-            label:"Registrations per hour",
-            data:hourlyData,
-            borderColor:"#0f766e",
-            backgroundColor:"rgba(15,118,110,0.1)",
-            tension:0.3,
-            fill:true,
-            pointRadius:2
-          }]
-        },
-        options:{
-          scales:{
-            x:{ ticks:{maxTicksLimit:8,font:{size:10}} },
-            y:{ beginAtZero:true, ticks:{stepSize:1,font:{size:10}} }
-          },
-          plugins:{
-            legend:{display:false}
-          }
-        }
-      });
-    }else{
-      hourlyChart.data.labels = hours.map(h => String(h).padStart(2,"0")+":00");
-      hourlyChart.data.datasets[0].data = hourlyData;
-      hourlyChart.update();
+      favBrandChart.data.labels = brandLabels;
+      favBrandChart.data.datasets[0].data = brandData;
+      favBrandChart.update();
     }
   }
 
-  // ---- search filter ----
+  // ---- search filter (only on the fields you requested) ----
   function applySearchFilter(){
     if(!guestSearchInput) return;
     const q = guestSearchInput.value.toLowerCase().trim();
@@ -1218,13 +1098,13 @@
     if(q){
       list = registrationsCache.filter(reg => {
         const parts = [
-          reg.tambolaNumber,
+          reg.tambolaNumber ?? reg.raffleNumber,
           reg.name,
           reg.phone,
           reg.email,
-          reg.city,
-          reg.favoriteBrand,
-          reg.brandsNextTime
+          reg.gender,
+          reg.ageGroup,
+          reg.favoriteBrand
         ].map(x => (x || "").toString().toLowerCase());
         return parts.some(p => p.includes(q));
       });
@@ -1234,7 +1114,7 @@
 
   guestSearchInput.addEventListener("input", applySearchFilter);
 
-  // Simple manual refresh
+  // manual refresh
   btnRefresh.addEventListener("click", async () => {
     try{
       const snap = await get(registrationsRef);
@@ -1250,7 +1130,7 @@
     }
   });
 
-  // CSV export
+  // CSV export — only the requested fields (+ createdAt)
   btnExportCsv.addEventListener("click", () => {
     if(!registrationsCache.length){
       alert("No registrations to export yet.");
@@ -1258,33 +1138,21 @@
     }
     const rows = [];
     const header = [
-      "id","tombolaNumber","name","phone","email","gender","city","ageGroup",
-      "schoolOrCollege","favoriteBrand","favoriteItem","brandsNextTime",
-      "heardAbout","firstTime","budgetRange","shoppingFocus","filledBy","createdAt"
+      "id","raffleNumber","name","phone","email","gender","ageGroup",
+      "favoriteBrand","createdAt"
     ];
     rows.push(header);
 
     registrationsCache.forEach(reg => {
       const row = [
         reg.id || "",
-        reg.tambolaNumber ?? "",
+        (reg.raffleNumber ?? reg.tambolaNumber ?? ""),
         reg.name ?? "",
         reg.phone ?? "",
         reg.email ?? "",
         reg.gender ?? "",
-        reg.city ?? "",
         reg.ageGroup ?? "",
-        reg.schoolOrCollege ?? "",
         reg.favoriteBrand ?? "",
-        reg.favoriteItem ?? "",
-        reg.brandsNextTime ?? "",
-        reg.heardAbout ?? "",
-        typeof reg.firstTime !== "undefined"
-          ? (reg.firstTime ? "Yes" : "No")
-          : (reg.isFirstTime ? "Yes" : (reg.isFirstTime === false ? "No" : "")),
-        reg.budgetRange ?? "",
-        reg.shoppingFocus ?? "",
-        reg.filledBy ?? "",
         reg.createdAt ? new Date(reg.createdAt).toISOString() : ""
       ];
       rows.push(row);

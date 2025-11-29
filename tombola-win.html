@@ -424,6 +424,16 @@
   const EVENT_ID   = "lokamania5";
   const EVENT_NAME = "Lokamania 5";
 
+  // 🔶 OPTIONAL: put your event logo URL here
+  // If left as empty string, it will show the "L" initial instead.
+  const EVENT_LOGO_URL = ""; // e.g. "https://.../lokamania-logo.png"
+
+  // 🔶 OPTIONAL: MANUAL WINNER OVERRIDE
+  // Set MANUAL_WINNER_ENABLED = true and put the tombola number you want to win.
+  // UI will still show mixing & "random" behavior.
+  const MANUAL_WINNER_ENABLED = true;
+  const MANUAL_WINNER_TOMBOLA = 1191; // e.g. 1234
+
   const firebaseConfig = {
     apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
     authDomain: "events-339ce.firebaseapp.com",
@@ -454,7 +464,17 @@
   const btnPick = document.getElementById("btnPick");
   const btnResetView = document.getElementById("btnResetView");
 
+  const eventLogoImg = document.getElementById("eventLogoImg");
+  const logoInitialEl = document.getElementById("logoInitial");
+
   eventTitleEl.textContent = EVENT_NAME;
+
+  // Apply event logo if provided
+  if (EVENT_LOGO_URL && eventLogoImg && logoInitialEl) {
+    eventLogoImg.src = EVENT_LOGO_URL;
+    eventLogoImg.style.display = "block";
+    logoInitialEl.style.display = "none";
+  }
 
   let picking = false;
 
@@ -497,9 +517,27 @@
         return;
       }
 
-      // Random selection (decided now, revealed after 5s)
-      const idx = Math.floor(Math.random() * eligible.length);
-      const winner = eligible[idx];
+      // Decide winner (manual override or random)
+      let winner = null;
+
+      if (MANUAL_WINNER_ENABLED && MANUAL_WINNER_TOMBOLA != null) {
+        const manualStr = String(MANUAL_WINNER_TOMBOLA);
+        winner = eligible.find(r => {
+          const tNum = r.tambolaNumber ?? r.raffleNumber ?? null;
+          if (tNum == null) return false;
+          return String(tNum) === manualStr;
+        });
+
+        if (!winner) {
+          console.warn("Manual winner tombola number not found among eligible entries, falling back to random.");
+        }
+      }
+
+      // If no manual winner or not found, pick random
+      if (!winner) {
+        const idx = Math.floor(Math.random() * eligible.length);
+        winner = eligible[idx];
+      }
 
       const now = Date.now();
 
@@ -510,7 +548,7 @@
           updates[`events/${EVENT_ID}/registrations/${winner.id}/winner`] = true;
           updates[`events/${EVENT_ID}/registrations/${winner.id}/winnerPickedAt`] = now;
           updates[`events/${EVENT_ID}/winners/${winner.id}`] = {
-            tambolaNumber: winner.tambolaNumber ?? null,
+            tambolaNumber: winner.tambolaNumber ?? winner.raffleNumber ?? null,
             name: winner.name || "",
             phone: winner.phone || "",
             createdAt: winner.createdAt || null,
@@ -519,7 +557,7 @@
 
           await update(rootRef, updates);
 
-          const tombolaNumber = winner.tambolaNumber ?? "----";
+          const tombolaNumber = winner.tambolaNumber ?? winner.raffleNumber ?? "----";
 
           winnerNumberEl.innerHTML = `
             <span class="label">Tombola number</span>
@@ -527,7 +565,7 @@
           `;
           winnerNameEl.textContent = winner.name || "Unknown guest";
           winnerSubEl.textContent = "Announce this number and invite the guest to the registration desk.";
-          winnerChipTextEl.textContent = `Winner: #${tombolaNumber}`;
+          winnerChipTextEl.textContent = \`Winner: #\${tombolaNumber}\`;
 
           statusTextEl.textContent = "Winner selected. You can keep this on screen while the guest comes to claim the prize.";
           mixHintTextEl.textContent = "Winner locked";

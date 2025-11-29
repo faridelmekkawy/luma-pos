@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Lokamania 5 — Tombola Winner</title>
+  <title>Lokamania 5 — Raffle Winner</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
@@ -365,7 +365,7 @@
       </div>
       <div>
         <div class="event-main" id="eventTitle">Lokamania 5</div>
-        <div class="event-sub">Tombola live draw</div>
+        <div class="event-sub">Raffle live draw</div>
       </div>
     </div>
     <div class="status-chip">
@@ -381,13 +381,13 @@
     </div>
 
     <div class="highlight-number" id="winnerNumber">
-      <span class="label">Tombola number</span>
+      <span class="label">Raffle number</span>
       <div class="value">— — — —</div>
     </div>
 
     <div class="winner-name" id="winnerName">No winner yet</div>
     <div class="winner-sub" id="winnerSub">
-      Press "Pick random winner" to start the tombola draw.
+      Press "Pick random winner" to start the Raffle draw.
     </div>
 
     <div class="actions-row">
@@ -493,7 +493,7 @@
     picking = true;
     btnPick.disabled = true;
 
-    statusTextEl.textContent = "Fetching entries and mixing tombola tickets...";
+    statusTextEl.textContent = "Fetching entries and mixing raffle tickets...";
     mixHintTextEl.textContent = "Mixing...";
     frameEl.classList.add("mixing");
 
@@ -512,7 +512,7 @@
       });
 
       if (!eligible.length) {
-        statusTextEl.textContent = "No available tombola entries. All registrations already have a winner flag.";
+        statusTextEl.textContent = "No available raffle entries. All registrations already have a winner flag.";
         mixHintTextEl.textContent = "No entries";
         frameEl.classList.remove("mixing");
         picking = false;
@@ -565,7 +565,7 @@
             : "----";
 
           winnerNumberEl.innerHTML =
-            '<span class="label">Tombola number</span>' +
+            '<span class="label">Raffle number</span>' +
             '<div class="value">#' + raffleNumber + '</div>';
 
           winnerNameEl.textContent = winner.name || "Unknown guest";
@@ -597,11 +597,11 @@
 
   btnResetView.addEventListener("click", function() {
     winnerNumberEl.innerHTML =
-      '<span class="label">Tombola number</span>' +
+      '<span class="label">raffle number</span>' +
       '<div class="value">— — — —</div>';
 
     winnerNameEl.textContent = "No winner yet";
-    winnerSubEl.textContent = "Press \"Pick random winner\" to start the tombola draw.";
+    winnerSubEl.textContent = "Press \"Pick random winner\" to start the raffle draw.";
     winnerChipTextEl.textContent = "No number selected yet";
     statusTextEl.textContent = "Show this screen on your TV/LED and press the button when you’re ready to pick a winner.";
     mixHintTextEl.textContent = "Waiting for draw...";

@@ -404,11 +404,19 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getDatabase, ref, push, get, runTransaction
+    getDatabase,
+    ref,
+    push,
+    get,
+    runTransaction,
+    query,
+    orderByChild,
+    equalTo
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
   import {
-    getAuth, signInAnonymously
+    getAuth,
+    signInAnonymously
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   const firebaseConfig = {
@@ -432,6 +440,8 @@
   const registrationsRef = ref(db, `events/${EVENT_ID}/registrations`);
   const raffleLastRef = ref(db, `events/${EVENT_ID}/raffleLast`);
 
+  const submitBtn = document.getElementById("submitBtn");
+
   signInAnonymously(auth).catch(console.error);
 
   async function nextRaffleNumber(){
@@ -442,8 +452,27 @@
     return result.snapshot.val();
   }
 
+  // NEW: check if this email or phone has already registered
+  async function hasExistingRegistration(email, phone){
+    // Email is already lowercased before being passed here
+    const emailQuery = query(registrationsRef, orderByChild("email"), equalTo(email));
+    const phoneQuery = query(registrationsRef, orderByChild("phone"), equalTo(phone));
+
+    const [emailSnap, phoneSnap] = await Promise.all([
+      get(emailQuery),
+      get(phoneQuery)
+    ]);
+
+    return emailSnap.exists() || phoneSnap.exists();
+  }
+
   document.getElementById("registrationForm").addEventListener("submit", async e=>{
     e.preventDefault();
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting…";
+    }
 
     const name = e.target.name.value.trim();
     const phone = e.target.phone.value.trim();
@@ -467,44 +496,73 @@
     if(!gender) err("err-gender","Please choose an option.");
     if(!age) err("err-age","Please select your age group.");
 
-    if(!ok) return;
+    if(!ok){
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Get my raffle number ✨";
+      }
+      return;
+    }
 
-    const raffleNumber = await nextRaffleNumber();
+    try{
+      // DUPLICATE CHECK HERE
+      const alreadyRegistered = await hasExistingRegistration(email, phone);
+      if(alreadyRegistered){
+        err("err-email","This email or phone has already registered.");
+        err("err-phone","This email or phone has already registered.");
 
-    const payload = {
-      name,
-      phone,
-      email,
-      gender,
-      ageGroup: age,
-      favoriteBrand: fav,
-      raffleNumber,
-      createdAt: Date.now(),
-      logoUrl: LOGO_URL
-    };
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Get my raffle number ✨";
+        }
+        return;
+      }
 
-    await push(registrationsRef, payload);
+      const raffleNumber = await nextRaffleNumber();
 
-    await fetch(WEBHOOK_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        type:"lokamania_registration",
-        eventId:EVENT_ID,
+      const payload = {
+        name,
+        phone,
+        email,
+        gender,
+        ageGroup: age,
+        favoriteBrand: fav,
         raffleNumber,
-        logoUrl: LOGO_URL,
-        data: payload
-      })
-    }).catch(console.warn);
+        createdAt: Date.now(),
+        logoUrl: LOGO_URL
+      };
 
-    document.getElementById("successNumber").textContent = "#" + raffleNumber;
-    document.getElementById("successPanel").classList.add("visible");
+      await push(registrationsRef, payload);
+
+      await fetch(WEBHOOK_URL,{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          type:"lokamania_registration",
+          eventId:EVENT_ID,
+          raffleNumber,
+          logoUrl: LOGO_URL,
+          data: payload
+        })
+      }).catch(console.warn);
+
+      document.getElementById("successNumber").textContent = "#" + raffleNumber;
+      document.getElementById("successPanel").classList.add("visible");
+    }catch(error){
+      console.error(error);
+      alert("Something went wrong. Please try again.");
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Get my raffle number ✨";
+      }
+    }
   });
 
   document.getElementById("successCloseBtn").addEventListener("click",()=>{
     location.reload();
   });
 </script>
+
 
 </body>
 </html>

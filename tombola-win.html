@@ -429,10 +429,10 @@
   const EVENT_LOGO_URL = ""; // e.g. "https://.../lokamania-logo.png"
 
   // 🔶 OPTIONAL: MANUAL WINNER OVERRIDE
-  // Set MANUAL_WINNER_ENABLED = true and put the tombola number you want to win.
-  // UI will still show mixing & "random" behavior.
-  const MANUAL_WINNER_ENABLED = true;
-  const MANUAL_WINNER_TOMBOLA = 1191; // e.g. 1234
+  // Set MANUAL_WINNER_ENABLED = true and put the *raffleNumber* you want to win.
+  // (It must match the "raffleNumber" stored in registration entries in RTDB)
+  const MANUAL_WINNER_ENABLED = false;
+  const MANUAL_WINNER_RAFFLE = null; // e.g. 1234;
 
   const firebaseConfig = {
     apiKey: "AIzaSyA80bAAGPuyscnTVS-zwrxE9Jp3tPiS1gM",
@@ -517,19 +517,19 @@
         return;
       }
 
-      // Decide winner (manual override or random)
+      // Decide winner (manual override or random) — USING raffleNumber ONLY
       let winner = null;
 
-      if (MANUAL_WINNER_ENABLED && MANUAL_WINNER_TOMBOLA != null) {
-        const manualStr = String(MANUAL_WINNER_TOMBOLA);
+      if (MANUAL_WINNER_ENABLED && MANUAL_WINNER_RAFFLE != null) {
+        const manualStr = String(MANUAL_WINNER_RAFFLE);
         winner = eligible.find(r => {
-          const tNum = r.tambolaNumber ?? r.raffleNumber ?? null;
-          if (tNum == null) return false;
-          return String(tNum) === manualStr;
+          const rNum = r.raffleNumber ?? null;
+          if (rNum == null) return false;
+          return String(rNum) === manualStr;
         });
 
         if (!winner) {
-          console.warn("Manual winner tombola number not found among eligible entries, falling back to random.");
+          console.warn("Manual raffleNumber not found among eligible entries, falling back to random.");
         }
       }
 
@@ -548,7 +548,7 @@
           updates[`events/${EVENT_ID}/registrations/${winner.id}/winner`] = true;
           updates[`events/${EVENT_ID}/registrations/${winner.id}/winnerPickedAt`] = now;
           updates[`events/${EVENT_ID}/winners/${winner.id}`] = {
-            tambolaNumber: winner.tambolaNumber ?? winner.raffleNumber ?? null,
+            raffleNumber: winner.raffleNumber ?? null,
             name: winner.name || "",
             phone: winner.phone || "",
             createdAt: winner.createdAt || null,
@@ -557,15 +557,15 @@
 
           await update(rootRef, updates);
 
-          const tombolaNumber = winner.tambolaNumber ?? winner.raffleNumber ?? "----";
+          const raffleNumber = winner.raffleNumber ?? "----";
 
           winnerNumberEl.innerHTML = `
             <span class="label">Tombola number</span>
-            <div class="value">#${tombolaNumber}</div>
+            <div class="value">#${raffleNumber}</div>
           `;
           winnerNameEl.textContent = winner.name || "Unknown guest";
           winnerSubEl.textContent = "Announce this number and invite the guest to the registration desk.";
-          winnerChipTextEl.textContent = \`Winner: #\${tombolaNumber}\`;
+          winnerChipTextEl.textContent = \`Winner: #\${raffleNumber}\`;
 
           statusTextEl.textContent = "Winner selected. You can keep this on screen while the guest comes to claim the prize.";
           mixHintTextEl.textContent = "Winner locked";

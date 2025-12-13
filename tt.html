@@ -1583,6 +1583,8 @@ createForm.addEventListener("submit", async e => {
           branchId: o.branchId || null,
           branchName: b ? b.name : "",
           ...o
+          window.ordersList = ordersList;
+
         });
       });
     }
@@ -1605,6 +1607,8 @@ createForm.addEventListener("submit", async e => {
             branchId: o.branchId || null,
             branchName: b ? b.name : "",
             ...o
+            window.ordersList = ordersList;
+
           });
         });
         updateDashboardUI();
@@ -4177,6 +4181,14 @@ function boot(){
     renderDashboardFromFilter();
     renderReports();
   }
+// expose renderers for the date-filter script (outside module) to call
+window.updateDashboardUI = updateDashboardUI;
+window.renderOrdersAnalytics = renderOrdersAnalytics;
+window.renderOrdersTable = renderOrdersTable;
+window.renderRecentOrdersTable = renderRecentOrdersTable;
+
+// also expose the orders list reference if you keep it module-scoped
+window.ordersList = ordersList;
 
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

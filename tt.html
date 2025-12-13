@@ -3,47 +3,49 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Luma Store OS — Brand Dashboard</title>
+  <title>Luma Store OS — Nizu Console</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
   <style>
     :root{
       --bg:#f7f8fa;
       --panel:#ffffff;
       --panel-soft:#f3f4f6;
-      --ink:#111827;
-      --muted:#6b7280;
-      --border:#e5e7eb;
+      --ink:#0b1220;
+      --muted:#5b6472;
+      --border:#e6e9ef;
 
-      --accent:#2563eb;
-      --accent-soft:#dbeafe;
+      --accent:#2563eb;         /* blue */
       --accent-strong:#1d4ed8;
+      --accent-soft:rgba(37,99,235,.14);
+
+      --ok:#16a34a;             /* green */
+      --ok-soft:rgba(22,163,74,.14);
+      --danger:#ef4444;         /* red */
+      --danger-soft:rgba(239,68,68,.14);
+      --warn:#f59e0b;           /* amber */
+      --warn-soft:rgba(245,158,11,.14);
 
       --radius:16px;
-      --shadow:0 18px 40px rgba(15,23,42,.10);
+      --radius2:22px;
+      --shadow:0 20px 55px rgba(15,23,42,.10);
+      --shadow2:0 10px 22px rgba(15,23,42,.08);
 
-      --ok:#16a34a;
-      --ok-soft:#dcfce7;
-      --danger:#ef4444;
-      --danger-soft:#fee2e2;
-      --warn:#f59e0b;
-      --warn-soft:#fffbeb;
+      --focus:0 0 0 4px rgba(37,99,235,.18);
     }
 
     :root[data-theme="dark"]{
       --bg:#0b0f17;
       --panel:#0f1623;
       --panel-soft:#111c2d;
-      --ink:#e5e7eb;
-      --muted:#9ca3af;
+      --ink:#eef2f7;
+      --muted:#a2acb9;
       --border:#1f2a3a;
 
       --accent:#3b82f6;
-      --accent-soft:rgba(59,130,246,.18);
       --accent-strong:#60a5fa;
-
-      --shadow:0 20px 50px rgba(0,0,0,.45);
+      --accent-soft:rgba(59,130,246,.18);
 
       --ok:#22c55e;
       --ok-soft:rgba(34,197,94,.18);
@@ -51,6 +53,11 @@
       --danger-soft:rgba(248,113,113,.16);
       --warn:#fbbf24;
       --warn-soft:rgba(251,191,36,.16);
+
+      --shadow:0 26px 70px rgba(0,0,0,.50);
+      --shadow2:0 14px 28px rgba(0,0,0,.42);
+
+      --focus:0 0 0 4px rgba(59,130,246,.24);
     }
 *{box-sizing:border-box;margin:0;padding:0}
     html,body{
@@ -338,7 +345,272 @@
       .sidebar-nav{flex-direction:row;}
       .topbar{flex-direction:column;align-items:flex-start;gap:8px;height:auto;}
     }
-  </style>
+  
+/* =========================
+   NIZU UI v1 (layout overhaul)
+   (No JS logic changed)
+   ========================= */
+
+html,body{background:var(--bg);color:var(--ink);font-family:"Inter", "Montserrat", system-ui, -apple-system, Segoe UI, Arial, sans-serif;}
+*{scrollbar-color: rgba(148,163,184,.55) transparent;}
+:root[data-theme="dark"] *{scrollbar-color: rgba(148,163,184,.35) transparent;}
+
+.app-shell{
+  min-height:100vh;
+  display:flex;
+  gap:16px;
+  padding:16px;
+}
+
+.sidebar{
+  width:260px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius2);
+  box-shadow:var(--shadow2);
+  padding:14px;
+  position:sticky;
+  top:16px;
+  height:calc(100vh - 32px);
+  display:flex;
+  flex-direction:column;
+}
+
+.sidebar-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px;
+  border-radius:14px;
+  background:linear-gradient(180deg, var(--panel-soft), transparent);
+  border:1px solid var(--border);
+}
+
+.sidebar-logo{
+  width:44px;height:44px;border-radius:14px;
+  display:grid;place-items:center;
+  background:var(--accent);
+  color:white;font-weight:800;
+  box-shadow:0 10px 20px rgba(37,99,235,.25);
+}
+
+.sidebar-brand-name{font-weight:800;font-size:14px;line-height:16px;letter-spacing:.2px;}
+.sidebar-brand-name::after{
+  content:" • Nizu";
+  color:var(--muted);
+  font-weight:600;
+}
+
+.sidebar-nav{margin-top:14px;display:flex;flex-direction:column;gap:6px;flex:1;}
+
+.nav-item{
+  width:100%;
+  background:transparent;
+  border:1px solid transparent;
+  color:var(--ink);
+  padding:10px 10px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:650;
+  cursor:pointer;
+  transition:transform .08s ease, background .12s ease, border-color .12s ease;
+}
+.nav-item .nav-ic{
+  width:34px;height:34px;border-radius:12px;
+  display:grid;place-items:center;
+  background:var(--panel-soft);
+  border:1px solid var(--border);
+  color:var(--muted);
+  flex:0 0 auto;
+}
+.nav-item:hover{background:var(--panel-soft);border-color:var(--border);}
+.nav-item:active{transform:translateY(1px);}
+.nav-item.active{
+  background:linear-gradient(180deg, var(--accent-soft), transparent);
+  border-color:rgba(37,99,235,.25);
+}
+:root[data-theme="dark"] .nav-item.active{border-color:rgba(59,130,246,.28);}
+
+.nav-item.active .nav-ic{
+  background:var(--accent);
+  border-color:transparent;
+  color:white;
+}
+
+.nav-item.logout{
+  margin-top:10px;
+  background:var(--danger-soft);
+  border-color:rgba(239,68,68,.25);
+  color:var(--danger);
+  font-weight:800;
+}
+.nav-item.logout .nav-ic{background:transparent;border-color:transparent;}
+.nav-item.logout:hover{background:rgba(239,68,68,.18);}
+
+.main-col{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.topbar{
+  height:auto;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius2);
+  box-shadow:var(--shadow2);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.topbar-title{font-size:16px;font-weight:850;letter-spacing:.2px;}
+.topbar-sub{color:var(--muted);font-size:12px;margin-top:2px;}
+
+.topbar-branch-filter{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.topbar-branch-filter span{color:var(--muted);font-size:12px;font-weight:650;}
+.topbar-branch-filter select{
+  border:1px solid var(--border);
+  background:var(--panel);
+  color:var(--ink);
+  padding:10px 12px;
+  border-radius:14px;
+  outline:none;
+}
+.topbar-branch-filter select:focus{box-shadow:var(--focus);border-color:rgba(37,99,235,.35);}
+
+.content-area{
+  background:transparent;
+  padding:0;
+}
+
+.page{
+  display:none;
+  gap:14px;
+}
+.page.active{display:flex;flex-direction:column;}
+
+.page-header{
+  margin:0;
+  padding:0;
+  border:none;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+}
+.page-title{font-size:14px;font-weight:850;letter-spacing:.2px;}
+.page-sub{color:var(--muted);font-size:12px;margin-top:4px;}
+.page-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;}
+
+.btn{
+  border-radius:14px !important;
+  padding:10px 12px !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  border:1px solid transparent;
+}
+.btn-primary{background:var(--accent) !important;color:white !important;}
+.btn-primary:hover{background:var(--accent-strong) !important;}
+.btn-ghost{
+  background:transparent !important;
+  border-color:var(--border) !important;
+  color:var(--ink) !important;
+}
+.btn-ghost:hover{background:var(--panel-soft) !important;}
+.btn-danger{background:var(--danger) !important;color:white !important;}
+.btn-danger:hover{filter:brightness(.95);}
+
+.toolbar{
+  border:1px solid var(--border);
+  background:var(--panel);
+  border-radius:var(--radius2);
+  box-shadow:var(--shadow2);
+  padding:10px;
+}
+.toolbar input, .toolbar select{
+  background:var(--panel) !important;
+  color:var(--ink) !important;
+  border:1px solid var(--border) !important;
+  border-radius:14px !important;
+  padding:10px 12px !important;
+}
+.toolbar input:focus, .toolbar select:focus{box-shadow:var(--focus);outline:none;border-color:rgba(37,99,235,.35);}
+
+.cards-grid{
+  display:grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap:12px;
+}
+
+.card{
+  background:var(--panel) !important;
+  border:1px solid var(--border) !important;
+  border-radius:var(--radius2) !important;
+  box-shadow:var(--shadow2) !important;
+  padding:14px !important;
+}
+.card-title{color:var(--muted) !important;font-weight:800 !important;font-size:12px !important;}
+.card-number{font-size:22px !important;font-weight:900 !important;margin-top:6px !important;}
+.card-note{color:var(--muted) !important;}
+
+.table-wrapper{
+  background:var(--panel) !important;
+  border:1px solid var(--border) !important;
+  border-radius:var(--radius2) !important;
+  box-shadow:var(--shadow2) !important;
+  overflow:hidden;
+}
+
+/* Dashboard - make it operational + analytical */
+#page-dashboard .cards-grid{grid-template-columns:repeat(12,1fr);}
+#page-dashboard .cards-grid > .card{grid-column:span 3;}
+#page-dashboard #table-recent-orders{grid-column:span 8;}
+@media (max-width: 1100px){
+  #page-dashboard .cards-grid > .card{grid-column:span 6;}
+}
+
+/* Low stock panel (ensure visible in dark) */
+#lowStockPanel{
+  background:var(--panel) !important;
+  border:1px solid rgba(245,158,11,.35) !important;
+  box-shadow:var(--shadow2) !important;
+}
+#lowStockPanelTitle{color:var(--warn) !important;font-weight:900 !important;}
+
+/* Inputs / fields */
+.field-input, input, select, textarea{
+  color:var(--ink);
+}
+.field-input{
+  background:var(--panel) !important;
+  border:1px solid var(--border) !important;
+}
+.field-input:focus{box-shadow:var(--focus);outline:none;border-color:rgba(37,99,235,.35) !important;}
+
+/* Settings cards */
+.settings-card{
+  background:var(--panel) !important;
+  border:1px solid var(--border) !important;
+  border-radius:var(--radius2) !important;
+  box-shadow:var(--shadow2) !important;
+}
+.settings-title{font-weight:900 !important;}
+
+/* Make sure any legacy hard-coded white is overridden */
+[style*="background:#fff"], [style*="background: #fff"]{background:var(--panel) !important;}
+
+</style>
 </head>
 <body>
 
@@ -411,23 +683,23 @@
         <div id="sidebar-brand-name" class="sidebar-brand-name">Brand</div>
       </div>
       <nav class="sidebar-nav">
-        <button class="nav-item active" data-page="page-dashboard">Dashboard</button>
-        <button class="nav-item" data-page="page-products">Products</button>
-        <button class="nav-item" data-page="page-branches">Branches</button>
-        <button class="nav-item" data-page="page-staff">Staff</button>
-        <button class="nav-item" data-page="page-customers">Customers</button>
-        <button class="nav-item" data-page="page-orders">Orders</button>
-        <button class="nav-item" data-page="page-settings">Settings</button>
+        <button class="nav-item active" data-page="page-dashboard"><span class="nav-ic" aria-hidden="true">🏠</span><span class="nav-tx">Dashboard</span></button>
+        <button class="nav-item" data-page="page-products"><span class="nav-ic" aria-hidden="true">🧾</span><span class="nav-tx">Products</span></button>
+        <button class="nav-item" data-page="page-branches"><span class="nav-ic" aria-hidden="true">🏬</span><span class="nav-tx">Branches</span></button>
+        <button class="nav-item" data-page="page-staff"><span class="nav-ic" aria-hidden="true">👥</span><span class="nav-tx">Staff</span></button>
+        <button class="nav-item" data-page="page-customers"><span class="nav-ic" aria-hidden="true">🧑‍💼</span><span class="nav-tx">Customers</span></button>
+        <button class="nav-item" data-page="page-orders"><span class="nav-ic" aria-hidden="true">🧾</span><span class="nav-tx">Orders</span></button>
+        <button class="nav-item" data-page="page-settings"><span class="nav-ic" aria-hidden="true">⚙️</span><span class="nav-tx">Settings</span></button>
       </nav>
-      <button id="btn-logout" class="nav-item logout">Logout</button>
+      <button id="btn-logout" class="nav-item logout"><span class="nav-ic" aria-hidden="true">↩️</span><span class="nav-tx">Logout</span></button>
     </aside>
 
     <!-- MAIN -->
-    <div style="flex:1;display:flex;flex-direction:column;">
+    <div class="main-col">
       <header class="topbar">
         <div>
-          <div id="topbar-brand-title" class="topbar-title">Brand Dashboard</div>
-          <div class="topbar-sub">Control center for your brand</div>
+          <div id="topbar-brand-title" class="topbar-title">Nizu Console</div>
+          <div class="topbar-sub">Operations & analytics for your brand</div>
         </div>
         <div class="topbar-branch-filter">
           <span>Branch:</span>
@@ -435,11 +707,6 @@
             <option value="global">All branches</option>
           </select>
         </div>
-      
-        <div class="topbar-actions" style="display:flex;align-items:center;gap:10px;">
-          <button id="btn-theme-toggle" class="btn btn-ghost" type="button" onclick="toggleTheme()">Dark mode</button>
-        </div>
-
       </header>
 
       <main class="content-area">
@@ -3303,32 +3570,38 @@ renderTopStaff(staffStats);
   </script>
 
 <script>
-/* Nizu theme toggle (non-breaking; does not modify existing functions) */
+/* Nizu Appearance (non-breaking: adds only; does not modify existing functions) */
 (function(){
   const key = "nizu_theme";
   const root = document.documentElement;
-  const btnId = "btn-theme-toggle";
 
-  function apply(t){
+  function applyTheme(t){
     if(t === "dark") root.setAttribute("data-theme","dark");
     else root.removeAttribute("data-theme");
     try{ localStorage.setItem(key, t); }catch(e){}
-    const b = document.getElementById(btnId);
-    if(b) b.textContent = (t === "dark") ? "Light mode" : "Dark mode";
+    // sync radios if present
+    const rL = document.getElementById("nizu-theme-light");
+    const rD = document.getElementById("nizu-theme-dark");
+    if(rL && rD){
+      rL.checked = (t !== "dark");
+      rD.checked = (t === "dark");
+    }
   }
 
-  function current(){
-    return root.getAttribute("data-theme")==="dark" ? "dark" : "light";
+  function init(){
+    let saved=null;
+    try{ saved = localStorage.getItem(key); }catch(e){}
+    if(saved !== "dark" && saved !== "light") saved = "light";
+    applyTheme(saved);
+
+    const rL = document.getElementById("nizu-theme-light");
+    const rD = document.getElementById("nizu-theme-dark");
+    if(rL) rL.addEventListener("change", ()=>{ if(rL.checked) applyTheme("light"); });
+    if(rD) rD.addEventListener("change", ()=>{ if(rD.checked) applyTheme("dark"); });
   }
 
-  window.toggleTheme = function(){
-    apply(current()==="dark" ? "light" : "dark");
-  };
-
-  let saved = null;
-  try{ saved = localStorage.getItem(key); }catch(e){}
-  if(saved === "dark" || saved === "light") apply(saved);
-  else apply("light");
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
 })();
 </script>
 

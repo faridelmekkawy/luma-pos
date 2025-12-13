@@ -452,6 +452,18 @@ html,body{background:var(--bg);color:var(--ink);font-family:"Inter","Montserrat"
 .nizu-chart-wrap{margin-top:10px; padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--panel-soft);}
 :root[data-theme="dark"] .nizu-chart-wrap{background:rgba(255,255,255,.04);}
 
+
+
+/* === Nizu hover fixes (strong specificity) === */
+.sidebar .nav-item:hover{background:var(--panel-soft) !important; border-color:var(--border) !important; color:var(--ink) !important;}
+.sidebar .nav-item:hover .nav-ic{background:var(--panel) !important; color:var(--muted) !important; border-color:var(--border) !important;}
+.sidebar .nav-item.active:hover{background:var(--accent-soft) !important;}
+:root[data-theme="dark"] .sidebar .nav-item:hover{background:rgba(255,255,255,.06) !important; color:var(--ink) !important;}
+:root[data-theme="dark"] .sidebar .nav-item:hover .nav-ic{background:rgba(255,255,255,.06) !important; color:var(--muted) !important; border-color:var(--border) !important;}
+/* Table row hover */
+.table-wrapper table tbody tr:hover{background:var(--panel-soft) !important;}
+:root[data-theme="dark"] .table-wrapper table tbody tr:hover{background:rgba(255,255,255,.05) !important;}
+
 </style>
 </head>
 <body>
@@ -3566,7 +3578,60 @@ renderTopStaff(staffStats);
   // ---- Date helpers ----
   function pad2(n){ return String(n).padStart(2,"0"); }
   function fmt(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
-  function parseYMD(s){ if(!s) return null; const [y,m,d]=s.split("-").map(Number); if(!y||!m||!d) return null; return new Date(y,m-1,d); }
+  function parseYMD(s){
+    if(!s) return null;
+    const [y,m,d]=String(s).split("-").map(Number);
+    if(!y||!m||!d) return null;
+    return new Date(y,m-1,d);
+  }
+
+  function normalizeToYMD(v){
+    if(!v) return "";
+    // Firestore Timestamp
+    try{
+      if(typeof v === "object" && typeof v.toDate === "function"){
+        const d = v.toDate();
+        return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+      }
+    }catch(e){}
+    // {seconds,nanoseconds}
+    try{
+      if(typeof v === "object" && typeof v.seconds === "number"){
+        const d = new Date(v.seconds * 1000);
+        return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+      }
+    }catch(e){}
+    // number ms
+    if(typeof v === "number"){
+      const d = new Date(v);
+      if(!isNaN(d)) return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+    }
+    // string
+    const s = String(v).trim();
+    if(!s) return "";
+    // ISO with time
+    if(/\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0,10);
+    // YYYY-MM-DD
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    // DD/MM/YYYY or MM/DD/YYYY
+    const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(m){
+      const a = Number(m[1]), b = Number(m[2]), y = Number(m[3]);
+      // Egypt commonly uses DD/MM/YYYY. If first part > 12, it's day.
+      let day=a, mon=b;
+      if(a <= 12 && b <= 12){
+        // ambiguous; prefer DD/MM for Egypt
+        day=a; mon=b;
+      }
+      if(a > 12){ day=a; mon=b; }
+      // sanity
+      if(mon>=1 && mon<=12 && day>=1 && day<=31) return `${y}-${pad2(mon)}-${pad2(day)}`;
+    }
+    // try Date parse
+    const d = new Date(s);
+    if(!isNaN(d)) return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+    return "";
+  }
   function startOfWeek(d){
     const x=new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const day=(x.getDay()+6)%7; // Monday=0
@@ -3581,14 +3646,16 @@ renderTopStaff(staffStats);
   window.NIZU_DATE_FILTER = state;
 
   function safeOrderYMD(o){
+    if(!o) return "";
     try{
       if(typeof window.orderDate === "function"){
         const v = window.orderDate(o);
-        if(v) return v;
+        const ymd = normalizeToYMD(v);
+        if(ymd) return ymd;
       }
     }catch(e){}
-    // common fallbacks
-    return (o && (o.date || o.createdAt || o.created_at || o.day)) ? (o.date || o.createdAt || o.created_at || o.day) : "";
+    const raw = (o.dateKey || o.date || o.createdAt || o.created_at || o.createdAtLocal || o.created_at_local || o.day || o.timestamp);
+    return normalizeToYMD(raw);
   }
 
   function inRange(ymd){
@@ -4070,10 +4137,27 @@ renderTopStaff(staffStats);
     if(bPdf) bPdf.addEventListener("click", exportPDFSnapshot);
   }
 
-  function boot(){
+  
+  function nizuWatchOrders(){
+    let lastSig = "";
+    setInterval(function(){
+      try{
+        const list = Array.isArray(window.ordersList) ? window.ordersList : [];
+        const sig = String(list.length) + "|" + (list[0] ? safeOrderYMD(list[0]) : "");
+        if(sig !== lastSig){
+          lastSig = sig;
+          renderDashboardFromFilter();
+          renderReports();
+        }
+      }catch(e){}
+    }, 900);
+  }
+
+function boot(){
     initTheme();
     initDateFilter();
     initReportButtons();
+    nizuWatchOrders();
     // initial render
     renderDashboardFromFilter();
     renderReports();
@@ -4086,4 +4170,5 @@ renderTopStaff(staffStats);
 
 
 </body>
+</html>
 </html>

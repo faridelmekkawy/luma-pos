@@ -1018,7 +1018,6 @@ html,body{background:var(--bg);color:var(--ink);font-family:"Inter","Montserrat"
       messagingSenderId:"175601544315",
       appId:"1:175601544315:web:00c94b4affa972b3a286de"
     };
-window.updateDashboardUI?.();
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -1584,10 +1583,13 @@ createForm.addEventListener("submit", async e => {
           branchId: o.branchId || null,
           branchName: b ? b.name : "",
           ...o
-
         });
       });
-    }
+    
+
+      // expose latest orders list for global date filter
+      window.ordersList = ordersList;
+}
 
     /* REALTIME ORDERS */
     function listenToOrdersRealtime() {
@@ -1607,9 +1609,11 @@ createForm.addEventListener("submit", async e => {
             branchId: o.branchId || null,
             branchName: b ? b.name : "",
             ...o
-
           });
         });
+        // keep global reference fresh for date filter
+        window.ordersList = ordersList;
+
         updateDashboardUI();
         renderOrdersTable();
         renderRecentOrdersTable();
@@ -3569,7 +3573,18 @@ renderTopStaff(staffStats);
       await signOut(auth);
       showAuth();
     });
-  </script>
+  
+    // ---------------------------
+    // Global exports (for non-module scripts like the global date filter)
+    // ---------------------------
+    window.updateDashboardUI = updateDashboardUI;
+    window.renderOrdersAnalytics = renderOrdersAnalytics;
+    window.renderOrdersTable = renderOrdersTable;
+    window.renderRecentOrdersTable = renderRecentOrdersTable;
+    // make sure the filter can read the current list
+    window.ordersList = ordersList;
+
+</script>
 
 
 <script>
@@ -4180,14 +4195,6 @@ function boot(){
     renderDashboardFromFilter();
     renderReports();
   }
-// expose renderers for the date-filter script (outside module) to call
-window.updateDashboardUI = updateDashboardUI;
-window.renderOrdersAnalytics = renderOrdersAnalytics;
-window.renderOrdersTable = renderOrdersTable;
-window.renderRecentOrdersTable = renderRecentOrdersTable;
-
-// also expose the orders list reference if you keep it module-scoped
-window.ordersList = ordersList;
 
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

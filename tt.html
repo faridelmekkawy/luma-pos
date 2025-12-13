@@ -3629,6 +3629,101 @@ renderTopStaff(staffStats);
     }catch(e){}
   }
 
+
+  // ---- Dashboard rendering (global filter aware) ----
+  function labelForPreset(){
+    const p = state.preset;
+    if(p==="all") return "General";
+    if(p==="today") return "Today";
+    if(p==="week") return "This week";
+    if(p==="month") return "This month";
+    if(p==="day") return "Selected day";
+    if(p==="range") return "Selected range";
+    return "Period";
+  }
+
+  function renderDashboardFromFilter(){
+    const orders = window.nizuGetFilteredOrders();
+
+    // KPIs
+    let salesNet=0, salesOrders=0, returnOrders=0;
+    orders.forEach(o=>{
+      const t=Number(o.total)||0;
+      const type=(o.type||"sale").toLowerCase();
+      if(type==="return"){
+        returnOrders++;
+        salesNet -= Math.abs(t);
+      }else{
+        salesOrders++;
+        salesNet += t;
+      }
+    });
+
+    const elSales=document.getElementById("dash-sales-today");
+    const elSalesOrders=document.getElementById("dash-orders-today");
+    const elReturnOrders=document.getElementById("dash-orders-returns-today");
+    if(elSales) elSales.textContent = money(salesNet);
+    if(elSalesOrders) elSalesOrders.textContent = String(salesOrders);
+    if(elReturnOrders) elReturnOrders.textContent = String(returnOrders);
+
+    // Dynamic labels (keeps layout but matches video concept)
+    const presetLabel = labelForPreset();
+    const t1 = document.querySelector('#page-dashboard .card-title');
+    const titles = document.querySelectorAll('#page-dashboard .card .card-title');
+    if(titles && titles.length >= 3){
+      titles[0].textContent = `Sales (${presetLabel})`;
+      titles[1].textContent = `Sales Orders (${presetLabel})`;
+      titles[2].textContent = `Return Orders (${presetLabel})`;
+    }
+
+    // Top staff list (uses filtered orders)
+    try{
+      const staffEl = document.getElementById("top-staff-today");
+      if(staffEl){
+        const top = topStaff(orders);
+        if(!top.length) staffEl.innerHTML = '<span style="color:var(--muted);font-size:12px;">No sales in this period.</span>';
+        else staffEl.innerHTML = top.slice(0,3).map(([n,v])=>`${escapeHtml(n)} — <b>${money(v)}</b>`).join("<br/>");
+      }
+    }catch(e){}
+
+    // Recent orders snapshot (filtered, last 10)
+    try{
+      const list = orders.slice().sort((a,b)=>{
+        const da = safeOrderYMD(a) || "";
+        const db = safeOrderYMD(b) || "";
+        return (db.localeCompare(da));
+      }).slice(0,10);
+
+      const wrap = document.getElementById("recent-orders-table");
+      if(wrap){
+        const html = [
+          '<table style="width:100%;border-collapse:collapse;font-size:12px;">',
+          '<thead><tr style="text-align:left;background:var(--panel-soft);border-bottom:1px solid var(--border);">',
+          '<th style="padding:10px 12px;">Order</th>',
+          '<th style="padding:10px 12px;">Date</th>',
+          '<th style="padding:10px 12px;">Branch</th>',
+          '<th style="padding:10px 12px;">Payment</th>',
+          '<th style="padding:10px 12px;text-align:right;">Total</th>',
+          '</tr></thead><tbody>'
+        ];
+        list.forEach(o=>{
+          const type=(o.type||"sale").toLowerCase();
+          const t=Number(o.total)||0;
+          const shown = (type==="return") ? -Math.abs(t) : t;
+          html.push('<tr style="border-bottom:1px solid var(--border);">');
+          html.push('<td style="padding:10px 12px;font-weight:700;">'+escapeHtml(o.orderId||o.id||"")+'</td>');
+          html.push('<td style="padding:10px 12px;color:var(--muted);">'+escapeHtml(safeOrderYMD(o)||"")+'</td>');
+          html.push('<td style="padding:10px 12px;color:var(--muted);">'+escapeHtml(o.branchName||"")+'</td>');
+          html.push('<td style="padding:10px 12px;color:var(--muted);">'+escapeHtml(o.paymentMethod||"")+'</td>');
+          html.push('<td style="padding:10px 12px;text-align:right;font-weight:800;">'+money(shown)+'</td>');
+          html.push('</tr>');
+        });
+        html.push('</tbody></table>');
+        wrap.innerHTML = html.join('');
+      }
+    }catch(e){}
+  }
+
   // ---- Reports rendering ----
   let chartTrend=null, chartPay=null;
 
@@ -3912,6 +4007,7 @@ renderTopStaff(staffStats);
     try{ localStorage.setItem("nizu_date_start", state.start||""); }catch(e){}
     try{ localStorage.setItem("nizu_date_end", state.end||""); }catch(e){}
     rerenderCore();
+    renderDashboardFromFilter();
     renderReports();
   }
 
@@ -3979,6 +4075,7 @@ renderTopStaff(staffStats);
     initDateFilter();
     initReportButtons();
     // initial render
+    renderDashboardFromFilter();
     renderReports();
   }
 

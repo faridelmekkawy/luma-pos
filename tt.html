@@ -3578,6 +3578,20 @@ renderTopStaff(staffStats);
   // ---- Date helpers ----
   function pad2(n){ return String(n).padStart(2,"0"); }
   function fmt(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+
+  function ymdInCairo(dateObj){
+    try{
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Cairo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(dateObj);
+    }catch(e){
+      return fmt(new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+    }
+  }
+
   function parseYMD(s){
     if(!s) return null;
     const [y,m,d]=String(s).split("-").map(Number);
@@ -3591,45 +3605,44 @@ renderTopStaff(staffStats);
     try{
       if(typeof v === "object" && typeof v.toDate === "function"){
         const d = v.toDate();
-        return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+        return ymdInCairo(d);
       }
     }catch(e){}
     // {seconds,nanoseconds}
     try{
       if(typeof v === "object" && typeof v.seconds === "number"){
         const d = new Date(v.seconds * 1000);
-        return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+        return ymdInCairo(d);
       }
     }catch(e){}
+    // Date object
+    if(Object.prototype.toString.call(v)==="[object Date]" && !isNaN(v)){
+      return ymdInCairo(v);
+    }
     // number ms
     if(typeof v === "number"){
       const d = new Date(v);
-      if(!isNaN(d)) return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+      if(!isNaN(d)) return ymdInCairo(d);
     }
     // string
     const s = String(v).trim();
     if(!s) return "";
     // ISO with time
-    if(/\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0,10);
+    if(/\d{4}-\d{2}-\d{2}T/.test(s)){
+      const d = new Date(s);
+      if(!isNaN(d)) return ymdInCairo(d);
+      return s.slice(0,10);
+    }
     // YYYY-MM-DD
     if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-    // DD/MM/YYYY or MM/DD/YYYY
+    // DD/MM/YYYY (prefer)
     const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if(m){
-      const a = Number(m[1]), b = Number(m[2]), y = Number(m[3]);
-      // Egypt commonly uses DD/MM/YYYY. If first part > 12, it's day.
-      let day=a, mon=b;
-      if(a <= 12 && b <= 12){
-        // ambiguous; prefer DD/MM for Egypt
-        day=a; mon=b;
-      }
-      if(a > 12){ day=a; mon=b; }
-      // sanity
+      const day = Number(m[1]), mon = Number(m[2]), y = Number(m[3]);
       if(mon>=1 && mon<=12 && day>=1 && day<=31) return `${y}-${pad2(mon)}-${pad2(day)}`;
     }
-    // try Date parse
     const d = new Date(s);
-    if(!isNaN(d)) return fmt(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+    if(!isNaN(d)) return ymdInCairo(d);
     return "";
   }
   function startOfWeek(d){
@@ -3647,15 +3660,17 @@ renderTopStaff(staffStats);
 
   function safeOrderYMD(o){
     if(!o) return "";
-    try{
-      if(typeof window.orderDate === "function"){
-        const v = window.orderDate(o);
-        const ymd = normalizeToYMD(v);
-        if(ymd) return ymd;
-      }
-    }catch(e){}
-    const raw = (o.dateKey || o.date || o.createdAt || o.created_at || o.createdAtLocal || o.created_at_local || o.day || o.timestamp);
-    return normalizeToYMD(raw);
+    // Prefer Firestore createdAt (correct business day)
+    const prefer = o.createdAt || o.created_at || null;
+    const a = normalizeToYMD(prefer);
+    if(a) return a;
+
+    // Next explicit date fields
+    const b = normalizeToYMD(o.dateKey || o.date || o.day);
+    if(b) return b;
+
+    // Finally createdAtLocal ISO (convert to Cairo day)
+    return normalizeToYMD(o.createdAtLocal || o.created_at_local || o.timestamp);
   }
 
   function inRange(ymd){
@@ -4170,5 +4185,4 @@ function boot(){
 
 
 </body>
-</html>
 </html>

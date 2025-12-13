@@ -435,6 +435,23 @@ html,body{background:var(--bg);color:var(--ink);font-family:"Inter","Montserrat"
 :root[data-theme="dark"] .sidebar,
 :root[data-theme="dark"] .settings-card{background:var(--panel)!important;color:var(--ink)!important;}
 
+
+
+/* Nizu modal scroll fix */
+#modal-container{align-items:flex-start !important; padding:22px 14px !important; overflow:auto !important;}
+.modal{max-height: calc(100vh - 44px) !important; overflow:auto !important;}
+
+:root[data-theme="dark"] .nav-item:hover{background:var(--panel-soft) !important; color:var(--ink) !important;}
+:root[data-theme="dark"] .btn-ghost:hover{background:var(--panel-soft) !important;}
+:root[data-theme="dark"] .table-wrapper *{color:var(--ink);}
+
+/* Reports KPI layout */
+.nizu-kpis{grid-template-columns:repeat(12,1fr) !important;}
+.nizu-kpi{grid-column:span 3 !important;}
+@media (max-width: 1100px){ .nizu-kpi{grid-column:span 6 !important;} }
+.nizu-chart-wrap{margin-top:10px; padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--panel-soft);}
+:root[data-theme="dark"] .nizu-chart-wrap{background:rgba(255,255,255,.04);}
+
 </style>
 </head>
 <body>
@@ -546,7 +563,7 @@ html,body{background:var(--bg);color:var(--ink);font-family:"Inter","Montserrat"
           </select>
 
           <input id="global-date-day" type="date" style="display:none"/>
-          <div id="global-date-range-wrap" style="display:none;display:flex;gap:8px;align-items:center;">
+          <div id="global-date-range-wrap" style="display:none;gap:8px;align-items:center;">
             <input id="global-date-start" type="date"/>
             <span style="color:var(--muted);font-size:12px;">to</span>
             <input id="global-date-end" type="date"/>
@@ -741,64 +758,115 @@ html,body{background:var(--bg);color:var(--ink);font-family:"Inter","Montserrat"
         </section>
 
         
+        
         <!-- REPORTS -->
         <section id="page-reports" class="page">
           <div class="page-header">
             <div>
               <div class="page-title">Reports</div>
-              <div class="page-sub">Export reports using the global date filter (All sections follow the same filter).</div>
+              <div class="page-sub">
+                Snapshot for the selected period (from the global date filter). Download as Excel/CSV or PDF.
+              </div>
             </div>
             <div class="page-actions">
-              <button id="btn-export-report-summary" class="btn btn-primary">Export Summary</button>
+              <button id="btn-report-export-csv-bundle" class="btn btn-ghost">Export Excel (CSV Bundle)</button>
+              <button id="btn-report-export-pdf" class="btn btn-primary">Export PDF</button>
+            </div>
+          </div>
+
+          <!-- KPI snapshot -->
+          <div class="cards-grid nizu-kpis">
+            <div class="card nizu-kpi">
+              <div class="card-title">Gross Sales</div>
+              <div id="rep-kpi-gross" class="card-number">0</div>
+              <div class="card-note">Sum of sales orders in range.</div>
+            </div>
+            <div class="card nizu-kpi">
+              <div class="card-title">Returns</div>
+              <div id="rep-kpi-returns" class="card-number">0</div>
+              <div class="card-note">Sum of return orders in range.</div>
+            </div>
+            <div class="card nizu-kpi">
+              <div class="card-title">Net</div>
+              <div id="rep-kpi-net" class="card-number">0</div>
+              <div class="card-note">Gross minus returns.</div>
+            </div>
+            <div class="card nizu-kpi">
+              <div class="card-title">Orders</div>
+              <div id="rep-kpi-orders" class="card-number">0</div>
+              <div class="card-note">Sales + returns count.</div>
+            </div>
+          </div>
+
+          <!-- Charts row -->
+          <div class="cards-grid nizu-rep-grid" style="margin-top:12px;">
+            <div class="card nizu-chart-card" style="grid-column:span 8;">
+              <div class="card-title">Sales Trend</div>
+              <div class="card-note">Daily net total for the selected range.</div>
+              <div class="nizu-chart-wrap">
+                <canvas id="rep-chart-trend" height="120"></canvas>
+              </div>
+            </div>
+            <div class="card nizu-chart-card" style="grid-column:span 4;">
+              <div class="card-title">Payment Mix</div>
+              <div class="card-note">Count by payment method.</div>
+              <div class="nizu-chart-wrap">
+                <canvas id="rep-chart-payments" height="120"></canvas>
+              </div>
+            </div>
+
+            <div class="card" style="grid-column:span 6;">
+              <div class="card-title">Top Products</div>
+              <div class="card-note">By quantity in range (from order line items).</div>
+              <div id="rep-top-products" style="margin-top:10px;"></div>
+            </div>
+            <div class="card" style="grid-column:span 6;">
+              <div class="card-title">Top Staff</div>
+              <div class="card-note">By sales total in range (if staffName is available).</div>
+              <div id="rep-top-staff" style="margin-top:10px;"></div>
+            </div>
+          </div>
+
+          <div class="page-header" style="margin-top:14px;">
+            <div>
+              <div class="page-title" style="font-size:14px;">Orders in this period</div>
+              <div class="page-sub">A quick table snapshot (first 30 records).</div>
+            </div>
+          </div>
+          <div id="rep-table-orders" class="table-wrapper"></div>
+
+          <div class="page-header" style="margin-top:14px;">
+            <div>
+              <div class="page-title" style="font-size:14px;">Exports</div>
+              <div class="page-sub">Download raw data for the selected range.</div>
             </div>
           </div>
 
           <div class="cards-grid" style="grid-template-columns:repeat(12,1fr);">
             <div class="card" style="grid-column:span 4;">
-              <div class="card-title">Orders Report</div>
-              <div class="card-note">Sales & returns within the selected date filter.</div>
+              <div class="card-title">Orders CSV</div>
+              <div class="card-note">Filtered orders list.</div>
               <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="btn-report-export-orders" class="btn btn-ghost">Export Orders CSV</button>
+                <button id="btn-report-export-orders" class="btn btn-ghost">Export</button>
               </div>
             </div>
             <div class="card" style="grid-column:span 4;">
-              <div class="card-title">Customers Report</div>
-              <div class="card-note">Customers list (unchanged) + optional order totals in-range.</div>
+              <div class="card-title">Customers CSV</div>
+              <div class="card-note">Customers export (not time-filtered unless your data model supports it).</div>
               <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="btn-report-export-customers" class="btn btn-ghost">Export Customers CSV</button>
+                <button id="btn-report-export-customers" class="btn btn-ghost">Export</button>
               </div>
             </div>
             <div class="card" style="grid-column:span 4;">
-              <div class="card-title">Products Report</div>
-              <div class="card-note">Products inventory export (not date-dependent).</div>
+              <div class="card-title">Products CSV</div>
+              <div class="card-note">Products inventory export.</div>
               <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="btn-report-export-products" class="btn btn-ghost">Export Products CSV</button>
-              </div>
-            </div>
-
-            <div class="card" style="grid-column:span 4;">
-              <div class="card-title">Branches Report</div>
-              <div class="card-note">Branches export.</div>
-              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="btn-report-export-branches" class="btn btn-ghost">Export Branches CSV</button>
-              </div>
-            </div>
-            <div class="card" style="grid-column:span 4;">
-              <div class="card-title">Staff Report</div>
-              <div class="card-note">Staff export.</div>
-              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="btn-report-export-staff" class="btn btn-ghost">Export Staff CSV</button>
-              </div>
-            </div>
-            <div class="card" style="grid-column:span 4;">
-              <div class="card-title">Discounts Report</div>
-              <div class="card-note">Discounts export.</div>
-              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="btn-report-export-discounts" class="btn btn-ghost">Export Discounts CSV</button>
+                <button id="btn-report-export-products" class="btn btn-ghost">Export</button>
               </div>
             </div>
           </div>
         </section>
+
 
 
         <!-- SETTINGS -->
@@ -3488,10 +3556,11 @@ renderTopStaff(staffStats);
     });
   </script>
 
+
 <script>
 /* =========================
-   NIZU Global Date Filter + Reports
-   (Adds only — does not remove existing functions)
+   NIZU Global Date Filter + Reports (v4)
+   Adds only; keeps existing logic intact.
    ========================= */
 (function(){
   // ---- Date helpers ----
@@ -3503,9 +3572,7 @@ renderTopStaff(staffStats);
     const day=(x.getDay()+6)%7; // Monday=0
     x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x;
   }
-  function endOfWeek(d){
-    const x=startOfWeek(d); x.setDate(x.getDate()+6); return x;
-  }
+  function endOfWeek(d){ const x=startOfWeek(d); x.setDate(x.getDate()+6); return x; }
   function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
   function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
 
@@ -3513,15 +3580,18 @@ renderTopStaff(staffStats);
   const state = { preset:"all", start:null, end:null };
   window.NIZU_DATE_FILTER = state;
 
-  function getOrderYMD(o){
+  function safeOrderYMD(o){
     try{
-      if(typeof orderDate === "function") return orderDate(o) || "";
+      if(typeof window.orderDate === "function"){
+        const v = window.orderDate(o);
+        if(v) return v;
+      }
     }catch(e){}
-    return (o && o.date) ? o.date : "";
+    // common fallbacks
+    return (o && (o.date || o.createdAt || o.created_at || o.day)) ? (o.date || o.createdAt || o.created_at || o.day) : "";
   }
 
   function inRange(ymd){
-    if(!ymd) return false;
     if(state.preset==="all") return true;
     const d=parseYMD(ymd);
     if(!d) return false;
@@ -3534,46 +3604,278 @@ renderTopStaff(staffStats);
 
   window.nizuGetFilteredOrders = function(){
     try{
-      if(!Array.isArray(window.ordersList)) return [];
-      return window.ordersList.filter(o => inRange(getOrderYMD(o)));
+      const list = Array.isArray(window.ordersList) ? window.ordersList : [];
+      return list.filter(o => inRange(safeOrderYMD(o)));
     }catch(e){ return []; }
   };
 
-  // ---- Apply filter to dashboard KPIs / orders analytics by reusing existing UI update functions ----
-  function rerenderAll(){
-    // Dashboard
+  // ---- Rerender hooks ----
+  function rerenderCore(){
+    // Dashboard & Orders pages (reuse existing if present)
     try{
-      if(typeof updateDashboardUI === "function"){
-        // Patch by temporarily providing filtered list
+      if(typeof window.updateDashboardUI === "function"){
         const original = window.ordersList;
         window.ordersList = window.nizuGetFilteredOrders();
-        updateDashboardUI();
+        window.updateDashboardUI();
         window.ordersList = original;
       }
     }catch(e){}
-
-    // Orders page analytics/table (if render exists)
     try{
-      if(typeof renderOrdersAnalytics === "function" || typeof renderOrdersTable === "function"){
-        const original = window.ordersList;
-        window.ordersList = window.nizuGetFilteredOrders();
-        if(typeof renderOrdersAnalytics === "function") renderOrdersAnalytics();
-        if(typeof renderOrdersTable === "function") renderOrdersTable();
-        window.ordersList = original;
-      }
-    }catch(e){}
-
-    // Customers analytics/table (if depends on orders)
-    try{
-      if(typeof renderCustomersAnalytics === "function" || typeof renderCustomersTable === "function"){
-        // keep customers list intact; only orders-derived metrics should use filtered orders where coded
-        if(typeof renderCustomersAnalytics === "function") renderCustomersAnalytics();
-        if(typeof renderCustomersTable === "function") renderCustomersTable();
-      }
+      const original = window.ordersList;
+      window.ordersList = window.nizuGetFilteredOrders();
+      if(typeof window.renderOrdersAnalytics === "function") window.renderOrdersAnalytics();
+      if(typeof window.renderOrdersTable === "function") window.renderOrdersTable();
+      window.ordersList = original;
     }catch(e){}
   }
 
-  // ---- UI wiring ----
+  // ---- Reports rendering ----
+  let chartTrend=null, chartPay=null;
+
+  function money(n){ 
+    const x = Number(n)||0;
+    return x.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function groupByDay(orders){
+    const map = new Map();
+    orders.forEach(o=>{
+      const ymd = safeOrderYMD(o) || "";
+      if(!ymd) return;
+      const type = (o.type||"sale").toLowerCase();
+      const total = Number(o.total)||0;
+      const net = (type==="return") ? -Math.abs(total) : total;
+      map.set(ymd, (map.get(ymd)||0) + net);
+    });
+    const days = Array.from(map.keys()).sort();
+    return { labels: days, values: days.map(d=> map.get(d) || 0) };
+  }
+
+  function paymentMix(orders){
+    const m = new Map();
+    orders.forEach(o=>{
+      const pm = (o.paymentMethod || o.payment_method || "unknown").toLowerCase();
+      m.set(pm, (m.get(pm)||0)+1);
+    });
+    const labels = Array.from(m.keys());
+    const values = labels.map(k=>m.get(k));
+    return { labels, values };
+  }
+
+  function topProducts(orders){
+    const m = new Map();
+    orders.forEach(o=>{
+      const type=(o.type||"sale").toLowerCase();
+      if(type==="return") return;
+      const items = o.items || o.cartItems || o.lineItems || [];
+      if(!Array.isArray(items)) return;
+      items.forEach(it=>{
+        const name = (it.name || it.title || it.productName || "Item").toString();
+        const qty = Number(it.qty ?? it.quantity ?? 1) || 1;
+        m.set(name, (m.get(name)||0)+qty);
+      });
+    });
+    const arr = Array.from(m.entries()).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    return arr;
+  }
+
+  function topStaff(orders){
+    const m = new Map();
+    orders.forEach(o=>{
+      const type=(o.type||"sale").toLowerCase();
+      if(type==="return") return;
+      const staff = (o.staffName || o.cashierName || o.staff || "Unknown").toString();
+      const total = Number(o.total)||0;
+      m.set(staff, (m.get(staff)||0)+total);
+    });
+    const arr = Array.from(m.entries()).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    return arr;
+  }
+
+  function renderList(el, rows, mode){
+    if(!el) return;
+    if(!rows.length){
+      el.innerHTML = '<div style="color:var(--muted);font-size:12px;">No data for this period.</div>';
+      return;
+    }
+    el.innerHTML = rows.map(([k,v],i)=>(
+      '<div style="display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">'+
+        '<div style="font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHtml(k)+'</div>'+
+        '<div style="color:var(--muted);font-weight:800;font-size:12px;">'+(mode==="money"?money(v):v)+'</div>'+
+      '</div>'
+    )).join('');
+  }
+
+  function renderOrdersTableSnapshot(orders){
+    const wrap = document.getElementById("rep-table-orders");
+    if(!wrap) return;
+    const rows = orders.slice(0,30);
+    const html = [
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;">',
+      '<thead><tr style="text-align:left;background:var(--panel-soft);border-bottom:1px solid var(--border);">',
+      '<th style="padding:10px 12px;">Order</th>',
+      '<th style="padding:10px 12px;">Date</th>',
+      '<th style="padding:10px 12px;">Branch</th>',
+      '<th style="padding:10px 12px;">Payment</th>',
+      '<th style="padding:10px 12px;text-align:right;">Total</th>',
+      '</tr></thead><tbody>'
+    ];
+    rows.forEach(o=>{
+      html.push('<tr style="border-bottom:1px solid var(--border);">');
+      html.push('<td style="padding:10px 12px;font-weight:700;">'+escapeHtml(o.orderId||o.id||"")+'</td>');
+      html.push('<td style="padding:10px 12px;color:var(--muted);">'+escapeHtml(safeOrderYMD(o)||"")+'</td>');
+      html.push('<td style="padding:10px 12px;color:var(--muted);">'+escapeHtml(o.branchName||"")+'</td>');
+      html.push('<td style="padding:10px 12px;color:var(--muted);">'+escapeHtml(o.paymentMethod||"")+'</td>');
+      const t=Number(o.total)||0;
+      const type=(o.type||"sale").toLowerCase();
+      const shown = (type==="return") ? -Math.abs(t) : t;
+      html.push('<td style="padding:10px 12px;text-align:right;font-weight:800;">'+money(shown)+'</td>');
+      html.push('</tr>');
+    });
+    html.push('</tbody></table>');
+    wrap.innerHTML = html.join('');
+  }
+
+  function escapeHtml(str){
+    return String(str||"").replace(/[&<>"]/g, s=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[s]));
+  }
+
+  function renderReports(){
+    const orders = window.nizuGetFilteredOrders();
+
+    // KPIs
+    let gross=0, ret=0;
+    orders.forEach(o=>{
+      const t=Number(o.total)||0;
+      const type=(o.type||"sale").toLowerCase();
+      if(type==="return") ret += Math.abs(t);
+      else gross += t;
+    });
+    const net = gross - ret;
+
+    const elGross=document.getElementById("rep-kpi-gross");
+    const elRet=document.getElementById("rep-kpi-returns");
+    const elNet=document.getElementById("rep-kpi-net");
+    const elOrders=document.getElementById("rep-kpi-orders");
+    if(elGross) elGross.textContent = money(gross);
+    if(elRet) elRet.textContent = money(ret);
+    if(elNet) elNet.textContent = money(net);
+    if(elOrders) elOrders.textContent = String(orders.length);
+
+    // Lists
+    renderList(document.getElementById("rep-top-products"), topProducts(orders), "qty");
+    renderList(document.getElementById("rep-top-staff"), topStaff(orders), "money");
+
+    // Table snapshot
+    renderOrdersTableSnapshot(orders);
+
+    // Charts (Chart.js optional)
+    if(window.Chart){
+      const trend = groupByDay(orders);
+      const pay = paymentMix(orders);
+
+      const ctx1 = document.getElementById("rep-chart-trend");
+      if(ctx1){
+        if(chartTrend) chartTrend.destroy();
+        chartTrend = new Chart(ctx1, {
+          type: "line",
+          data: { labels: trend.labels, datasets: [{ label:"Net", data: trend.values, tension:.35, fill:false }] },
+          options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ maxRotation:0 } } } }
+        });
+      }
+
+      const ctx2 = document.getElementById("rep-chart-payments");
+      if(ctx2){
+        if(chartPay) chartPay.destroy();
+        chartPay = new Chart(ctx2, {
+          type: "bar",
+          data: { labels: pay.labels, datasets: [{ label:"Count", data: pay.values }] },
+          options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } }
+        });
+      }
+    }
+  }
+
+  // ---- Exports ----
+  function exportOrdersCSV(){
+    const orders = window.nizuGetFilteredOrders();
+    const rows = [["orderId","date","branch","customer","total","paymentMethod","type","status"]];
+    orders.forEach(o=>{
+      rows.push([
+        o.orderId || o.id || "",
+        safeOrderYMD(o) || "",
+        o.branchName || "",
+        o.customerName || "",
+        (o.total ?? ""),
+        o.paymentMethod || "",
+        o.type || "sale",
+        o.status || "normal"
+      ]);
+    });
+    if(typeof window.downloadCsv === "function") window.downloadCsv("orders_filtered.csv", rows);
+  }
+
+  function exportCustomersCSV(){
+    // fall back to existing exporter if available
+    if(document.getElementById("btn-export-customers")) document.getElementById("btn-export-customers").click();
+    else {
+      alert("Customers export button not found in this build.");
+    }
+  }
+
+  function exportProductsCSV(){
+    if(document.getElementById("btn-export-products")) document.getElementById("btn-export-products").click();
+    else alert("Products export button not found in this build.");
+  }
+
+  function exportCSVBUNDLE(){
+    exportOrdersCSV();
+    // trigger other exports
+    exportCustomersCSV();
+    exportProductsCSV();
+  }
+
+  function exportPDFSnapshot(){
+    const page = document.getElementById("page-reports");
+    if(!page){ alert("Reports page not found."); return; }
+
+    // clone the reports page as seen
+    const clone = page.cloneNode(true);
+    clone.classList.add("active");
+
+    // build printable document
+    const w = window.open("", "_blank");
+    if(!w){ alert("Popup blocked. Please allow popups to export PDF."); return; }
+
+    const css = Array.from(document.querySelectorAll("style")).map(s=>s.innerHTML).join("\n");
+    const head = `
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width,initial-scale=1"/>
+      <title>Nizu Report</title>
+      <style>
+        ${css}
+        body{background:white;color:#111827;font-family:Inter,system-ui,Arial;}
+        .sidebar,.topbar{display:none!important;}
+        .app{padding:0!important;}
+        .page{display:block!important;}
+        @page{ size: A4; margin: 12mm; }
+        .table-wrapper{page-break-inside:avoid;}
+        canvas{max-width:100%;}
+      </style>
+    `;
+    w.document.open();
+    w.document.write(`<html><head>${head}</head><body>${clone.outerHTML}</body></html>`);
+    w.document.close();
+
+    // wait then print
+    w.onload = ()=>{
+      w.focus();
+      w.print();
+      // user can "Save as PDF" — snapshot matches what they see
+    };
+  }
+
+  // ---- Filter UI ----
   function setPreset(p){
     state.preset = p;
     const today = new Date(); today.setHours(0,0,0,0);
@@ -3609,7 +3911,8 @@ renderTopStaff(staffStats);
     try{ localStorage.setItem("nizu_date_preset", state.preset); }catch(e){}
     try{ localStorage.setItem("nizu_date_start", state.start||""); }catch(e){}
     try{ localStorage.setItem("nizu_date_end", state.end||""); }catch(e){}
-    rerenderAll();
+    rerenderCore();
+    renderReports();
   }
 
   function initDateFilter(){
@@ -3618,7 +3921,6 @@ renderTopStaff(staffStats);
     const startEl = document.getElementById("global-date-start");
     const endEl = document.getElementById("global-date-end");
 
-    // restore
     let p="all", a="", b="";
     try{ p = localStorage.getItem("nizu_date_preset") || "all"; }catch(e){}
     try{ a = localStorage.getItem("nizu_date_start") || ""; }catch(e){}
@@ -3637,7 +3939,6 @@ renderTopStaff(staffStats);
     if(endEl) endEl.addEventListener("change", ()=> setPreset("range"));
   }
 
-  // ---- Theme in Settings ----
   function initTheme(){
     const key="nizu_theme";
     const root=document.documentElement;
@@ -3653,96 +3954,39 @@ renderTopStaff(staffStats);
     try{ saved = localStorage.getItem(key) || "light"; }catch(e){}
     if(saved!=="dark" && saved!=="light") saved="light";
     apply(saved);
-
     const rL=document.getElementById("nizu-theme-light");
     const rD=document.getElementById("nizu-theme-dark");
     if(rL) rL.addEventListener("change", ()=>{ if(rL.checked) apply("light"); });
     if(rD) rD.addEventListener("change", ()=>{ if(rD.checked) apply("dark"); });
   }
 
-  // ---- Reports page wiring (reuse existing exporters) ----
-  function initReports(){
-    function click(id){ const el=document.getElementById(id); if(el) el.click(); }
-    const map = [
-      ["btn-report-export-orders", "btn-export-orders"],
-      ["btn-report-export-customers", "btn-export-customers"],
-      ["btn-report-export-products", "btn-export-products"],
-      ["btn-report-export-branches", "btn-export-branches"],
-      ["btn-report-export-staff", "btn-export-staff"],
-      ["btn-report-export-discounts", "btn-export-discounts"]
-    ];
-    map.forEach(([a,b])=>{
-      const x=document.getElementById(a);
-      if(x) x.addEventListener("click", ()=> click(b));
-    });
+  function initReportButtons(){
+    const b1=document.getElementById("btn-report-export-orders");
+    const b2=document.getElementById("btn-report-export-customers");
+    const b3=document.getElementById("btn-report-export-products");
+    const bBundle=document.getElementById("btn-report-export-csv-bundle");
+    const bPdf=document.getElementById("btn-report-export-pdf");
 
-    const sumBtn=document.getElementById("btn-export-report-summary");
-    if(sumBtn){
-      sumBtn.addEventListener("click", ()=>{
-        const orders = window.nizuGetFilteredOrders();
-        let sales=0, returns=0, countSales=0, countReturns=0;
-        orders.forEach(o=>{
-          const t=Number(o.total)||0;
-          if((o.type||"sale")==="return"){ countReturns++; returns += Math.abs(t); }
-          else { countSales++; sales += t; }
-        });
-        const rows = [
-          ["metric","value"],
-          ["datePreset", state.preset],
-          ["start", state.start||""],
-          ["end", state.end||""],
-          ["salesTotal", sales.toFixed(2)],
-          ["returnsTotal", returns.toFixed(2)],
-          ["netTotal", (sales-returns).toFixed(2)],
-          ["salesOrders", String(countSales)],
-          ["returnOrders", String(countReturns)],
-          ["ordersCount", String(orders.length)]
-        ];
-        if(typeof downloadCsv === "function") downloadCsv("nizu_report_summary.csv", rows);
-      });
-    }
-  }
-
-  // ---- Patch existing export buttons to respect date filter (orders only) ----
-  function patchOrderExports(){
-    const exportOrdersBtn = document.getElementById("btn-export-orders");
-    if(exportOrdersBtn){
-      exportOrdersBtn.addEventListener("click", ()=>{
-        // If existing handler already ran, we can't stop it. So we replace by cloning once.
-      }, true);
-      // Replace handler by cloning node (removes previous listeners) then reattach filtered export.
-      const clone = exportOrdersBtn.cloneNode(true);
-      exportOrdersBtn.parentNode.replaceChild(clone, exportOrdersBtn);
-      clone.addEventListener("click", ()=>{
-        const rows = [["orderId","date","branch","customer","total","paymentMethod","type","status"]];
-        window.nizuGetFilteredOrders().forEach(o=>{
-          rows.push([
-            o.orderId || o.id,
-            getOrderYMD(o) || "",
-            o.branchName || "",
-            o.customerName || "",
-            (o.total ?? ""),
-            o.paymentMethod || "",
-            o.type || "sale",
-            o.status || "normal"
-          ]);
-        });
-        if(typeof downloadCsv === "function") downloadCsv("orders_filtered.csv", rows);
-      });
-    }
+    if(b1) b1.addEventListener("click", exportOrdersCSV);
+    if(b2) b2.addEventListener("click", exportCustomersCSV);
+    if(b3) b3.addEventListener("click", exportProductsCSV);
+    if(bBundle) bBundle.addEventListener("click", exportCSVBUNDLE);
+    if(bPdf) bPdf.addEventListener("click", exportPDFSnapshot);
   }
 
   function boot(){
     initTheme();
     initDateFilter();
-    initReports();
-    patchOrderExports();
+    initReportButtons();
+    // initial render
+    renderReports();
   }
 
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();
 </script>
+
 
 </body>
 </html>
